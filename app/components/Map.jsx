@@ -112,7 +112,7 @@ const Map = () => {
     const generateStructuredData = (location) => {
         return {
             '@context': 'http://schema.org',
-            '@type': 'PizzaRestaurant',
+            '@type': 'PizzaRestaurantTest',
             name: location.name,
             address: {
                 '@type': 'PostalAddress',
