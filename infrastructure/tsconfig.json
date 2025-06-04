@@ -23,10 +23,18 @@
     "typeRoots": [
       "./node_modules/@types"
     ],
-    "outDir": "dist"
+    "outDir": "dist",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "node"
   },
   "exclude": [
     "node_modules",
     "cdk.out"
+  ],
+  "include": [
+    "bin/**/*",
+    "lib/**/*",
+    "lambda/**/*"
   ]
 } 
