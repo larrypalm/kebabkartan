@@ -1,0 +1,28 @@
+# CDK build output
+cdk.out/
+
+# Dependencies
+node_modules/
+
+# TypeScript build artifacts
+*.js
+*.d.ts
+
+# Except for configuration files
+!jest.config.js
+!.eslintrc.js
+
+# CDK context & history
+cdk.context.json
+.cdk.staging/
+
+# IDE and OS files
+.DS_Store
+.idea/
+*.swp
+*.swo
+
+# npm logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log* 
