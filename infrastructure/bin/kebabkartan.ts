@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
-import * as cdk from 'aws-cdk-lib';
 import { KebabkartanStack } from '../lib/kebabkartan-stack';
+import { App } from 'aws-cdk-lib';
 
-const app = new cdk.App();
+const app = new App;
 new KebabkartanStack(app, 'KebabkartanStack', {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
