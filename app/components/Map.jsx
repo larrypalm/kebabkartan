@@ -5,14 +5,68 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-// Dummy data for locations and ratings in Gothenburg
-const locations = [
-    { id: 1, lat: 57.7089, lon: 11.9746, rating: 4.5, name: 'Gothenburg City Center' },
-    { id: 2, lat: 57.7087, lon: 11.9749, rating: 4.2, name: 'Universeum' },
-    { id: 3, lat: 57.7077, lon: 11.9754, rating: 4.6, name: 'Liseberg Amusement Park' },
-    { id: 4, lat: 57.7072, lon: 11.9730, rating: 4.7, name: 'Gothenburg Opera' },
-    { id: 5, lat: 57.6925, lon: 11.9860, rating: 4.3, name: 'Slottsskogen Park' },
-];
+const RatingStars = ({ placeId, currentRating, totalVotes }) => {
+    const [hoveredRating, setHoveredRating] = useState(0);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleRating = async (rating) => {
+        if (isSubmitting) return;
+        
+        setIsSubmitting(true);
+        try {
+            const response = await fetch('/api/ratings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    placeId,
+                    rating,
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update rating');
+            }
+
+            // Refresh the page to get updated ratings
+            window.location.reload();
+        } catch (error) {
+            console.error('Error updating rating:', error);
+            alert('Failed to update rating. Please try again.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    return (
+        <div className="rating-container">
+            <div className="stars">
+                {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                        key={star}
+                        onMouseEnter={() => setHoveredRating(star)}
+                        onMouseLeave={() => setHoveredRating(0)}
+                        onClick={() => handleRating(star)}
+                        disabled={isSubmitting}
+                        style={{ 
+                            background: 'none',
+                            border: 'none',
+                            cursor: isSubmitting ? 'default' : 'pointer',
+                            fontSize: '24px',
+                            padding: '0 2px'
+                        }}
+                    >
+                        {star <= (hoveredRating || currentRating) ? '❤️' : '🤍'}
+                    </button>
+                ))}
+            </div>
+            <div style={{ fontSize: '12px', marginTop: '4px' }}>
+                Average rating: {currentRating.toFixed(1)} ({totalVotes} votes)
+            </div>
+        </div>
+    );
+};
 
 const LocationButton = () => {
     const map = useMap();
@@ -57,9 +111,9 @@ const LocationButton = () => {
 
 const ZoomableMarker = React.memo(({ location, onClickLocation }) => {
     const map = useMap();
-
+    
     const handleClick = () => {
-        map.setView([location.lat, location.lon], 15);
+        map.setView([location.latitude, location.longitude], 15);
         onClickLocation(location); // Pass the location to the parent component
     };
 
@@ -81,24 +135,35 @@ const ZoomableMarker = React.memo(({ location, onClickLocation }) => {
     );
 
     return (
-        <Marker position={[location.lat, location.lon]} icon={pizzaIcon} eventHandlers={{ click: handleClick }}>
+        <Marker position={[location.latitude, location.longitude]} icon={pizzaIcon} eventHandlers={{ click: handleClick }}>
             <Popup>
-                <strong>{location.name}</strong>
-                <br />
-                Rating: {location.rating}
+                <div style={{ minWidth: '200px' }}>
+                    <strong>{location.name}</strong>
+                    <br />
+                    <RatingStars 
+                        placeId={location.id}
+                        currentRating={location.rating}
+                        totalVotes={location.totalVotes}
+                    />
+                </div>
             </Popup>
         </Marker>
     );
 });
 
 const Map = () => {
-    const [markers, setMarkers] = useState(locations);
+    const [markers, setMarkers] = useState();
     const [selectedLocation, setSelectedLocation] = useState(null);
 
     useEffect(() => {
         // Simulate fetching data from an API (for now using dummy data)
         const fetchLocations = () => {
-            setMarkers(locations);
+            const handleFetch = async () => {
+                const response = await fetch('/api/kebab-places');
+                const data = await response.json();
+                setMarkers(data);
+            };
+            handleFetch();
         };
 
         fetchLocations();
@@ -148,8 +213,8 @@ const Map = () => {
                     attribution="&copy; OpenStreetMap contributors"
                 />
                 <LocationButton />
-
-                {markers.map((location) => (
+            
+                {(markers || []).map((location) => (
                     <ZoomableMarker key={location.id} location={location} onClickLocation={handleLocationClick} />
                 ))}
             </MapContainer>
