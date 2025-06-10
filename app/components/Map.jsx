@@ -152,7 +152,7 @@ const ZoomableMarker = React.memo(({ location, onClickLocation }) => {
 });
 
 const Map = () => {
-    const [markers, setMarkers] = useState();
+    const [markers, setMarkers] = useState([]);
     const [selectedLocation, setSelectedLocation] = useState(null);
 
     useEffect(() => {
