@@ -4,16 +4,26 @@ import React, { useState, useMemo, useEffect } from 'react'; // Ensure React is 
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 
 const RatingStars = ({ placeId, currentRating, totalVotes }) => {
+    const { executeRecaptcha } = useGoogleReCaptcha();
     const [hoveredRating, setHoveredRating] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleRating = async (rating) => {
         if (isSubmitting) return;
-        
+
+        if (!executeRecaptcha) {
+            alert("reCAPTCHA is not ready. Please try again in a moment.");
+            return;
+        }
+
         setIsSubmitting(true);
+
         try {
+            const token = await executeRecaptcha('submit_rating');
+
             const response = await fetch('/api/ratings', {
                 method: 'POST',
                 headers: {
@@ -22,14 +32,15 @@ const RatingStars = ({ placeId, currentRating, totalVotes }) => {
                 body: JSON.stringify({
                     placeId,
                     rating,
+                    recaptchaToken: token,
                 }),
             });
 
             if (!response.ok) {
-                throw new Error('Failed to update rating');
+                const errorText = await response.text();
+                throw new Error(errorText || 'Failed to update rating');
             }
 
-            // Refresh the page to get updated ratings
             window.location.reload();
         } catch (error) {
             console.error('Error updating rating:', error);
@@ -140,6 +151,8 @@ const ZoomableMarker = React.memo(({ location, onClickLocation }) => {
                 <div style={{ minWidth: '200px' }}>
                     <strong>{location.name}</strong>
                     <br />
+                    <strong>{location.address}</strong>
+                    <br />
                     <RatingStars 
                         placeId={location.id}
                         currentRating={location.rating}
@@ -173,11 +186,10 @@ const Map = () => {
         setSelectedLocation(location);
     };
 
-    // Function to generate JSON-LD for structured data
     const generateStructuredData = (location) => {
         return {
             '@context': 'http://schema.org',
-            '@type': 'PizzaRestaurantTest',
+            '@type': 'Kebabkartan',
             name: location.name,
             address: {
                 '@type': 'PostalAddress',
@@ -188,13 +200,13 @@ const Map = () => {
                 addressCountry: 'SE',
             },
             ratingValue: location.rating,
-            reviewCount: '150',
+            reviewCount: location.totalVotes,
             geo: {
                 '@type': 'GeoCoordinates',
                 latitude: location.lat,
                 longitude: location.lon,
             },
-            url: `https://yourwebsite.com/pizza/${location.id}`,
+            url: `https://www.kebabkartan.se/${location.id}`,
         };
     };
 

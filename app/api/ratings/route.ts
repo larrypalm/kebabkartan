@@ -10,9 +10,14 @@ const TABLE_NAME = process.env.NEXT_PUBLIC_DYNAMODB_TABLE_NAME;
 const ACCESS_KEY_ID = process.env.NEXT_PUBLIC_ACCESS_KEY_ID;
 const SECRET_ACCESS_KEY = process.env.NEXT_PUBLIC_SECRET_ACCESS_KEY;
 const AWS_REGION = process.env.NEXT_PUBLIC_AWS_REGION;
+const RECAPTCHA_SECRET_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SECRET_KEY; // Server-side secret key
 
 if (!ACCESS_KEY_ID || !SECRET_ACCESS_KEY || !AWS_REGION) {
     throw new Error('AWS credentials or region are not set in environment variables.');
+}
+
+if (!RECAPTCHA_SECRET_KEY) {
+    throw new Error('RECAPTCHA_SECRET_KEY is not set in environment variables.');
 }
 
 const client = new DynamoDBClient({
@@ -33,7 +38,24 @@ export async function POST(request: Request) {
 
         const body = await request.json();
 
-        if (!body || !body.placeId || typeof body.rating !== 'number') {
+        const token = body.recaptchaToken;
+        if (!token) {
+            return NextResponse.json({ message: 'Missing reCAPTCHA token' }, { status: 400 });
+        }
+
+        const recaptchaResponse = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `secret=${RECAPTCHA_SECRET_KEY}&response=${token}`,
+        });
+
+        const recaptchaData = await recaptchaResponse.json();
+
+        if (!recaptchaData.success || recaptchaData.score < 0.5) {
+            return NextResponse.json({ message: 'Failed reCAPTCHA verification ' + JSON.stringify(recaptchaData)}, { status: 403 });
+        }
+
+        if (!body.placeId || typeof body.rating !== 'number') {
             return NextResponse.json(
                 { message: 'Missing or invalid request body' },
                 { status: 400 }
