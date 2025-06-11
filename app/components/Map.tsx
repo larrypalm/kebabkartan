@@ -37,6 +37,19 @@ interface SetViewOnSelectProps {
     lng: number;
 }
 
+interface Coordinates {
+    latitude: number;
+    longitude: number;
+    zoom: number;
+}
+
+// Sweden's bounding box coordinates
+const SWEDEN_VIEW: Coordinates = {
+    latitude: 62.5,  // Center of Sweden approximately
+    longitude: 16.5,
+    zoom: 5
+};
+
 const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, totalVotes }) => {
     const { executeRecaptcha } = useGoogleReCaptcha();
     const [hoveredRating, setHoveredRating] = useState<number>(0);
@@ -112,6 +125,19 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
 
 const LocationButton: React.FC = () => {
     const map = useMap();
+    const [permissionState, setPermissionState] = useState<PermissionState | null>(null);
+
+    useEffect(() => {
+        // Check if geolocation permission is available
+        if (navigator.permissions && navigator.permissions.query) {
+            navigator.permissions
+                .query({ name: 'geolocation' })
+                .then((result) => {
+                    setPermissionState(result.state);
+                    result.onchange = () => setPermissionState(result.state);
+                });
+        }
+    }, []);
 
     const handleClick = () => {
         if (navigator.geolocation) {
@@ -120,14 +146,27 @@ const LocationButton: React.FC = () => {
                     const { latitude, longitude } = position.coords;
                     map.setView([latitude, longitude], 13);
                 },
-                () => {
-                    alert('Geolocation not available or permission denied.');
+                (error) => {
+                    console.error('Geolocation error:', error);
+                    // If denied, zoom out to show all of Sweden
+                    map.setView([SWEDEN_VIEW.latitude, SWEDEN_VIEW.longitude], SWEDEN_VIEW.zoom);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 5000,
+                    maximumAge: 0
                 }
             );
         } else {
-            alert('Geolocation is not supported by this browser.');
+            console.error('Geolocation is not supported');
+            map.setView([SWEDEN_VIEW.latitude, SWEDEN_VIEW.longitude], SWEDEN_VIEW.zoom);
         }
     };
+
+    // Don't show the button if permission is denied
+    if (permissionState === 'denied') {
+        return null;
+    }
 
     return (
         <button
@@ -143,10 +182,14 @@ const LocationButton: React.FC = () => {
                 borderRadius: '5px',
                 cursor: 'pointer',
                 fontSize: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
             }}
             onClick={handleClick}
         >
-            Go to My Location
+            <span style={{ fontSize: '20px' }}>📍</span>
+            {permissionState === 'granted' ? 'Show My Location' : 'Use My Location'}
         </button>
     );
 };
@@ -287,7 +330,7 @@ const generateStructuredData = (location: Location) => {
             latitude: location.latitude,
             longitude: location.longitude,
         },
-        url: `https://www.kebabkartan.se/${location.id}`,
+        url: `https://www.kebabkartan.se/place/${location.id}`,
     };
 };
 
@@ -296,6 +339,33 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null }) => {
     const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
     const [isInitialLoad, setIsInitialLoad] = useState(true);
     const initialPlaceIdRef = useRef(initialPlaceId);
+    const [defaultView, setDefaultView] = useState<Coordinates>(SWEDEN_VIEW);
+
+    // Effect to get initial location from IP
+    useEffect(() => {
+        const getLocationFromIP = async () => {
+            try {
+                const response = await fetch('https://ipapi.co/json/');
+                if (!response.ok) throw new Error('Failed to get location from IP');
+                
+                const data = await response.json();
+                if (data.latitude && data.longitude) {
+                    setDefaultView({
+                        latitude: data.latitude,
+                        longitude: data.longitude,
+                        zoom: 11 // City level zoom
+                    });
+                }
+            } catch (error) {
+                console.error('Error getting location from IP:', error);
+                // Keep the Sweden view as fallback
+            }
+        };
+
+        if (!selectedLocation) {
+            getLocationFromIP();
+        }
+    }, []);
 
     // Effect for handling direct navigation and initial load
     useEffect(() => {
@@ -365,8 +435,8 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null }) => {
             <MapContainer
                 center={selectedLocation 
                     ? [selectedLocation.latitude, selectedLocation.longitude]
-                    : [57.7089, 11.9746]}
-                zoom={selectedLocation ? 15 : 13}
+                    : [defaultView.latitude, defaultView.longitude]}
+                zoom={selectedLocation ? 15 : defaultView.zoom}
                 style={{ width: '100%', height: '100%' }}
                 scrollWheelZoom={true}
                 touchZoom={true}
