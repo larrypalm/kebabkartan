@@ -20,7 +20,7 @@ export default function App() {
     return (
         <GoogleReCaptchaProvider reCaptchaKey={RECAPTCHA_SITE_KEY}>
             <main>
-                <Map />
+                <Map initialPlaceId={null} />
             </main>
         </GoogleReCaptchaProvider>
     );
