@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
 import { GoogleReCaptchaProvider } from "react-google-recaptcha-v3";
@@ -10,7 +10,7 @@ const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!;
 export default function PlacePage() {
     const params = useParams();
     const router = useRouter();
-    const placeId = params.id as string;
+    const [currentPlaceId, setCurrentPlaceId] = useState<string | null>(params.id as string);
 
     const Map = dynamic(
         () => import('../../components/Map'),
@@ -26,7 +26,7 @@ export default function PlacePage() {
             try {
                 const response = await fetch('/api/kebab-places');
                 const places = await response.json();
-                const placeExists = places.some((place: any) => place.id === placeId);
+                const placeExists = places.some((place: any) => place.id === currentPlaceId);
                 
                 if (!placeExists) {
                     router.push('/'); // Redirect to home if place doesn't exist
@@ -37,12 +37,24 @@ export default function PlacePage() {
         };
 
         validatePlace();
-    }, [placeId, router]);
+    }, [currentPlaceId, router]);
+
+    // Handle navigation
+    useEffect(() => {
+        const handlePopState = () => {
+            const pathParts = window.location.pathname.split('/');
+            const urlPlaceId = pathParts[2];
+            setCurrentPlaceId(urlPlaceId || null);
+        };
+
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, []);
 
     return (
         <GoogleReCaptchaProvider reCaptchaKey={RECAPTCHA_SITE_KEY}>
             <main>
-                <Map initialPlaceId={placeId} />
+                <Map initialPlaceId={currentPlaceId} />
             </main>
         </GoogleReCaptchaProvider>
     );

@@ -215,6 +215,7 @@ const ZoomableMarker: React.FC<ZoomableMarkerProps> = React.memo(({ location, on
 
     const handlePopupClose = () => {
         window.history.pushState({}, '', '/');
+        window.dispatchEvent(new PopStateEvent('popstate'));
         onClickLocation(null);
     };
 
@@ -423,6 +424,7 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null }) => {
                 }
             } else {
                 setSelectedLocation(null);
+                initialPlaceIdRef.current = null;
             }
         };
 
