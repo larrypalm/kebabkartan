@@ -14,7 +14,7 @@ const RatingStars = ({ placeId, currentRating, totalVotes }) => {
         
         setIsSubmitting(true);
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ratings`, {
+            const response = await fetch('/api/ratings', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -159,7 +159,7 @@ const Map = () => {
         // Simulate fetching data from an API (for now using dummy data)
         const fetchLocations = () => {
             const handleFetch = async () => {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/kebab-places`);
+                const response = await fetch('/api/kebab-places');
                 const data = await response.json();
                 setMarkers(data);
             };
@@ -214,7 +214,7 @@ const Map = () => {
                 />
                 <LocationButton />
             
-                {(markers || []).map((location) => (
+                {(Array.isArray(markers) ? markers : []).map((location) => (
                     <ZoomableMarker key={location.id} location={location} onClickLocation={handleLocationClick} />
                 ))}
             </MapContainer>
