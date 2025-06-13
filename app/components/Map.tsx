@@ -322,6 +322,211 @@ const generateStructuredData = (location: Location) => {
     };
 };
 
+const MapControls: React.FC<{
+    markers: Location[];
+    onLocationSelect: (location: Location) => void;
+    initialPlaceId: string | null;
+    onShowAllPlacesChange: (show: boolean) => void;
+}> = ({ markers, onLocationSelect, initialPlaceId, onShowAllPlacesChange }) => {
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedResultIndex, setSelectedResultIndex] = useState(-1);
+    const [showAllPlaces, setShowAllPlaces] = useState(!initialPlaceId);
+    const searchInputRef = useRef<HTMLInputElement>(null);
+    const map = useMap();
+
+    useEffect(() => {
+        onShowAllPlacesChange(showAllPlaces);
+    }, [showAllPlaces, onShowAllPlacesChange]);
+
+    const filteredMarkers = useMemo(() => {
+        if (!searchQuery.trim()) return markers;
+        const query = searchQuery.toLowerCase();
+        return markers.filter(marker => 
+            marker.name.toLowerCase().includes(query)
+        );
+    }, [markers, searchQuery]);
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                searchInputRef.current?.focus();
+            }
+
+            if (searchQuery && filteredMarkers.length > 0) {
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    setSelectedResultIndex(prev => 
+                        prev < filteredMarkers.length - 1 ? prev + 1 : prev
+                    );
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    setSelectedResultIndex(prev => prev > 0 ? prev - 1 : prev);
+                } else if (e.key === 'Enter' && selectedResultIndex >= 0) {
+                    e.preventDefault();
+                    const selectedPlace = filteredMarkers[selectedResultIndex];
+                    handleResultClick(selectedPlace);
+                } else if (e.key === 'Escape') {
+                    setSearchQuery('');
+                    setSelectedResultIndex(-1);
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [searchQuery, filteredMarkers, selectedResultIndex]);
+
+    useEffect(() => {
+        setSelectedResultIndex(-1);
+    }, [searchQuery]);
+
+    const handleClearSearch = () => {
+        setSearchQuery('');
+        setSelectedResultIndex(-1);
+    };
+
+    const handleResultClick = (location: Location) => {
+        onLocationSelect(location);
+        setSearchQuery('');
+        setSelectedResultIndex(-1);
+        map.setView([location.latitude, location.longitude], 15, {
+            animate: true,
+            duration: 0.5
+        });
+    };
+
+    return (
+        <>
+            {showAllPlaces ? (
+                <div style={{
+                    position: 'absolute',
+                    top: '20px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    zIndex: 1000,
+                    width: '300px',
+                    backgroundColor: 'white',
+                    padding: '10px',
+                    borderRadius: '8px',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                }}>
+                    <div style={{ position: 'relative' }}>
+                        <input
+                            ref={searchInputRef}
+                            type="text"
+                            placeholder="Search kebab places... (Ctrl/Cmd + K)"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            style={{
+                                width: '100%',
+                                padding: '8px',
+                                paddingRight: '30px',
+                                border: '1px solid #ccc',
+                                borderRadius: '4px',
+                                fontSize: '14px'
+                            }}
+                        />
+                        {searchQuery && (
+                            <button
+                                onClick={handleClearSearch}
+                                style={{
+                                    position: 'absolute',
+                                    right: '8px',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    fontSize: '16px',
+                                    color: '#666'
+                                }}
+                            >
+                                ×
+                            </button>
+                        )}
+                    </div>
+                    
+                    {searchQuery && filteredMarkers.length > 0 && (
+                        <div style={{
+                            position: 'absolute',
+                            top: '100%',
+                            left: 0,
+                            right: 0,
+                            backgroundColor: 'white',
+                            borderRadius: '4px',
+                            marginTop: '4px',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                            maxHeight: '300px',
+                            overflowY: 'auto'
+                        }}>
+                            {filteredMarkers.map((location, index) => (
+                                <div
+                                    key={location.id}
+                                    onClick={() => handleResultClick(location)}
+                                    style={{
+                                        padding: '10px',
+                                        cursor: 'pointer',
+                                        backgroundColor: index === selectedResultIndex ? '#f0f0f0' : 'transparent',
+                                        borderBottom: '1px solid #eee'
+                                    }}
+                                >
+                                    <div style={{ fontWeight: 'bold' }}>{location.name}</div>
+                                    <div style={{ fontSize: '12px', color: '#666' }}>{location.address}</div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            ) : (
+                <button
+                    onClick={() => setShowAllPlaces(true)}
+                    style={{
+                        position: 'absolute',
+                        top: '20px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        zIndex: 1000,
+                        backgroundColor: 'white',
+                        padding: '10px 20px',
+                        borderRadius: '8px',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: 'bold'
+                    }}
+                >
+                    Show All Places
+                </button>
+            )}
+        </>
+    );
+};
+
+const CenterMapOnLocation: React.FC<{ location: Location | null }> = ({ location }) => {
+    const map = useMap();
+    useEffect(() => {
+        if (location) {
+            map.setView([location.latitude, location.longitude], 15, {
+                animate: true,
+                duration: 0.5,
+            });
+        }
+    }, [location, map]);
+    return null;
+};
+
+const useMapCentering = () => {
+    const map = useMap();
+    
+    const centerOnLocation = (location: Location) => {
+        map.setView([location.latitude, location.longitude], 15);
+    };
+    
+    return centerOnLocation;
+};
+
 const Map: React.FC<MapProps> = ({ initialPlaceId = null }) => {
     const [markers, setMarkers] = useState<Location[]>([]);
     const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
@@ -329,6 +534,8 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null }) => {
     const [mapLoaded, setMapLoaded] = useState(false);
     const initialPlaceIdRef = useRef(initialPlaceId);
     const [defaultView, setDefaultView] = useState<Coordinates>(SWEDEN_VIEW);
+    const [showAllPlaces, setShowAllPlaces] = useState(!initialPlaceId);
+
 
     // Effect to get initial location from IP
     useEffect(() => {
@@ -440,7 +647,6 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null }) => {
 
     return (
         <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
-            {/* Placeholder image for LCP optimization */}
             {!mapLoaded && (
                 <img
                     src={MAP_PLACEHOLDER}
@@ -471,15 +677,23 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null }) => {
                     attribution="&copy; OpenStreetMap contributors"
                 />
                 <LocationButton />
-            
-                {markers.map((location) => (
-                    <ZoomableMarker 
-                        key={location.id} 
-                        location={location} 
-                        onClickLocation={handleLocationClick}
-                        isSelected={selectedLocation?.id === location.id}
-                    />
-                ))}
+                <MapControls 
+                    markers={markers} 
+                    onLocationSelect={setSelectedLocation}
+                    initialPlaceId={initialPlaceId}
+                    onShowAllPlacesChange={setShowAllPlaces}
+                />
+                <CenterMapOnLocation location={selectedLocation} />
+                {markers
+                    .filter(location => showAllPlaces || location.id === selectedLocation?.id)
+                    .map((location) => (
+                        <ZoomableMarker 
+                            key={location.id} 
+                            location={location} 
+                            onClickLocation={handleLocationClick}
+                            isSelected={selectedLocation?.id === location.id}
+                        />
+                    ))}
 
                 {selectedLocation && (
                     <SetViewOnSelect 
