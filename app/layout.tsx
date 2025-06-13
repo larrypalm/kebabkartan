@@ -16,6 +16,15 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en">
+            <head>
+                <link rel="preconnect" href="https://www.google.com" />
+                <link rel="preconnect" href="https://www.gstatic.com" crossOrigin="anonymous" />
+                <link rel="preconnect" href="https://tile.openstreetmap.org" />
+                <link rel="dns-prefetch" href="https://tile.openstreetmap.org" />
+                <meta name="viewport" content="width=device-width, initial-scale=1" />
+                <script type="module" src="/_next/static/chunks/main.js" async />
+                <script noModule src="/_next/static/chunks/main-legacy.js" async />
+            </head>
             <body className={inter.className}>{children}</body>
         </html>
     );
