@@ -50,6 +50,8 @@ const SWEDEN_VIEW: Coordinates = {
     zoom: 5
 };
 
+const MAP_PLACEHOLDER = '/static/map-placeholder.png'; // Place a suitable image in public/static/
+
 const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, totalVotes }) => {
     const { executeRecaptcha } = useGoogleReCaptcha();
     const [hoveredRating, setHoveredRating] = useState<number>(0);
@@ -170,22 +172,7 @@ const LocationButton: React.FC = () => {
 
     return (
         <button
-            style={{
-                position: 'absolute',
-                top: '20px',
-                left: '20px',
-                zIndex: 1000,
-                padding: '10px 20px',
-                backgroundColor: '#007bff',
-                color: 'white',
-                border: 'none',
-                borderRadius: '5px',
-                cursor: 'pointer',
-                fontSize: '16px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-            }}
+            className="location-button"
             onClick={handleClick}
         >
             <span style={{ fontSize: '20px' }}>📍</span>
@@ -339,6 +326,7 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null }) => {
     const [markers, setMarkers] = useState<Location[]>([]);
     const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
     const [isInitialLoad, setIsInitialLoad] = useState(true);
+    const [mapLoaded, setMapLoaded] = useState(false);
     const initialPlaceIdRef = useRef(initialPlaceId);
     const [defaultView, setDefaultView] = useState<Coordinates>(SWEDEN_VIEW);
 
@@ -406,6 +394,24 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null }) => {
         }
     }, [selectedLocation, isInitialLoad]);
 
+    // Listen for tile load events to hide the placeholder
+    useEffect(() => {
+        const handleTileLoad = () => setMapLoaded(true);
+        const leafletContainers = document.getElementsByClassName('leaflet-tile');
+        if (leafletContainers.length > 0) {
+            for (let i = 0; i < leafletContainers.length; i++) {
+                leafletContainers[i].addEventListener('load', handleTileLoad);
+            }
+        }
+        return () => {
+            if (leafletContainers.length > 0) {
+                for (let i = 0; i < leafletContainers.length; i++) {
+                    leafletContainers[i].removeEventListener('load', handleTileLoad);
+                }
+            }
+        };
+    }, [mapLoaded]);
+
     const handleLocationClick = (location: Location | null) => {
         if (location?.id === selectedLocation?.id) return;
         setSelectedLocation(location);
@@ -433,7 +439,23 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null }) => {
     }, [markers, selectedLocation]);
 
     return (
-        <div style={{ width: '100vw', height: '100vh' }}>
+        <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
+            {/* Placeholder image for LCP optimization */}
+            {!mapLoaded && (
+                <img
+                    src={MAP_PLACEHOLDER}
+                    alt="Map loading"
+                    style={{
+                        position: 'absolute',
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        zIndex: 1,
+                        top: 0,
+                        left: 0
+                    }}
+                />
+            )}
             <MapContainer
                 center={selectedLocation 
                     ? [selectedLocation.latitude, selectedLocation.longitude]
