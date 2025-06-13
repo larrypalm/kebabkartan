@@ -601,24 +601,6 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null }) => {
         }
     }, [selectedLocation, isInitialLoad]);
 
-    // Listen for tile load events to hide the placeholder
-    useEffect(() => {
-        const handleTileLoad = () => setMapLoaded(true);
-        const leafletContainers = document.getElementsByClassName('leaflet-tile');
-        if (leafletContainers.length > 0) {
-            for (let i = 0; i < leafletContainers.length; i++) {
-                leafletContainers[i].addEventListener('load', handleTileLoad);
-            }
-        }
-        return () => {
-            if (leafletContainers.length > 0) {
-                for (let i = 0; i < leafletContainers.length; i++) {
-                    leafletContainers[i].removeEventListener('load', handleTileLoad);
-                }
-            }
-        };
-    }, [mapLoaded]);
-
     const handleLocationClick = (location: Location | null) => {
         if (location?.id === selectedLocation?.id) return;
         setSelectedLocation(location);
@@ -675,6 +657,9 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null }) => {
                 <TileLayer
                     url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
                     attribution="&copy; OpenStreetMap contributors"
+                    eventHandlers={{
+                        load: () => setMapLoaded(true),
+                    }}
                 />
                 <LocationButton />
                 <MapControls 
