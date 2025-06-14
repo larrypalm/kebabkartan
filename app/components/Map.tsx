@@ -5,7 +5,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
-import { trackKebabPlaceView, trackRatingSubmitted, trackSearch, trackSearchResultSelect } from '@/app/utils/analytics';
+import { trackRatingSubmitted, trackSearch, trackSearchResultSelect } from '@/app/utils/analytics';
 
 interface Location {
     id: string;
