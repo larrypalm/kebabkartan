@@ -57,6 +57,7 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
     const { executeRecaptcha } = useGoogleReCaptcha();
     const [hoveredRating, setHoveredRating] = useState<number>(0);
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+    const [submittingRating, setSubmittingRating] = useState<number | null>(null);
 
     const handleRating = async (rating: number) => {
         if (isSubmitting) return;
@@ -67,6 +68,7 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
         }
 
         setIsSubmitting(true);
+        setSubmittingRating(rating);
 
         try {
             const token = await executeRecaptcha('submit_rating');
@@ -97,30 +99,38 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
             alert('Failed to update rating. Please try again.');
         } finally {
             setIsSubmitting(false);
+            setSubmittingRating(null);
         }
     };
 
     return (
         <div className="rating-container">
             <div className="stars">
-                {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                        key={star}
-                        onMouseEnter={() => setHoveredRating(star)}
-                        onMouseLeave={() => setHoveredRating(0)}
-                        onClick={() => handleRating(star)}
-                        disabled={isSubmitting}
-                        style={{ 
-                            background: 'none',
-                            border: 'none',
-                            cursor: isSubmitting ? 'default' : 'pointer',
-                            fontSize: '24px',
-                            padding: '0 2px'
-                        }}
-                    >
-                        {star <= (hoveredRating || currentRating) ? '❤️' : '🤍'}
-                    </button>
-                ))}
+                {[1, 2, 3, 4, 5].map((star) => {
+                    const isActive = isSubmitting && submittingRating === star;
+                    const isDimmed = isSubmitting && submittingRating !== star;
+                    return (
+                        <button
+                            key={star}
+                            onMouseEnter={() => setHoveredRating(star)}
+                            onMouseLeave={() => setHoveredRating(0)}
+                            onClick={() => handleRating(star)}
+                            disabled={isSubmitting}
+                            className={isActive ? 'loading' : ''}
+                            style={{
+                                background: 'none',
+                                border: 'none',
+                                cursor: isSubmitting ? 'default' : 'pointer',
+                                fontSize: '24px',
+                                padding: '0 2px',
+                                opacity: isActive ? 1 : isDimmed ? 0.3 : 1,
+                                transition: 'opacity 0.2s'
+                            }}
+                        >
+                            {(isActive || star <= (hoveredRating || currentRating)) ? '❤️' : '🤍'}
+                        </button>
+                    );
+                })}
             </div>
             <div style={{ fontSize: '12px', marginTop: '4px' }}>
                 Average rating: {currentRating.toFixed(1)} ({totalVotes} votes)
