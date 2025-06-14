@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
+import { trackKebabPlaceView, trackRatingSubmitted, trackSearch, trackSearchResultSelect } from '@/app/utils/analytics';
 
 interface Location {
     id: string;
@@ -86,6 +87,9 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
                 const errorText = await response.text();
                 throw new Error(errorText || 'Failed to update rating');
             }
+
+            // Track the rating submission
+            trackRatingSubmitted(placeId, 'Kebab Place', rating);
 
             window.location.reload();
         } catch (error) {
@@ -394,6 +398,7 @@ const MapControls: React.FC<{
             animate: true,
             duration: 0.5
         });
+        trackSearchResultSelect(location.id, location.name);
     };
 
     return (
@@ -417,7 +422,12 @@ const MapControls: React.FC<{
                             type="text"
                             placeholder="Search kebab places... (Ctrl/Cmd + K)"
                             value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onChange={(e) => {
+                                setSearchQuery(e.target.value);
+                                if (e.target.value.length > 0) {
+                                    trackSearch(e.target.value);
+                                }
+                            }}
                             style={{
                                 width: '100%',
                                 padding: '8px',
@@ -541,7 +551,7 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null }) => {
     useEffect(() => {
         const getLocationFromIP = async () => {
             try {
-                const response = await fetch('https://ipapi.co/json/');
+                const response = await fetch('https://corsproxy.io/?https://ipapi.co/json/');
                 if (!response.ok) throw new Error('Failed to get location from IP');
                 
                 const data = await response.json();
@@ -604,6 +614,9 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null }) => {
     const handleLocationClick = (location: Location | null) => {
         if (location?.id === selectedLocation?.id) return;
         setSelectedLocation(location);
+        if (location) {
+            // Removed trackKebabPlaceView to avoid double event
+        }
     };
 
     // Handle browser back/forward
