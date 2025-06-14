@@ -5,6 +5,7 @@ import {
     GetCommand,
     UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
+import { ratingLimiter } from '@/app/lib/rateLimiter';
 
 const TABLE_NAME = process.env.NEXT_PUBLIC_DYNAMODB_TABLE_NAME;
 const ACCESS_KEY_ID = process.env.NEXT_PUBLIC_ACCESS_KEY_ID;
@@ -34,6 +35,19 @@ export async function POST(request: Request) {
     try {
         if (!TABLE_NAME) {
             throw new Error('TABLE_NAME environment variable is not set');
+        }
+
+        // Get client IP for rate limiting
+        const forwardedFor = request.headers.get('x-forwarded-for');
+        const ip = forwardedFor ? forwardedFor.split(',')[0] : 'unknown';
+
+        // Check rate limit
+        const isLimited = await ratingLimiter.isRateLimited(ip);
+        if (isLimited) {
+            return NextResponse.json(
+                { message: 'Too many requests. Please try again later.' },
+                { status: 429 }
+            );
         }
 
         const body = await request.json();
