@@ -7,8 +7,61 @@ import ClientLayout from "./components/ClientLayout";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-    title: 'Kebabkartan',
-    description: 'Kebabkartan | betygsätt din favorit kebab!',
+    title: {
+        default: 'Kebabkartan | Hitta och betygsätt din favorit kebab',
+        template: '%s | Kebabkartan'
+    },
+    description: 'Hitta och betygsätt din favorit kebab i Sverige. Utforska kebabställen nära dig, läs recensioner och dela dina erfarenheter.',
+    keywords: ['kebab', 'kebabställen', 'restauranger', 'mat', 'betygsättning', 'Sverige', 'kebabkarta'],
+    authors: [{ name: 'Kebabkartan' }],
+    creator: 'Kebabkartan',
+    publisher: 'Kebabkartan',
+    formatDetection: {
+        email: false,
+        address: false,
+        telephone: false,
+    },
+    metadataBase: new URL('https://www.kebabkartan.se'),
+    alternates: {
+        canonical: '/',
+    },
+    openGraph: {
+        type: 'website',
+        locale: 'sv_SE',
+        url: 'https://www.kebabkartan.se',
+        title: 'Kebabkartan | Hitta och betygsätt din favorit kebab',
+        description: 'Hitta och betygsätt din favorit kebab i Sverige. Utforska kebabställen nära dig, läs recensioner och dela dina erfarenheter.',
+        siteName: 'Kebabkartan',
+        images: [
+            {
+                url: '/og-image.jpg',
+                width: 1200,
+                height: 630,
+                alt: 'Kebabkartan - Din guide till bästa kebaben i Sverige',
+            },
+        ],
+    },
+    twitter: {
+        card: 'summary_large_image',
+        title: 'Kebabkartan | Hitta och betygsätt din favorit kebab',
+        description: 'Hitta och betygsätt din favorit kebab i Sverige. Utforska kebabställen nära dig, läs recensioner och dela dina erfarenheter.',
+        images: ['/og-image.jpg'],
+        creator: '@kebabkartan',
+    },
+    robots: {
+        index: true,
+        follow: true,
+        googleBot: {
+            index: true,
+            follow: true,
+            'max-video-preview': -1,
+            'max-image-preview': 'large',
+            'max-snippet': -1,
+        },
+    },
+    verification: {
+        google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+    },
 };
 
 export default function RootLayout({

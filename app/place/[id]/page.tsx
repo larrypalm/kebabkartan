@@ -1,65 +1,57 @@
-'use client';
+import { Metadata } from 'next';
+import PlacePageClient from '@/app/place/[id]/PlacePageClient';
+import { getKebabPlaces } from '@/lib/getKebabPlaces';
 
-import { useEffect, useState } from 'react';
-import dynamic from 'next/dynamic';
-import { useParams, useRouter } from 'next/navigation';
-import { GoogleReCaptchaProvider } from "react-google-recaptcha-v3";
-import { trackKebabPlaceView } from '@/app/utils/analytics';
-
-const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!;
-
-export default function PlacePage() {
-    const params = useParams();
-    const router = useRouter();
-    const [currentPlaceId, setCurrentPlaceId] = useState<string | null>(params.id as string);
-
-    const Map = dynamic(
-        () => import('../../components/Map'),
-        {
-            loading: () => <p>Kebabkartan is loading</p>,
-            ssr: false
+// Generate metadata for the place page
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+    try {
+        const places = await getKebabPlaces();
+        const place = places.find((p: any) => p.id === params.id);
+        console.log(place);
+        if (!place) {
+            return {
+                title: 'Kebabställe hittades inte | Kebabkartan',
+                description: 'Det efterfrågade kebabstället kunde inte hittas.',
+            };
         }
-    );
 
-    // Handle invalid place IDs and track place view
-    useEffect(() => {
-        const validatePlace = async () => {
-            try {
-                const response = await fetch('/api/kebab-places');
-                const places = await response.json();
-                const place = places.find((p: any) => p.id === currentPlaceId);
-                
-                if (!place) {
-                    router.push('/'); // Redirect to home if place doesn't exist
-                } else {
-                    // Track the place view
-                    trackKebabPlaceView(place.id, place.name);
-                }
-            } catch (error) {
-                console.error('Error validating place:', error);
-            }
+        const title = `Kebabkartan - ${place.name} | Betygsätt och recensera | Kebabkartan`;
+        const description = `Utforska ${place.name} på ${place.address}. Betygsätt och dela din erfarenhet av deras kebab. Läs recensioner och se betyg från andra besökare.`;
+        console.log(title);
+
+        return {
+            title,
+            description,
+            openGraph: {
+                title,
+                description,
+                url: `https://www.kebabkartan.se/place/${place.id}`,
+                type: 'website',
+                images: [
+                    {
+                        url: '/og-image.jpg',
+                        width: 1200,
+                        height: 630,
+                        alt: `${place.name} - Kebabställe på ${place.address}`,
+                    },
+                ],
+            },
+            twitter: {
+                card: 'summary_large_image',
+                title,
+                description,
+                images: ['/og-image.jpg'],
+            },
         };
-
-        validatePlace();
-    }, [currentPlaceId, router]);
-
-    // Handle navigation
-    useEffect(() => {
-        const handlePopState = () => {
-            const pathParts = window.location.pathname.split('/');
-            const urlPlaceId = pathParts[2];
-            setCurrentPlaceId(urlPlaceId || null);
+    } catch (error) {
+        console.error('Error generating metadata:', error);
+        return {
+            title: 'Kebabställe | Kebabkartan',
+            description: 'Utforska och betygsätt kebabställen i Sverige.',
         };
+    }
+}
 
-        window.addEventListener('popstate', handlePopState);
-        return () => window.removeEventListener('popstate', handlePopState);
-    }, []);
-
-    return (
-        <GoogleReCaptchaProvider reCaptchaKey={RECAPTCHA_SITE_KEY}>
-            <main>
-                <Map initialPlaceId={currentPlaceId} />
-            </main>
-        </GoogleReCaptchaProvider>
-    );
+export default function PlacePage({ params }: { params: { id: string } }) {
+    return <PlacePageClient id={params.id} />;
 } 

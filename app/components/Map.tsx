@@ -314,9 +314,11 @@ const ZoomableMarker: React.FC<ZoomableMarkerProps> = React.memo(({ location, on
 
 const generateStructuredData = (location: Location) => {
     return {
-        '@context': 'http://schema.org',
-        '@type': 'Kebabkartan',
+        '@context': 'https://schema.org',
+        '@type': 'Restaurant',
+        '@id': `https://www.kebabkartan.se/place/${location.id}`,
         name: location.name,
+        image: '/og-image.jpg',
         address: {
             '@type': 'PostalAddress',
             streetAddress: location.address,
@@ -325,14 +327,41 @@ const generateStructuredData = (location: Location) => {
             postalCode: '12345',
             addressCountry: 'SE',
         },
-        ratingValue: location.rating,
-        reviewCount: location.totalVotes,
         geo: {
             '@type': 'GeoCoordinates',
             latitude: location.latitude,
             longitude: location.longitude,
         },
-        url: `https://www.kebabkartan.se/place/${location.id}`,
+        url: `https://kebabkartan.se/place/${location.id}`,
+        telephone: '',
+        priceRange: '$$',
+        servesCuisine: ['Kebab', 'Mellanöstern', 'Turkisk'],
+        aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: location.rating,
+            reviewCount: location.totalVotes,
+            bestRating: '5',
+            worstRating: '1'
+        },
+        openingHoursSpecification: {
+            '@type': 'OpeningHoursSpecification',
+            dayOfWeek: [
+                'Monday',
+                'Tuesday',
+                'Wednesday',
+                'Thursday',
+                'Friday',
+                'Saturday',
+                'Sunday'
+            ],
+            opens: '11:00',
+            closes: '22:00'
+        },
+        hasMenu: {
+            '@type': 'Menu',
+            name: 'Kebab Menu',
+            url: `https://kebabkartan.se/place/${location.id}/menu`
+        }
     };
 };
 
@@ -678,8 +707,8 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null }) => {
                 zoomControl={false}
             >
                 <TileLayer
-                    url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-                    attribution="&copy; OpenStreetMap contributors &copy; CARTO"
+                    url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution="&copy; OpenStreetMap contributor"
                     eventHandlers={{
                         load: () => setMapLoaded(true),
                     }}

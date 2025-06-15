@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
+import { getKebabPlaces } from '@/lib/getKebabPlaces';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, ScanCommand, PutCommand, } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { v4 as uuidv4 } from 'uuid';
 
 const TABLE_NAME = process.env.NEXT_PUBLIC_DYNAMODB_TABLE_NAME;
@@ -25,10 +26,7 @@ const docClient = DynamoDBDocumentClient.from(client);
 
 export async function GET() {
     try {
-        const command = new ScanCommand({ TableName: TABLE_NAME });
-        const result = await docClient.send(command);
-        const kebabPlaces = result.Items ?? [];
-
+        const kebabPlaces = await getKebabPlaces();
         return NextResponse.json(kebabPlaces, { status: 200 });
     } catch (error) {
         console.error('Error fetching kebab places:', error);
