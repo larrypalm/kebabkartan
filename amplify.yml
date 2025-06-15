@@ -15,6 +15,3 @@ frontend:
     paths:
       - node_modules/**/*
       - .next/cache/**/*
-  background:
-    commands:
-      - npm run start:worker
