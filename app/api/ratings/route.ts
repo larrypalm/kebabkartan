@@ -41,13 +41,18 @@ export async function POST(request: Request) {
         const forwardedFor = request.headers.get('x-forwarded-for');
         const ip = forwardedFor ? forwardedFor.split(',')[0] : 'unknown';
 
-        // Check rate limit
-        const isLimited = await ratingLimiter.isRateLimited(ip);
-        if (isLimited) {
-            return NextResponse.json(
-                { message: 'Too many requests. Please try again later.' },
-                { status: 429 }
-            );
+        // Check rate limit with timeout handling
+        try {
+            const isLimited = await ratingLimiter.isRateLimited(ip);
+            if (isLimited) {
+                return NextResponse.json(
+                    { message: 'Too many requests. Please try again later.' },
+                    { status: 429 }
+                );
+            }
+        } catch (rateLimitError) {
+            console.error('Rate limit check failed:', rateLimitError);
+            // Continue without rate limiting if there's an error
         }
 
         const body = await request.json();

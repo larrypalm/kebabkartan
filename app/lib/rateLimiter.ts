@@ -7,6 +7,9 @@ const redis = new Redis(process.env.NEXT_PUBLIC_VALKEY_ENDPOINT || 'redis://loca
         return delay;
     },
     maxRetriesPerRequest: 3,
+    connectTimeout: 5000, // 5 second connection timeout
+    commandTimeout: 3000, // 3 second command timeout
+    enableOfflineQueue: false, // Don't queue commands when offline
 });
 
 // Handle connection errors gracefully
@@ -14,6 +17,14 @@ redis.on('error', (err) => {
     console.error('Redis connection error:', err);
     // Don't throw the error, just log it
     // This allows the app to continue running even if Redis is not available
+});
+
+redis.on('connect', () => {
+    console.log('Successfully connected to Redis');
+});
+
+redis.on('ready', () => {
+    console.log('Redis client is ready');
 });
 
 export interface RateLimitConfig {
@@ -49,14 +60,21 @@ export class RateLimiter {
             // Set expiry on the key
             pipeline.expire(key, Math.ceil(this.config.windowMs / 1000));
 
-            const results = await pipeline.exec();
-            if (!results) return true;
+            // Add timeout to the pipeline execution
+            const results = await Promise.race([
+                pipeline.exec(),
+                new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Redis operation timed out')), 2000)
+                )
+            ]) as [Error | null, any][] | null;
+
+            if (!results) return false; // If Redis fails, don't rate limit
 
             const requestCount = results[1][1] as number;
             return requestCount >= this.config.maxRequests;
         } catch (error) {
             console.error('Rate limit check failed:', error);
-            // If Redis is not available, don't rate limit
+            // If Redis is not available or times out, don't rate limit
             return false;
         }
     }
