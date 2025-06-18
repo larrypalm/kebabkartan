@@ -6,6 +6,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { trackKebabPlaceView, trackRatingSubmitted, trackSearch, trackSearchResultSelect } from '@/app/utils/analytics';
+import Header from './Header';
 
 interface Location {
     id: string;
@@ -136,62 +137,6 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
                 Average rating: {currentRating.toFixed(1)} ({totalVotes} votes)
             </div>
         </div>
-    );
-};
-
-const LocationButton: React.FC = () => {
-    const map = useMap();
-    const [permissionState, setPermissionState] = useState<PermissionState | null>(null);
-
-    useEffect(() => {
-        // Check if geolocation permission is available
-        if (navigator.permissions && navigator.permissions.query) {
-            navigator.permissions
-                .query({ name: 'geolocation' })
-                .then((result) => {
-                    setPermissionState(result.state);
-                    result.onchange = () => setPermissionState(result.state);
-                });
-        }
-    }, []);
-
-    const handleClick = () => {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const { latitude, longitude } = position.coords;
-                    map.setView([latitude, longitude], 13);
-                },
-                (error) => {
-                    console.error('Geolocation error:', error);
-                    // If denied, zoom out to show all of Sweden
-                    map.setView([SWEDEN_VIEW.latitude, SWEDEN_VIEW.longitude], SWEDEN_VIEW.zoom);
-                },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 5000,
-                    maximumAge: 0
-                }
-            );
-        } else {
-            console.error('Geolocation is not supported');
-            map.setView([SWEDEN_VIEW.latitude, SWEDEN_VIEW.longitude], SWEDEN_VIEW.zoom);
-        }
-    };
-
-    // Don't show the button if permission is denied
-    if (permissionState === 'denied') {
-        return null;
-    }
-
-    return (
-        <button
-            className="location-button"
-            onClick={handleClick}
-        >
-            <span style={{ fontSize: '20px' }}>📍</span>
-            {permissionState === 'granted' ? 'Show My Location' : 'Use My Location'}
-        </button>
     );
 };
 
@@ -584,7 +529,19 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null }) => {
     const initialPlaceIdRef = useRef(initialPlaceId);
     const [defaultView, setDefaultView] = useState<Coordinates>(SWEDEN_VIEW);
     const [showAllPlaces, setShowAllPlaces] = useState(!initialPlaceId);
+    const [permissionState, setPermissionState] = useState<PermissionState | null>(null);
 
+    useEffect(() => {
+        // Check if geolocation permission is available
+        if (navigator.permissions && navigator.permissions.query) {
+            navigator.permissions
+                .query({ name: 'geolocation' })
+                .then((result) => {
+                    setPermissionState(result.state);
+                    result.onchange = () => setPermissionState(result.state);
+                });
+        }
+    }, []);
 
     // Effect to get initial location from IP
     useEffect(() => {
@@ -650,35 +607,6 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null }) => {
         }
     }, [selectedLocation, isInitialLoad]);
 
-    const handleLocationClick = (location: Location | null) => {
-        if (location?.id === selectedLocation?.id) return;
-        setSelectedLocation(location);
-        if (location) {
-            // Removed trackKebabPlaceView to avoid double event
-        }
-    };
-
-    // Handle browser back/forward
-    useEffect(() => {
-        const handlePopState = () => {
-            const pathParts = window.location.pathname.split('/');
-            const placeId = pathParts[2];
-            
-            if (placeId && markers.length > 0) {
-                const place = markers.find(m => m.id === placeId);
-                if (place && place.id !== selectedLocation?.id) {
-                    setSelectedLocation(place);
-                }
-            } else {
-                setSelectedLocation(null);
-                initialPlaceIdRef.current = null;
-            }
-        };
-
-        window.addEventListener('popstate', handlePopState);
-        return () => window.removeEventListener('popstate', handlePopState);
-    }, [markers, selectedLocation]);
-
     return (
         <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
             {!mapLoaded && (
@@ -713,7 +641,7 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null }) => {
                         load: () => setMapLoaded(true),
                     }}
                 />
-                <LocationButton />
+                <Header permissionState={permissionState} />
                 <MapControls 
                     markers={markers} 
                     onLocationSelect={setSelectedLocation}
@@ -727,7 +655,7 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null }) => {
                         <ZoomableMarker 
                             key={location.id} 
                             location={location} 
-                            onClickLocation={handleLocationClick}
+                            onClickLocation={setSelectedLocation}
                             isSelected={selectedLocation?.id === location.id}
                         />
                     ))}
