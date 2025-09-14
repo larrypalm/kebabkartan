@@ -1,105 +1,82 @@
 import * as cdk from 'aws-cdk-lib';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
-import * as lambda from 'aws-cdk-lib/aws-lambda';
-import * as apigateway from 'aws-cdk-lib/aws-apigateway';
-import * as iam from 'aws-cdk-lib/aws-iam';
-import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
+import * as elasticache from 'aws-cdk-lib/aws-elasticache';
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import { Construct } from 'constructs';
-import * as path from 'path';
 
 export class KebabkartanStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
-    super(scope, id, props);
+    constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+        super(scope, id, props);
 
-    // DynamoDB table for kebab places
-    const kebabPlacesTable = new dynamodb.Table(this, 'KebabPlacesTable', {
-      partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
-      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST, // Cost optimal
-      removalPolicy: cdk.RemovalPolicy.DESTROY, // For development - change for production
-    });
+        // Create a minimal VPC with a single private subnet
+        const vpc = new ec2.Vpc(this, 'KebabkartanVPC', {
+            maxAzs: 1,
+            natGateways: 0,
+            subnetConfiguration: [
+                {
+                    name: 'PrivateIsolatedSubnet',
+                    subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
+                }
+            ],
+        });
 
-    // Add GSI for ratings
-    kebabPlacesTable.addGlobalSecondaryIndex({
-      indexName: 'RatingIndex',
-      partitionKey: { name: 'rating', type: dynamodb.AttributeType.NUMBER },
-      sortKey: { name: 'id', type: dynamodb.AttributeType.STRING },
-    });
+        const isolatedSubnets = vpc.selectSubnets({
+            subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
+        });
 
-    const commonLambdaConfig = {
-      runtime: lambda.Runtime.NODEJS_22_X,
-      bundling: {
-        platform: 'linux/arm64',
-        target: 'node18',
-        sourceMap: true,
-        externalModules: [
-          '@aws-sdk/client-dynamodb',
-          '@aws-sdk/lib-dynamodb',
-        ],
-      },
-    };
+        // Create a security group for Valkey
+        const valkeySecurityGroup = new ec2.SecurityGroup(this, 'ValkeySecurityGroup', {
+            vpc,
+            description: 'Security group for Valkey',
+            allowAllOutbound: true,
+        });
 
-    // Lambda function for getting all kebab places
-    const getKebabPlacesFunction = new NodejsFunction(this, 'GetKebabPlacesFunction', {
-      ...commonLambdaConfig,
-      handler: 'handler',
-      entry: path.join(__dirname, '../lambda/getKebabPlaces.ts'),
-      environment: {
-        TABLE_NAME: kebabPlacesTable.tableName,
-      },
-      functionName: 'kebabkartan-get-kebab-places',
-      description: 'Retrieves all kebab places from the database'
-    });
+        // Allow inbound Valkey traffic from within the VPC
+        valkeySecurityGroup.addIngressRule(
+            ec2.Peer.ipv4(vpc.vpcCidrBlock),
+            ec2.Port.tcp(6379),
+            'Allow Valkey traffic from within VPC'
+        );
 
-    // Lambda function for adding a new kebab place (admin only)
-    const addKebabPlaceFunction = new NodejsFunction(this, 'AddKebabPlaceFunction', {
-      ...commonLambdaConfig,
-      handler: 'handler',
-      entry: path.join(__dirname, '../lambda/addKebabPlace.ts'),
-      environment: {
-        TABLE_NAME: kebabPlacesTable.tableName,
-        ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || 'defaultpassword',
-      },
-      functionName: 'kebabkartan-add-kebab-place',
-      description: 'Adds a new kebab place to the database (admin only)',
-    });
+        // Create Valkey subnet group
+        const valkeySubnetGroup = new elasticache.CfnSubnetGroup(this, 'ValkeySubnetGroup', {
+            description: 'Subnet group for Valkey',
+            subnetIds: isolatedSubnets.subnetIds,
+        });
 
-    // Lambda function for updating ratings
-    const updateRatingFunction = new NodejsFunction(this, 'UpdateRatingFunction', {
-      ...commonLambdaConfig,
-      handler: 'handler',
-      entry: path.join(__dirname, '../lambda/updateRating.ts'),
-      environment: {
-        TABLE_NAME: kebabPlacesTable.tableName,
-      },
-      functionName: 'kebabkartan-update-rating',
-      description: 'Updates the rating for a kebab place',
-    });
+        // Create single-node Valkey instance
+        const valkeyReplicationGroup = new elasticache.CfnReplicationGroup(this, 'Valkey', {
+            replicationGroupDescription: 'Single-node Valkey instance',
+            engine: 'valkey',
+            cacheNodeType: 'cache.t3.micro', // Smallest instance type
+            numCacheClusters: 1,
+            port: 6379,
+            automaticFailoverEnabled: false,
+            multiAzEnabled: false,
+            cacheSubnetGroupName: valkeySubnetGroup.ref,
+            securityGroupIds: [valkeySecurityGroup.securityGroupId],
+            transitEncryptionEnabled: false,
+            atRestEncryptionEnabled: false,
+        });
 
-    // Grant DynamoDB permissions to Lambda functions
-    kebabPlacesTable.grantReadData(getKebabPlacesFunction);
-    kebabPlacesTable.grantWriteData(addKebabPlaceFunction);
-    kebabPlacesTable.grantReadWriteData(updateRatingFunction);
+        // DynamoDB table for kebab places
+        const kebabPlacesTable = new dynamodb.Table(this, 'KebabPlacesTable', {
+            partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+            billingMode: dynamodb.BillingMode.PAY_PER_REQUEST, // Cost optimal
+            removalPolicy: cdk.RemovalPolicy.DESTROY, // For development - change for production
+        });
 
-    // Create API Gateway
-    const api = new apigateway.RestApi(this, 'KebabkartanApi', {
-      defaultCorsPreflightOptions: {
-        allowOrigins: apigateway.Cors.ALL_ORIGINS,
-        allowMethods: apigateway.Cors.ALL_METHODS,
-      },
-    });
+        // Add GSI for ratings
+        kebabPlacesTable.addGlobalSecondaryIndex({
+            indexName: 'RatingIndex',
+            partitionKey: { name: 'rating', type: dynamodb.AttributeType.NUMBER },
+            sortKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+        });
 
-    // API endpoints
-    const kebabPlaces = api.root.addResource('kebab-places');
-    kebabPlaces.addMethod('GET', new apigateway.LambdaIntegration(getKebabPlacesFunction));
-    kebabPlaces.addMethod('POST', new apigateway.LambdaIntegration(addKebabPlaceFunction));
-
-    const ratings = api.root.addResource('ratings');
-    ratings.addMethod('POST', new apigateway.LambdaIntegration(updateRatingFunction));
-
-    // Output the API URL
-    new cdk.CfnOutput(this, 'ApiUrl', {
-      value: api.url,
-      description: 'API Gateway URL',
-    });
-  }
+        // Output Valkey endpoint for Amplify configuration
+        new cdk.CfnOutput(this, 'ValkeyEndpoint', {
+            value: valkeyReplicationGroup.attrPrimaryEndPointAddress,
+            description: 'Valkey endpoint',
+        });
+    }
 } 
