@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./app.css";
 import GoogleAnalytics from "./components/GoogleAnalytics";
 import ClientLayout from "./components/ClientLayout";
+import AmplifyProvider from "./components/AmplifyProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -110,7 +111,9 @@ export default function RootLayout({
                 {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
                     <GoogleAnalytics GA_MEASUREMENT_ID={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
                 )}
-                <ClientLayout>{children}</ClientLayout>
+                <AmplifyProvider>
+                    <ClientLayout>{children}</ClientLayout>
+                </AmplifyProvider>
             </body>
         </html>
     );

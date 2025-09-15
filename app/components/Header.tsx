@@ -4,6 +4,7 @@ import React from 'react';
 import { useMap } from 'react-leaflet';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import AuthButton from './AuthButton';
 
 interface HeaderProps {
     permissionState: PermissionState | null;
@@ -71,17 +72,19 @@ const Header: React.FC<HeaderProps> = ({ permissionState }) => {
                     style={{ display: 'block', height: 'auto', width: 'auto', maxHeight: 124 }}
                 />
             </div>
-            {permissionState !== 'denied' && (
-                <button
-                    className="location-button"
-                    onClick={handleLocationClick}
-                    aria-label={permissionState === 'granted' ? 'Show my location' : 'Use my location'}
-                    style={{ pointerEvents: 'auto' }}
-                >
-                    <span aria-hidden="true" style={{ fontSize: '20px' }}>📍</span>
-                    {permissionState === 'granted' ? 'Show My Location' : 'Use My Location'}
-                </button>
-            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', pointerEvents: 'auto' }}>
+                {permissionState !== 'denied' && (
+                    <button
+                        className="location-button"
+                        onClick={handleLocationClick}
+                        aria-label={permissionState === 'granted' ? 'Show my location' : 'Use my location'}
+                    >
+                        <span aria-hidden="true" style={{ fontSize: '20px' }}>📍</span>
+                        {permissionState === 'granted' ? 'Show My Location' : 'Use My Location'}
+                    </button>
+                )}
+                <AuthButton />
+            </div>
         </header>
     );
 };
