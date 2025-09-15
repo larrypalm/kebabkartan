@@ -73,10 +73,36 @@ export class KebabkartanStack extends cdk.Stack {
             sortKey: { name: 'id', type: dynamodb.AttributeType.STRING },
         });
 
+        // DynamoDB table for user votes
+        const userVotesTable = new dynamodb.Table(this, 'UserVotesTable', {
+            partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
+            sortKey: { name: 'placeId', type: dynamodb.AttributeType.STRING },
+            billingMode: dynamodb.BillingMode.PAY_PER_REQUEST, // Cost optimal
+            removalPolicy: cdk.RemovalPolicy.DESTROY, // For development - change for production
+        });
+
+        // Add GSI for place-based queries
+        userVotesTable.addGlobalSecondaryIndex({
+            indexName: 'PlaceIndex',
+            partitionKey: { name: 'placeId', type: dynamodb.AttributeType.STRING },
+            sortKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
+        });
+
         // Output Valkey endpoint for Amplify configuration
         new cdk.CfnOutput(this, 'ValkeyEndpoint', {
             value: valkeyReplicationGroup.attrPrimaryEndPointAddress,
             description: 'Valkey endpoint',
+        });
+
+        // Output table names for environment variables
+        new cdk.CfnOutput(this, 'KebabPlacesTableName', {
+            value: kebabPlacesTable.tableName,
+            description: 'Kebab Places table name',
+        });
+
+        new cdk.CfnOutput(this, 'UserVotesTableName', {
+            value: userVotesTable.tableName,
+            description: 'User Votes table name',
         });
     }
 } 

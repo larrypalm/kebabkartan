@@ -59,16 +59,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       fetchUser();
     }, 500);
 
-    // Set up a periodic check for authentication state
-    const checkInterval = setInterval(() => {
-      console.log('AuthContext: Periodic auth check...');
-      fetchUser();
-    }, 1000);
-
-    // Clear interval after 30 seconds
-    const clearCheck = setTimeout(() => {
-      clearInterval(checkInterval);
-    }, 30000);
+    // Removed periodic check to prevent excessive re-renders
+    // The Hub listener should handle most authentication state changes
 
     // Listen for auth events
     const unsubscribe = Hub.listen('auth', ({ payload }) => {
@@ -76,7 +68,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       switch (payload.event) {
         case 'signedIn':
           console.log('AuthContext: User signed in, fetching user...');
-          clearInterval(checkInterval);
           fetchUser();
           break;
         case 'signedOut':
@@ -107,8 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       unsubscribe();
       window.removeEventListener('focus', handleFocus);
-      clearInterval(checkInterval);
-      clearTimeout(clearCheck);
+      // Removed interval cleanup since we removed the periodic check
     };
   }, []);
 

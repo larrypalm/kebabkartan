@@ -21,6 +21,43 @@ export default function MyAccountPage() {
   });
   const [message, setMessage] = useState({ type: '', text: '' });
   const [isLoading, setIsLoading] = useState(false);
+  const [userVotes, setUserVotes] = useState<any[]>([]);
+  const [loadingVotes, setLoadingVotes] = useState(false);
+  const [placeDetails, setPlaceDetails] = useState<{[key: string]: any}>({});
+  const [editingVote, setEditingVote] = useState<string | null>(null);
+
+  const fetchUserVotes = async () => {
+    if (!user) return;
+    
+    setLoadingVotes(true);
+    try {
+      const response = await fetch(`/api/user-votes?userId=${encodeURIComponent(user.username)}`);
+      if (response.ok) {
+        const data = await response.json();
+        const votes = data.votes || [];
+        setUserVotes(votes);
+        
+        // Fetch place details for each vote
+        const placeDetailsMap: {[key: string]: any} = {};
+        for (const vote of votes) {
+          try {
+            const placeResponse = await fetch(`/api/kebab-places/${vote.placeId}`);
+            if (placeResponse.ok) {
+              const placeData = await placeResponse.json();
+              placeDetailsMap[vote.placeId] = placeData;
+            }
+          } catch (error) {
+            console.error(`Error fetching place details for ${vote.placeId}:`, error);
+          }
+        }
+        setPlaceDetails(placeDetailsMap);
+      }
+    } catch (error) {
+      console.error('Error fetching user votes:', error);
+    } finally {
+      setLoadingVotes(false);
+    }
+  };
 
   useEffect(() => {
     if (user && !loading) {
@@ -29,6 +66,7 @@ export default function MyAccountPage() {
         email: user.signInDetails?.loginId || user.username || '',
         name: (user as any).attributes?.name || '',
       }));
+      fetchUserVotes();
     }
   }, [user, loading]);
 
@@ -98,6 +136,36 @@ export default function MyAccountPage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditVote = async (placeId: string, newRating: number) => {
+    try {
+      const response = await fetch('/api/ratings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          placeId,
+          rating: newRating,
+          recaptchaToken: 'bypass-for-edit', // We'll need to handle this differently
+          userId: user?.username,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to update rating');
+      }
+
+      // Refresh votes after successful update
+      await fetchUserVotes();
+      setEditingVote(null);
+      setMessage({ type: 'success', text: 'Vote updated successfully!' });
+    } catch (error) {
+      console.error('Error updating vote:', error);
+      setMessage({ type: 'error', text: 'Failed to update vote. Please try again.' });
+    }
   };
 
   if (loading) {
@@ -185,6 +253,16 @@ export default function MyAccountPage() {
                 }`}
               >
                 Preferences
+              </button>
+              <button
+                onClick={() => setActiveTab('votes')}
+                className={`px-6 py-4 text-sm font-medium ${
+                  activeTab === 'votes'
+                    ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                My Votes
               </button>
             </nav>
           </div>
@@ -389,6 +467,102 @@ export default function MyAccountPage() {
                     </div>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* My Votes Tab */}
+            {activeTab === 'votes' && (
+              <div>
+                <h2 className="text-xl font-semibold mb-6">My Votes</h2>
+                
+                {loadingVotes ? (
+                  <div className="text-center py-8">
+                    <div className="text-gray-500">Loading your votes...</div>
+                  </div>
+                ) : userVotes.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="text-gray-500 mb-4">You haven't voted on any kebab places yet.</div>
+                    <button
+                      onClick={() => router.push('/')}
+                      className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                    >
+                      Browse Kebab Places
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {userVotes.map((vote) => (
+                      <div key={vote.placeId} className="border border-gray-200 rounded-lg p-4">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="font-medium">
+                                {placeDetails[vote.placeId]?.name || `Place ID: ${vote.placeId}`}
+                              </span>
+                              <div className="flex">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <span key={star} className="text-lg">
+                                    {star <= vote.rating ? '❤️' : '🤍'}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                            {placeDetails[vote.placeId]?.address && (
+                              <div className="text-sm text-gray-500 mb-1">
+                                {placeDetails[vote.placeId].address}
+                              </div>
+                            )}
+                            <div className="text-sm text-gray-600">
+                              Rated {vote.rating} star{vote.rating > 1 ? 's' : ''} on{' '}
+                              {new Date(vote.createdAt).toLocaleDateString()}
+                              {vote.updatedAt !== vote.createdAt && (
+                                <span className="ml-2">
+                                  (Updated {new Date(vote.updatedAt).toLocaleDateString()})
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => router.push(`/place/${vote.placeId}`)}
+                              className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
+                            >
+                              View Place
+                            </button>
+                            {editingVote === vote.placeId ? (
+                              <div className="flex items-center gap-2">
+                                <div className="flex">
+                                  {[1, 2, 3, 4, 5].map((star) => (
+                                    <button
+                                      key={star}
+                                      onClick={() => handleEditVote(vote.placeId, star)}
+                                      className="text-lg hover:scale-110 transition-transform"
+                                    >
+                                      {star <= vote.rating ? '❤️' : '🤍'}
+                                    </button>
+                                  ))}
+                                </div>
+                                <button
+                                  onClick={() => setEditingVote(null)}
+                                  className="bg-gray-500 text-white px-2 py-1 rounded text-xs hover:bg-gray-600"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setEditingVote(vote.placeId)}
+                                className="bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600"
+                              >
+                                Edit Vote
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>

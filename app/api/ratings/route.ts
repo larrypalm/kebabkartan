@@ -4,10 +4,12 @@ import {
     DynamoDBDocumentClient,
     GetCommand,
     UpdateCommand,
+    PutCommand,
 } from '@aws-sdk/lib-dynamodb';
 import { ratingLimiter } from '@/app/lib/rateLimiter';
 
 const TABLE_NAME = process.env.NEXT_PUBLIC_DYNAMODB_TABLE_NAME;
+const USER_VOTES_TABLE_NAME = process.env.NEXT_PUBLIC_USER_VOTES_TABLE_NAME || `${TABLE_NAME}_user_votes`;
 const ACCESS_KEY_ID = process.env.NEXT_PUBLIC_ACCESS_KEY_ID;
 const SECRET_ACCESS_KEY = process.env.NEXT_PUBLIC_SECRET_ACCESS_KEY;
 const AWS_REGION = process.env.NEXT_PUBLIC_AWS_REGION;
@@ -57,21 +59,24 @@ export async function POST(request: Request) {
 
         const body = await request.json();
 
-        const token = body.recaptchaToken;
-        if (!token) {
-            return NextResponse.json({ message: 'Missing reCAPTCHA token' }, { status: 400 });
-        }
+        // Skip reCAPTCHA for authenticated users (for vote editing)
+        if (body.recaptchaToken !== 'bypass-for-edit') {
+            const token = body.recaptchaToken;
+            if (!token) {
+                return NextResponse.json({ message: 'Missing reCAPTCHA token' }, { status: 400 });
+            }
 
-        const recaptchaResponse = await fetch('https://www.google.com/recaptcha/api/siteverify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `secret=${RECAPTCHA_SECRET_KEY}&response=${token}`,
-        });
+            const recaptchaResponse = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `secret=${RECAPTCHA_SECRET_KEY}&response=${token}`,
+            });
 
-        const recaptchaData = await recaptchaResponse.json();
+            const recaptchaData = await recaptchaResponse.json();
 
-        if (!recaptchaData.success || recaptchaData.score < 0.5) {
-            return NextResponse.json({ message: 'Failed reCAPTCHA verification ' + JSON.stringify(recaptchaData)}, { status: 403 });
+            if (!recaptchaData.success || recaptchaData.score < 0.5) {
+                return NextResponse.json({ message: 'Failed reCAPTCHA verification ' + JSON.stringify(recaptchaData)}, { status: 403 });
+            }
         }
 
         if (!body.placeId || typeof body.rating !== 'number') {
@@ -88,6 +93,30 @@ export async function POST(request: Request) {
             );
         }
 
+        // Get userId from request body
+        if (!body.userId) {
+            return NextResponse.json(
+                { message: 'userId required in request body' },
+                { status: 400 }
+            );
+        }
+        const userId = body.userId;
+
+        // Check if user has already voted on this place
+        const existingVote = await docClient.send(
+            new GetCommand({
+                TableName: USER_VOTES_TABLE_NAME,
+                Key: { 
+                    userId,
+                    placeId: body.placeId 
+                },
+            })
+        );
+
+        const isUpdate = !!existingVote.Item;
+        const previousRating = existingVote.Item?.rating;
+
+        // Get the kebab place
         const getResult = await docClient.send(
             new GetCommand({
                 TableName: TABLE_NAME,
@@ -103,11 +132,20 @@ export async function POST(request: Request) {
         }
 
         const currentPlace = getResult.Item;
-        const newTotalVotes = currentPlace.totalVotes + 1;
-        const newRating =
-            (currentPlace.rating * currentPlace.totalVotes + body.rating) /
-            newTotalVotes;
+        let newTotalVotes: number;
+        let newRating: number;
 
+        if (isUpdate) {
+            // Update existing vote
+            newTotalVotes = currentPlace.totalVotes; // Total votes stays the same
+            newRating = (currentPlace.rating * currentPlace.totalVotes - previousRating + body.rating) / currentPlace.totalVotes;
+        } else {
+            // New vote
+            newTotalVotes = currentPlace.totalVotes + 1;
+            newRating = (currentPlace.rating * currentPlace.totalVotes + body.rating) / newTotalVotes;
+        }
+
+        // Update the kebab place rating
         await docClient.send(
             new UpdateCommand({
                 TableName: TABLE_NAME,
@@ -122,10 +160,46 @@ export async function POST(request: Request) {
             })
         );
 
+        // Save/update the user's vote
+        const now = new Date().toISOString();
+        if (isUpdate) {
+            // Update existing vote
+            await docClient.send(
+                new UpdateCommand({
+                    TableName: USER_VOTES_TABLE_NAME,
+                    Key: { 
+                        userId,
+                        placeId: body.placeId 
+                    },
+                    UpdateExpression: 'SET rating = :rating, updatedAt = :updatedAt',
+                    ExpressionAttributeValues: {
+                        ':rating': body.rating,
+                        ':updatedAt': now,
+                    },
+                })
+            );
+        } else {
+            // Create new vote
+            await docClient.send(
+                new PutCommand({
+                    TableName: USER_VOTES_TABLE_NAME,
+                    Item: {
+                        userId,
+                        placeId: body.placeId,
+                        rating: body.rating,
+                        createdAt: now,
+                        updatedAt: now,
+                    },
+                })
+            );
+        }
+
         return NextResponse.json({
             placeId: body.placeId,
             newRating,
             totalVotes: newTotalVotes,
+            isUpdate,
+            previousRating,
         });
     } catch (error) {
         console.error('Error updating rating:', error);

@@ -63,6 +63,49 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
     const [hoveredRating, setHoveredRating] = useState<number>(0);
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const [submittingRating, setSubmittingRating] = useState<number | null>(null);
+    const [userVote, setUserVote] = useState<number | null>(null);
+    const [loadingVote, setLoadingVote] = useState<boolean>(false);
+    const fetchingRef = useRef<boolean>(false);
+
+    // Memoize the username to prevent unnecessary re-renders
+    const username = useMemo(() => user?.username, [user?.username]);
+
+    // Fetch user's vote for this place
+    useEffect(() => {
+        const fetchUserVote = async () => {
+            if (!username) {
+                setUserVote(null);
+                return;
+            }
+
+            // Prevent multiple simultaneous requests
+            if (fetchingRef.current) {
+                return;
+            }
+
+            fetchingRef.current = true;
+            setLoadingVote(true);
+            try {
+                const response = await fetch(`/api/user-votes/${placeId}?userId=${encodeURIComponent(username)}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setUserVote(data.vote?.rating || null);
+                }
+            } catch (error) {
+                console.error('Error fetching user vote:', error);
+            } finally {
+                setLoadingVote(false);
+                fetchingRef.current = false;
+            }
+        };
+
+        // Only fetch if we have a valid username
+        if (username) {
+            fetchUserVote();
+        } else {
+            setUserVote(null);
+        }
+    }, [username, placeId]); // Only depend on memoized username and placeId
 
     const handleRating = async (rating: number) => {
         if (isSubmitting) return;
@@ -96,6 +139,7 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
                     placeId,
                     rating,
                     recaptchaToken: token,
+                    userId: user.username,
                 }),
             });
 
@@ -106,6 +150,9 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
 
             // Track the rating submission
             trackRatingSubmitted(placeId, 'Kebab Place', rating);
+
+            // Update user vote state
+            setUserVote(rating);
 
             window.location.reload();
         } catch (error) {
@@ -144,7 +191,7 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
                             }}
                             title={!isAuthenticated ? 'Sign in to vote' : `Rate ${star} star${star > 1 ? 's' : ''}`}
                         >
-                            {(isActive || star <= (hoveredRating || currentRating)) ? '❤️' : '🤍'}
+                            {(isActive || star <= (hoveredRating || userVote || currentRating)) ? '❤️' : '🤍'}
                         </button>
                     );
                 })}
@@ -152,6 +199,16 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
             <div style={{ fontSize: '12px', marginTop: '4px' }}>
                 Average rating: {currentRating.toFixed(1)} ({totalVotes} votes)
             </div>
+            {user && userVote && (
+                <div style={{ 
+                    fontSize: '10px', 
+                    marginTop: '2px', 
+                    color: '#e74c3c',
+                    fontWeight: 'bold'
+                }}>
+                    Your rating: {userVote} star{userVote > 1 ? 's' : ''}
+                </div>
+            )}
             {!user && (
                 <div style={{ 
                     fontSize: '10px', 
