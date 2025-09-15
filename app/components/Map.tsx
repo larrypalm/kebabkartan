@@ -6,6 +6,8 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { trackKebabPlaceView, trackRatingSubmitted, trackSearch, trackSearchResultSelect } from '@/app/utils/analytics';
+import { useAuth } from '@/app/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
 import Header from './Header';
 
 interface Location {
@@ -56,12 +58,23 @@ const MAP_PLACEHOLDER = '/static/map-placeholder.png'; // Place a suitable image
 
 const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, totalVotes }) => {
     const { executeRecaptcha } = useGoogleReCaptcha();
+    const { user, loading } = useAuth();
+    const router = useRouter();
     const [hoveredRating, setHoveredRating] = useState<number>(0);
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const [submittingRating, setSubmittingRating] = useState<number | null>(null);
 
     const handleRating = async (rating: number) => {
         if (isSubmitting) return;
+
+        // Check if user is authenticated
+        if (!user) {
+            const shouldSignIn = confirm('You need to sign in to vote on kebab places. Would you like to sign in now?');
+            if (shouldSignIn) {
+                router.push('/auth');
+            }
+            return;
+        }
 
         if (!executeRecaptcha) {
             alert("reCAPTCHA is not ready. Please try again in a moment.");
@@ -110,6 +123,7 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
                 {[1, 2, 3, 4, 5].map((star) => {
                     const isActive = isSubmitting && submittingRating === star;
                     const isDimmed = isSubmitting && submittingRating !== star;
+                    const isAuthenticated = !!user;
                     return (
                         <button
                             key={star}
@@ -121,12 +135,14 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
                             style={{
                                 background: 'none',
                                 border: 'none',
-                                cursor: isSubmitting ? 'default' : 'pointer',
+                                cursor: isSubmitting ? 'default' : (isAuthenticated ? 'pointer' : 'pointer'),
                                 fontSize: '24px',
                                 padding: '0 2px',
                                 opacity: isActive ? 1 : isDimmed ? 0.3 : 1,
-                                transition: 'opacity 0.2s'
+                                transition: 'opacity 0.2s',
+                                filter: !isAuthenticated ? 'grayscale(0.3)' : 'none'
                             }}
+                            title={!isAuthenticated ? 'Sign in to vote' : `Rate ${star} star${star > 1 ? 's' : ''}`}
                         >
                             {(isActive || star <= (hoveredRating || currentRating)) ? '❤️' : '🤍'}
                         </button>
@@ -136,6 +152,16 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
             <div style={{ fontSize: '12px', marginTop: '4px' }}>
                 Average rating: {currentRating.toFixed(1)} ({totalVotes} votes)
             </div>
+            {!user && (
+                <div style={{ 
+                    fontSize: '10px', 
+                    marginTop: '2px', 
+                    color: '#666',
+                    fontStyle: 'italic'
+                }}>
+                    Sign in to vote
+                </div>
+            )}
         </div>
     );
 };
