@@ -1,6 +1,6 @@
 'use client';
 
-import { usePageTracking } from '../hooks/usePageTracking';
+import { usePageTracking } from '@/app/hooks/usePageTracking';
 
 export default function ClientLayout({
     children,

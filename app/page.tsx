@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import "./../app/app.css";
+import "./app.css";
 import "@aws-amplify/ui-react/styles.css";
 import dynamic from "next/dynamic";
 import { GoogleReCaptchaProvider } from "react-google-recaptcha-v3";

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '@/app/contexts/AuthContext';
 import { signOut, updatePassword, updateUserAttributes } from 'aws-amplify/auth';
 import { useRouter } from 'next/navigation';
 

@@ -2,9 +2,8 @@
 
 import { useEffect } from 'react';
 import { Amplify } from 'aws-amplify';
-// @ts-ignore
-import awsExports from '../../aws-exports.js';
-import { AuthProvider } from '../contexts/AuthContext';
+import awsExports from '@/aws-exports.js';
+import { AuthProvider } from '@/app/contexts/AuthContext';
 
 export default function AmplifyProvider({
   children,

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { getCurrentUser } from 'aws-amplify/auth';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '@/app/contexts/AuthContext';
 
 export default function AuthDebug() {
   const { user, loading, refreshUser } = useAuth();
