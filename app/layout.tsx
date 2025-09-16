@@ -4,8 +4,15 @@ import "./app.css";
 import GoogleAnalytics from "./components/GoogleAnalytics";
 import ClientLayout from "./components/ClientLayout";
 import AmplifyProvider from "./components/AmplifyProvider";
+import StructuredData from "./components/StructuredData";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ 
+    subsets: ["latin"],
+    display: 'swap',
+    preload: true,
+    fallback: ['system-ui', 'arial'],
+    variable: '--font-inter'
+});
 
 export const metadata: Metadata = {
     title: {
@@ -35,7 +42,7 @@ export const metadata: Metadata = {
         siteName: 'Kebabkartan',
         images: [
             {
-                url: '/og-image.jpg',
+                url: '/static/logo.png',
                 width: 1200,
                 height: 630,
                 alt: 'Kebabkartan - Din guide till bästa kebaben i Sverige',
@@ -46,7 +53,7 @@ export const metadata: Metadata = {
         card: 'summary_large_image',
         title: 'Kebabkartan | Hitta och betygsätt din favorit kebab',
         description: 'Hitta och betygsätt din favorit kebab i Sverige. Utforska kebabställen nära dig, läs recensioner och dela dina erfarenheter.',
-        images: ['/og-image.jpg'],
+        images: ['/static/logo.png'],
         creator: '@kebabkartan',
     },
     robots: {
@@ -71,15 +78,17 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="en">
+        <html lang="sv">
             <head>
                 <link rel="preconnect" href="https://www.google.com" />
                 <link rel="preconnect" href="https://www.gstatic.com" crossOrigin="anonymous" />
                 <link rel="preconnect" href="https://tile.openstreetmap.org" />
                 <link rel="dns-prefetch" href="https://tile.openstreetmap.org" />
+                <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+                <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
-                <script type="module" src="/_next/static/chunks/main.js" async />
-                <script noModule src="/_next/static/chunks/main-legacy.js" async />
+                <script type="module" src="/_next/static/chunks/main.js" async defer />
+                <script noModule src="/_next/static/chunks/main-legacy.js" async defer />
                 {/* Preload OpenStreetMap tiles for LCP optimization */}
                 <link rel="preload" as="image" href="https://tile.openstreetmap.org/5/17/8.png" />
                 <link rel="preload" as="image" href="https://tile.openstreetmap.org/5/17/7.png" />
@@ -106,6 +115,9 @@ export default function RootLayout({
                 <link rel="preload" as="image" href="https://tile.openstreetmap.org/5/19/6.png" />
                 <link rel="preload" as="image" href="https://tile.openstreetmap.org/5/15/10.png" />
                 <link rel="preload" as="image" href="https://tile.openstreetmap.org/5/19/10.png" />
+                {/* Preload critical resources for LCP optimization */}
+                <link rel="preload" as="image" href="/static/logo.png" />
+                <link rel="preload" as="image" href="/static/map-placeholder.png" />
             </head>
             <body className={inter.className}>
                 {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
@@ -114,6 +126,7 @@ export default function RootLayout({
                 <AmplifyProvider>
                     <ClientLayout>{children}</ClientLayout>
                 </AmplifyProvider>
+                <StructuredData type="website" data={null} />
             </body>
         </html>
     );

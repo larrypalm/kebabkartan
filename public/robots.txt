@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://www.kebabkartan.se/sitemap.xml
+
+# Crawl delay for better server performance
+Crawl-delay: 1
+
+# Block admin and API routes
+Disallow: /admin/
+Disallow: /api/
+Disallow: /auth-test/
+Disallow: /dashboard/

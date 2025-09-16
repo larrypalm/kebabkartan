@@ -22,6 +22,9 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
         return {
             title,
             description,
+            alternates: {
+                canonical: `https://www.kebabkartan.se/place/${place.id}`,
+            },
             openGraph: {
                 title,
                 description,
@@ -29,7 +32,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
                 type: 'website',
                 images: [
                     {
-                        url: '/og-image.jpg',
+                        url: '/static/logo.png',
                         width: 1200,
                         height: 630,
                         alt: `${place.name} - Kebabställe på ${place.address}`,
@@ -40,7 +43,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
                 card: 'summary_large_image',
                 title,
                 description,
-                images: ['/og-image.jpg'],
+                images: ['/static/logo.png'],
             },
         };
     } catch (error) {
