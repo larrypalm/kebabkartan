@@ -119,6 +119,11 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
             return;
         }
 
+        // Check if user is trying to vote the same rating they already have
+        if (userVote === rating) {
+            return; // Don't submit if it's the same vote
+        }
+
         if (!executeRecaptcha) {
             alert("reCAPTCHA is not ready. Please try again in a moment.");
             return;
@@ -171,6 +176,8 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
                     const isActive = isSubmitting && submittingRating === star;
                     const isDimmed = isSubmitting && submittingRating !== star;
                     const isAuthenticated = !!user;
+                    const isAlreadyVoted = userVote === star;
+                    const isCurrentVote = userVote && star <= userVote;
                     return (
                         <button
                             key={star}
@@ -182,14 +189,14 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
                             style={{
                                 background: 'none',
                                 border: 'none',
-                                cursor: isSubmitting ? 'default' : (isAuthenticated ? 'pointer' : 'pointer'),
+                                cursor: isSubmitting ? 'default' : (isAuthenticated ? (isAlreadyVoted ? 'not-allowed' : 'pointer') : 'pointer'),
                                 fontSize: '24px',
                                 padding: '0 2px',
                                 opacity: isActive ? 1 : isDimmed ? 0.3 : 1,
                                 transition: 'opacity 0.2s',
                                 filter: !isAuthenticated ? 'grayscale(0.3)' : 'none'
                             }}
-                            title={!isAuthenticated ? 'Sign in to vote' : `Rate ${star} star${star > 1 ? 's' : ''}`}
+                            title={!isAuthenticated ? 'Sign in to vote' : (isAlreadyVoted ? 'You already voted this rating' : `Rate ${star} star${star > 1 ? 's' : ''}`)}
                         >
                             {(isActive || star <= (hoveredRating || userVote || currentRating)) ? '❤️' : '🤍'}
                         </button>
@@ -631,7 +638,7 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null }) => {
     useEffect(() => {
         const getLocationFromIP = async () => {
             try {
-                const response = await fetch('https://corsproxy.io/?https://ipapi.co/json/');
+                const response = await fetch('https://ipapi.co/json/');
                 if (!response.ok) throw new Error('Failed to get location from IP');
                 
                 const data = await response.json();

@@ -139,6 +139,15 @@ export default function MyAccountPage() {
   };
 
   const handleEditVote = async (placeId: string, newRating: number) => {
+    // Find the current vote for this place
+    const currentVote = userVotes.find(vote => vote.placeId === placeId);
+    
+    // Check if user is trying to vote the same rating they already have
+    if (currentVote && currentVote.rating === newRating) {
+      setEditingVote(null); // Exit edit mode
+      return; // Don't submit if it's the same vote
+    }
+
     try {
       const response = await fetch('/api/ratings', {
         method: 'POST',
@@ -297,19 +306,6 @@ export default function MyAccountPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Email Address
-                      </label>
-                      <input
-                        type="email"
-                        value={formData.email}
-                        disabled
-                        className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-gray-500"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
                         Full Name
                       </label>
                       <input
@@ -325,25 +321,6 @@ export default function MyAccountPage() {
                       />
                     </div>
                   </div>
-
-                  {isEditing && (
-                    <div className="mt-6 flex gap-4">
-                      <button
-                        type="submit"
-                        disabled={isLoading}
-                        className="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600 disabled:opacity-50"
-                      >
-                        {isLoading ? 'Saving...' : 'Save Changes'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setIsEditing(false)}
-                        className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  )}
                 </form>
               </div>
             )}
@@ -415,40 +392,8 @@ export default function MyAccountPage() {
             {activeTab === 'preferences' && (
               <div>
                 <h2 className="text-xl font-semibold mb-6">Preferences</h2>
-                
+              
                 <div className="space-y-6">
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <h3 className="text-lg font-medium mb-3">Notifications</h3>
-                    <div className="space-y-3">
-                      <label className="flex items-center">
-                        <input type="checkbox" className="mr-3" defaultChecked />
-                        <span>Email notifications for new kebab places</span>
-                      </label>
-                      <label className="flex items-center">
-                        <input type="checkbox" className="mr-3" defaultChecked />
-                        <span>Weekly digest of popular kebab places</span>
-                      </label>
-                      <label className="flex items-center">
-                        <input type="checkbox" className="mr-3" />
-                        <span>Marketing emails and promotions</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <h3 className="text-lg font-medium mb-3">Privacy</h3>
-                    <div className="space-y-3">
-                      <label className="flex items-center">
-                        <input type="checkbox" className="mr-3" defaultChecked />
-                        <span>Make my reviews public</span>
-                      </label>
-                      <label className="flex items-center">
-                        <input type="checkbox" className="mr-3" />
-                        <span>Allow other users to see my profile</span>
-                      </label>
-                    </div>
-                  </div>
-
                   <div className="border border-gray-200 rounded-lg p-4">
                     <h3 className="text-lg font-medium mb-3">Account Actions</h3>
                     <div className="space-y-3">
@@ -532,15 +477,22 @@ export default function MyAccountPage() {
                             {editingVote === vote.placeId ? (
                               <div className="flex items-center gap-2">
                                 <div className="flex">
-                                  {[1, 2, 3, 4, 5].map((star) => (
-                                    <button
-                                      key={star}
-                                      onClick={() => handleEditVote(vote.placeId, star)}
-                                      className="text-lg hover:scale-110 transition-transform"
-                                    >
-                                      {star <= vote.rating ? '❤️' : '🤍'}
-                                    </button>
-                                  ))}
+                                  {[1, 2, 3, 4, 5].map((star) => {
+                                    const isAlreadyVoted = vote.rating === star;
+                                    return (
+                                      <button
+                                        key={star}
+                                        onClick={() => handleEditVote(vote.placeId, star)}
+                                        className="text-lg hover:scale-110 transition-transform"
+                                        style={{
+                                          cursor: isAlreadyVoted ? 'not-allowed' : 'pointer'
+                                        }}
+                                        title={isAlreadyVoted ? 'You already voted this rating' : `Rate ${star} star${star > 1 ? 's' : ''}`}
+                                      >
+                                        {star <= vote.rating ? '❤️' : '🤍'}
+                                      </button>
+                                    );
+                                  })}
                                 </div>
                                 <button
                                   onClick={() => setEditingVote(null)}
