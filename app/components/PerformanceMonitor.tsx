@@ -19,7 +19,7 @@ export default function PerformanceMonitor() {
         const fidObserver = new PerformanceObserver((list) => {
           const entries = list.getEntries();
           entries.forEach((entry) => {
-            const fid = entry.processingStart - entry.startTime;
+            const fid = (entry as any).processingStart - entry.startTime;
             console.log('⚡ FID (First Input Delay):', Math.round(fid) + 'ms');
           });
         });
