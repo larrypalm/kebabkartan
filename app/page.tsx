@@ -21,7 +21,7 @@ export default function App() {
     return (
         <GoogleReCaptchaProvider reCaptchaKey={RECAPTCHA_SITE_KEY}>
             <main>
-                <AuthDebug />
+                {/* <AuthDebug /> */}
                 <Map initialPlaceId={null} />
             </main>
         </GoogleReCaptchaProvider>

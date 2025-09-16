@@ -471,10 +471,10 @@ const MapControls: React.FC<{
     return (
         <>
             {showAllPlaces ? (
-                <div style={{
+                <div className="mobile-search" style={{
                     position: 'absolute',
                     top: '20px',
-                    left: '50%',
+                    left: 'calc(50% + 140px)',
                     transform: 'translateX(-50%)',
                     zIndex: 1000,
                     width: '300px',
@@ -558,10 +558,11 @@ const MapControls: React.FC<{
             ) : (
                 <button
                     onClick={() => setShowAllPlaces(true)}
+                    className="mobile-search"
                     style={{
                         position: 'absolute',
                         top: '20px',
-                        left: '50%',
+                        left: 'calc(50% + 140px)',
                         transform: 'translateX(-50%)',
                         zIndex: 1000,
                         backgroundColor: 'white',
@@ -691,19 +692,19 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null }) => {
     }, [selectedLocation, isInitialLoad]);
 
     return (
-        <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
+        <div style={{ position: 'relative', width: '100vw', height: '100vh', display: 'flex' }}>
             {!mapLoaded && (
                 <img
                     src={MAP_PLACEHOLDER}
                     alt="Map loading"
                     style={{
                         position: 'absolute',
-                        width: '100%',
+                        width: 'calc(100% - 280px)',
                         height: '100%',
                         objectFit: 'cover',
                         zIndex: 1,
                         top: 0,
-                        left: 0
+                        left: '280px'
                     }}
                 />
             )}
@@ -712,7 +713,6 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null }) => {
                     ? [selectedLocation.latitude, selectedLocation.longitude]
                     : [defaultView.latitude, defaultView.longitude]}
                 zoom={selectedLocation ? 15 : defaultView.zoom}
-                style={{ width: '100%', height: '100%' }}
                 scrollWheelZoom={true}
                 touchZoom={true}
                 zoomControl={false}
