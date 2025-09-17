@@ -19,6 +19,7 @@ interface Location {
     rating: number;
     totalVotes: number;
     openingHours?: string;
+    priceRange?: string;
 }
 
 interface RatingStarsProps {
@@ -410,6 +411,10 @@ const ZoomableMarker: React.FC<ZoomableMarkerProps> = React.memo(({ location, on
                                     <span style={{ marginRight: '6px' }}>⭐</span>
                                     <span>{location.rating.toFixed(1)}/5.0 ({location.totalVotes} votes)</span>
                                 </div>
+                                <div style={{ marginBottom: '6px', display: 'flex', alignItems: 'center' }}>
+                                    <span style={{ marginRight: '6px' }}>💰</span>
+                                    <span>{location.priceRange ? `${location.priceRange} SEK` : 'Price not specified'}</span>
+                                </div>
                                 <div style={{ marginBottom: '0', display: 'flex', alignItems: 'center' }}>
                                     <span style={{ marginRight: '6px' }}>🕒</span>
                                     <span>{location.openingHours || 'Hours not specified'}</span>
@@ -468,7 +473,7 @@ const generateStructuredData = (location: Location) => {
         },
         url: `https://kebabkartan.se/place/${location.id}`,
         telephone: '',
-        priceRange: '$$',
+        priceRange: location.priceRange || '$$',
         servesCuisine: ['Kebab', 'Mellanöstern', 'Turkisk'],
         aggregateRating: {
             '@type': 'AggregateRating',

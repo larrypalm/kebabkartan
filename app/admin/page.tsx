@@ -13,6 +13,7 @@ export default function AdminPage() {
         latitude: '',
         longitude: '',
         openingHours: '',
+        priceRange: '',
     });
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -78,6 +79,7 @@ export default function AdminPage() {
                 latitude: '',
                 longitude: '',
                 openingHours: '',
+                priceRange: '',
             });
             // Refresh the places list
             fetchPlaces();
@@ -292,6 +294,20 @@ export default function AdminPage() {
                         />
                         <p className="text-sm text-gray-500 mt-1">
                             Enter opening hours in any format. Examples: "Daily 09:00-22:00" or "Mon-Fri: 10:00-20:00, Sat-Sun: 11:00-21:00"
+                        </p>
+                    </div>
+                    <div className="mb-4">
+                        <label className="block text-gray-700 mb-2">Price Range</label>
+                        <input
+                            type="text"
+                            name="priceRange"
+                            value={formData.priceRange}
+                            onChange={handleChange}
+                            className="w-full p-2 border rounded"
+                            placeholder="Example: 100-300"
+                        />
+                        <p className="text-sm text-gray-500 mt-1">
+                            Enter the price range in SEK (e.g., "100-300" for 100 to 300 SEK)
                         </p>
                     </div>
                     {error && <p className="text-red-500 mb-4">{error}</p>}

@@ -11,6 +11,7 @@ interface KebabPlace {
     latitude: number;
     longitude: number;
     openingHours?: string;
+    priceRange?: string;
     rating: number;
     totalVotes: number;
     createdAt: string;
@@ -133,6 +134,9 @@ export default function AdminPlacesPage() {
                                             Votes
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Price Range
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Created
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -161,6 +165,11 @@ export default function AdminPlacesPage() {
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="text-sm text-gray-900">
                                                     {place.totalVotes}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm text-gray-900">
+                                                    {place.priceRange ? `${place.priceRange} SEK` : 'Not set'}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">

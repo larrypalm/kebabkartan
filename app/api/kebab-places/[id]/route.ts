@@ -120,7 +120,7 @@ export async function PUT(
             new UpdateCommand({
                 TableName: TABLE_NAME,
                 Key: { id: params.id },
-                UpdateExpression: 'SET #name = :name, address = :address, latitude = :latitude, longitude = :longitude, openingHours = :openingHours, updatedAt = :updatedAt',
+                UpdateExpression: 'SET #name = :name, address = :address, latitude = :latitude, longitude = :longitude, openingHours = :openingHours, priceRange = :priceRange, updatedAt = :updatedAt',
                 ExpressionAttributeNames: {
                     '#name': 'name'
                 },
@@ -130,6 +130,7 @@ export async function PUT(
                     ':latitude': latitude,
                     ':longitude': longitude,
                     ':openingHours': body.openingHours || '',
+                    ':priceRange': body.priceRange || '',
                     ':updatedAt': now,
                 },
             })
