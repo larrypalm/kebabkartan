@@ -6,6 +6,8 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { trackKebabPlaceView, trackRatingSubmitted, trackSearch, trackSearchResultSelect } from '@/app/utils/analytics';
+import { useAuth } from '@/app/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
 import Header from './Header';
 
 interface Location {
@@ -56,12 +58,71 @@ const MAP_PLACEHOLDER = '/static/map-placeholder.png'; // Place a suitable image
 
 const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, totalVotes }) => {
     const { executeRecaptcha } = useGoogleReCaptcha();
+    const { user, loading } = useAuth();
+    const router = useRouter();
     const [hoveredRating, setHoveredRating] = useState<number>(0);
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const [submittingRating, setSubmittingRating] = useState<number | null>(null);
+    const [userVote, setUserVote] = useState<number | null>(null);
+    const [loadingVote, setLoadingVote] = useState<boolean>(false);
+    const fetchingRef = useRef<boolean>(false);
+
+    // Memoize the username to prevent unnecessary re-renders
+    const username = useMemo(() => user?.username, [user?.username]);
+
+    // Fetch user's vote for this place
+    useEffect(() => {
+        const fetchUserVote = async () => {
+            if (!username) {
+                setUserVote(null);
+                return;
+            }
+
+            // Prevent multiple simultaneous requests
+            if (fetchingRef.current) {
+                return;
+            }
+
+            fetchingRef.current = true;
+            setLoadingVote(true);
+            try {
+                const response = await fetch(`/api/user-votes/${placeId}?userId=${encodeURIComponent(username)}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setUserVote(data.vote?.rating || null);
+                }
+            } catch (error) {
+                console.error('Error fetching user vote:', error);
+            } finally {
+                setLoadingVote(false);
+                fetchingRef.current = false;
+            }
+        };
+
+        // Only fetch if we have a valid username
+        if (username) {
+            fetchUserVote();
+        } else {
+            setUserVote(null);
+        }
+    }, [username, placeId]); // Only depend on memoized username and placeId
 
     const handleRating = async (rating: number) => {
         if (isSubmitting) return;
+
+        // Check if user is authenticated
+        if (!user) {
+            const shouldSignIn = confirm('You need to sign in to vote on kebab places. Would you like to sign in now?');
+            if (shouldSignIn) {
+                router.push('/auth');
+            }
+            return;
+        }
+
+        // Check if user is trying to vote the same rating they already have
+        if (userVote === rating) {
+            return; // Don't submit if it's the same vote
+        }
 
         if (!executeRecaptcha) {
             alert("reCAPTCHA is not ready. Please try again in a moment.");
@@ -83,6 +144,7 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
                     placeId,
                     rating,
                     recaptchaToken: token,
+                    userId: user.username,
                 }),
             });
 
@@ -93,6 +155,9 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
 
             // Track the rating submission
             trackRatingSubmitted(placeId, 'Kebab Place', rating);
+
+            // Update user vote state
+            setUserVote(rating);
 
             window.location.reload();
         } catch (error) {
@@ -110,6 +175,9 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
                 {[1, 2, 3, 4, 5].map((star) => {
                     const isActive = isSubmitting && submittingRating === star;
                     const isDimmed = isSubmitting && submittingRating !== star;
+                    const isAuthenticated = !!user;
+                    const isAlreadyVoted = userVote === star;
+                    const isCurrentVote = userVote && star <= userVote;
                     return (
                         <button
                             key={star}
@@ -121,14 +189,16 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
                             style={{
                                 background: 'none',
                                 border: 'none',
-                                cursor: isSubmitting ? 'default' : 'pointer',
+                                cursor: isSubmitting ? 'default' : (isAuthenticated ? (isAlreadyVoted ? 'not-allowed' : 'pointer') : 'pointer'),
                                 fontSize: '24px',
                                 padding: '0 2px',
                                 opacity: isActive ? 1 : isDimmed ? 0.3 : 1,
-                                transition: 'opacity 0.2s'
+                                transition: 'opacity 0.2s',
+                                filter: !isAuthenticated ? 'grayscale(0.3)' : 'none'
                             }}
+                            title={!isAuthenticated ? 'Sign in to vote' : (isAlreadyVoted ? 'You already voted this rating' : `Rate ${star} star${star > 1 ? 's' : ''}`)}
                         >
-                            {(isActive || star <= (hoveredRating || currentRating)) ? '❤️' : '🤍'}
+                            {(isActive || star <= (hoveredRating || userVote || currentRating)) ? '❤️' : '🤍'}
                         </button>
                     );
                 })}
@@ -136,6 +206,26 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
             <div style={{ fontSize: '12px', marginTop: '4px' }}>
                 Average rating: {currentRating.toFixed(1)} ({totalVotes} votes)
             </div>
+            {user && userVote && (
+                <div style={{ 
+                    fontSize: '10px', 
+                    marginTop: '2px', 
+                    color: '#e74c3c',
+                    fontWeight: 'bold'
+                }}>
+                    Your rating: {userVote} star{userVote > 1 ? 's' : ''}
+                </div>
+            )}
+            {!user && (
+                <div style={{ 
+                    fontSize: '10px', 
+                    marginTop: '2px', 
+                    color: '#666',
+                    fontStyle: 'italic'
+                }}>
+                    Sign in to vote
+                </div>
+            )}
         </div>
     );
 };
@@ -388,10 +478,10 @@ const MapControls: React.FC<{
     return (
         <>
             {showAllPlaces ? (
-                <div style={{
+                <div className="mobile-search" style={{
                     position: 'absolute',
                     top: '20px',
-                    left: '50%',
+                    left: 'calc(50% + 140px)',
                     transform: 'translateX(-50%)',
                     zIndex: 1000,
                     width: '300px',
@@ -475,10 +565,11 @@ const MapControls: React.FC<{
             ) : (
                 <button
                     onClick={() => setShowAllPlaces(true)}
+                    className="mobile-search"
                     style={{
                         position: 'absolute',
                         top: '20px',
-                        left: '50%',
+                        left: 'calc(50% + 140px)',
                         transform: 'translateX(-50%)',
                         zIndex: 1000,
                         backgroundColor: 'white',
@@ -547,7 +638,7 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null }) => {
     useEffect(() => {
         const getLocationFromIP = async () => {
             try {
-                const response = await fetch('https://corsproxy.io/?https://ipapi.co/json/');
+                const response = await fetch('https://ipapi.co/json/');
                 if (!response.ok) throw new Error('Failed to get location from IP');
                 
                 const data = await response.json();
@@ -608,19 +699,19 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null }) => {
     }, [selectedLocation, isInitialLoad]);
 
     return (
-        <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
+        <div style={{ position: 'relative', width: '100vw', height: '100vh', display: 'flex' }}>
             {!mapLoaded && (
                 <img
                     src={MAP_PLACEHOLDER}
                     alt="Map loading"
                     style={{
                         position: 'absolute',
-                        width: '100%',
+                        width: 'calc(100% - 280px)',
                         height: '100%',
                         objectFit: 'cover',
                         zIndex: 1,
                         top: 0,
-                        left: 0
+                        left: '280px'
                     }}
                 />
             )}
@@ -629,7 +720,6 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null }) => {
                     ? [selectedLocation.latitude, selectedLocation.longitude]
                     : [defaultView.latitude, defaultView.longitude]}
                 zoom={selectedLocation ? 15 : defaultView.zoom}
-                style={{ width: '100%', height: '100%' }}
                 scrollWheelZoom={true}
                 touchZoom={true}
                 zoomControl={false}

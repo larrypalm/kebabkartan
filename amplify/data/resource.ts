@@ -1,17 +1,25 @@
-import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
+import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
 
 /*== STEP 1 ===============================================================
-The section below creates a Todo database table with a "content" field. Try
-adding a new "isDone" field as a boolean. The authorization rule below
-specifies that any user authenticated via an API key can "create", "read",
-"update", and "delete" any "Todo" records.
+The section below creates a KebabPlace database table for storing kebab place information.
+The authorization rule allows authenticated users to create, read, update, and delete records.
 =========================================================================*/
 const schema = a.schema({
-  Todo: a
+  KebabPlace: a
     .model({
-      content: a.string(),
+      name: a.string().required(),
+      address: a.string().required(),
+      latitude: a.float().required(),
+      longitude: a.float().required(),
+      rating: a.float(),
+      description: a.string(),
+      website: a.string(),
+      phone: a.string(),
     })
-    .authorization((allow) => [allow.publicApiKey()]),
+    .authorization((allow) => [
+      allow.authenticated().to(['create', 'read', 'update', 'delete']),
+      allow.guest().to(['read'])
+    ]),
 });
 
 export type Schema = ClientSchema<typeof schema>;
@@ -19,10 +27,7 @@ export type Schema = ClientSchema<typeof schema>;
 export const data = defineData({
   schema,
   authorizationModes: {
-    defaultAuthorizationMode: "apiKey",
-    apiKeyAuthorizationMode: {
-      expiresInDays: 30,
-    },
+    defaultAuthorizationMode: 'userPool',
   },
 });
 
@@ -51,6 +56,6 @@ Fetch records from the database and use them in your frontend component.
 
 /* For example, in a React component, you can use this snippet in your
   function's RETURN statement */
-// const { data: todos } = await client.models.Todo.list()
+// const { data: kebabPlaces } = await client.models.KebabPlace.list()
 
-// return <ul>{todos.map(todo => <li key={todo.id}>{todo.content}</li>)}</ul>
+// return <ul>{kebabPlaces.map(place => <li key={place.id}>{place.name} - {place.address}</li>)}</ul>

@@ -1,6 +1,10 @@
 'use client';
 
-import { usePageTracking } from '../hooks/usePageTracking';
+import { usePageTracking } from '@/app/hooks/usePageTracking';
+import Breadcrumbs from './Breadcrumbs';
+import PerformanceOptimizer from './PerformanceOptimizer';
+import PerformanceMonitor from './PerformanceMonitor';
+import LCPOptimizer from './LCPOptimizer';
 
 export default function ClientLayout({
     children,
@@ -9,5 +13,13 @@ export default function ClientLayout({
 }) {
     usePageTracking();
     
-    return <>{children}</>;
+    return (
+        <>
+            <LCPOptimizer />
+            <PerformanceOptimizer />
+            <PerformanceMonitor />
+            <Breadcrumbs />
+            {children}
+        </>
+    );
 } 
