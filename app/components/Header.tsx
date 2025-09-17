@@ -5,6 +5,7 @@ import { useMap } from 'react-leaflet';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import AuthButton from './AuthButton';
+import { useAuth } from '@/app/contexts/AuthContext';
 
 interface HeaderProps {
     permissionState: PermissionState | null;
@@ -13,6 +14,7 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ permissionState }) => {
     const map = useMap();
     const router = useRouter();
+    const { user } = useAuth();
     const [isMobile, setIsMobile] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -46,6 +48,17 @@ const Header: React.FC<HeaderProps> = ({ permissionState }) => {
     const handleLogoClick = () => {
         map.setView([62.5, 16.5], 5);
         router.push('/');
+        if (isMobile) {
+            setSidebarOpen(false);
+        }
+    };
+
+    const handleSuggestionsClick = () => {
+        if (user) {
+            router.push('/suggestions');
+        } else {
+            router.push('/auth');
+        }
         if (isMobile) {
             setSidebarOpen(false);
         }
@@ -168,6 +181,31 @@ const Header: React.FC<HeaderProps> = ({ permissionState }) => {
                         {permissionState === 'granted' ? 'Show My Location' : 'Use My Location'}
                     </button>
                 )}
+                <button
+                    onClick={handleSuggestionsClick}
+                    style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        backgroundColor: '#f59e0b',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        transition: 'background-color 0.2s',
+                        marginBottom: '12px'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#d97706'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f59e0b'}
+                >
+                    <span aria-hidden="true" style={{ fontSize: '16px' }}>💡</span>
+                    Föreslå restaurang
+                </button>
                 <AuthButton />
             </div>
             </aside>
