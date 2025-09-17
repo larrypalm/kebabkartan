@@ -2,23 +2,28 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
-export default function AdminPage() {
+interface KebabPlace {
+    id: string;
+    name: string;
+    address: string;
+    latitude: number;
+    longitude: number;
+    openingHours?: string;
+    rating: number;
+    totalVotes: number;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export default function AdminPlacesPage() {
     const router = useRouter();
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [password, setPassword] = useState('');
-    const [formData, setFormData] = useState({
-        name: '',
-        address: '',
-        latitude: '',
-        longitude: '',
-        openingHours: '',
-    });
+    const [places, setPlaces] = useState<KebabPlace[]>([]);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const [places, setPlaces] = useState<any[]>([]);
-    const [loadingPlaces, setLoadingPlaces] = useState(false);
 
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
@@ -32,7 +37,7 @@ export default function AdminPage() {
     };
 
     const fetchPlaces = async () => {
-        setLoadingPlaces(true);
+        setLoading(true);
         try {
             const response = await fetch('/api/kebab-places');
             if (response.ok) {
@@ -44,56 +49,8 @@ export default function AdminPage() {
         } catch (error) {
             setError('Failed to fetch places');
         } finally {
-            setLoadingPlaces(false);
+            setLoading(false);
         }
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsLoading(true);
-        setError('');
-        setSuccess('');
-
-        try {
-            const response = await fetch('/api/kebab-places', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    ...formData,
-                    adminPassword: process.env.NEXT_PUBLIC_LAMBDA_PASSWORD,
-                }),
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to add kebab place');
-            }
-
-            const data = await response.json();
-            setSuccess('Kebab place added successfully!');
-            setFormData({
-                name: '',
-                address: '',
-                latitude: '',
-                longitude: '',
-                openingHours: '',
-            });
-            // Refresh the places list
-            fetchPlaces();
-        } catch (error) {
-            setError('Failed to add kebab place. Please try again.');
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value,
-        }));
     };
 
     if (!isAuthenticated) {
@@ -127,26 +84,38 @@ export default function AdminPage() {
 
     return (
         <div className="min-h-screen bg-gray-100 p-8">
-            <div className="max-w-4xl mx-auto">
-
-                {/* Existing Places List */}
-                <div className="bg-white rounded-lg shadow-md p-8 mb-6">
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold">Existing Places</h2>
+            <div className="max-w-6xl mx-auto">
+                <div className="flex justify-between items-center mb-6">
+                    <h1 className="text-3xl font-bold">Manage Kebab Places</h1>
+                    <div className="flex gap-4">
+                        <Link
+                            href="/admin"
+                            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                        >
+                            Add New Place
+                        </Link>
                         <button
                             onClick={fetchPlaces}
-                            disabled={loadingPlaces}
-                            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 disabled:bg-gray-300"
+                            disabled={loading}
+                            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-blue-300"
                         >
-                            {loadingPlaces ? 'Refreshing...' : 'Refresh'}
+                            {loading ? 'Refreshing...' : 'Refresh'}
                         </button>
                     </div>
+                </div>
 
-                    {loadingPlaces ? (
-                        <div className="text-center py-8">
-                            <p>Loading places...</p>
-                        </div>
-                    ) : (
+                {error && (
+                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                        {error}
+                    </div>
+                )}
+
+                {loading ? (
+                    <div className="text-center py-8">
+                        <p>Loading places...</p>
+                    </div>
+                ) : (
+                    <div className="bg-white rounded-lg shadow-md overflow-hidden">
                         <div className="overflow-x-auto">
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50">
@@ -201,19 +170,19 @@ export default function AdminPage() {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                 <div className="flex gap-2">
-                                                    <button
-                                                        onClick={() => router.push(`/admin/${place.id}`)}
+                                                    <Link
+                                                        href={`/admin/places/${place.id}`}
                                                         className="text-blue-600 hover:text-blue-900"
                                                     >
                                                         Edit
-                                                    </button>
-                                                    <a
+                                                    </Link>
+                                                    <Link
                                                         href={`/place/${place.id}`}
                                                         target="_blank"
                                                         className="text-green-600 hover:text-green-900"
                                                     >
                                                         View
-                                                    </a>
+                                                    </Link>
                                                 </div>
                                             </td>
                                         </tr>
@@ -221,91 +190,14 @@ export default function AdminPage() {
                                 </tbody>
                             </table>
                         </div>
-                    )}
-                    {places.length === 0 && !loadingPlaces && (
-                        <div className="text-center py-8 text-gray-500">
-                            No places found.
-                        </div>
-                    )}
-                </div>
-                
-                <div id="add-place-form" className="bg-white rounded-lg shadow-md p-8">
-                    <h1 className="text-2xl font-bold mb-6">Add New Kebab Place</h1>
-                <form onSubmit={handleSubmit}>
-                    <div className="mb-4">
-                        <label className="block text-gray-700 mb-2">Name</label>
-                        <input
-                            type="text"
-                            name="name"
-                            value={formData.name}
-                            onChange={handleChange}
-                            className="w-full p-2 border rounded"
-                            required
-                        />
+                        {places.length === 0 && (
+                            <div className="text-center py-8 text-gray-500">
+                                No places found.
+                            </div>
+                        )}
                     </div>
-                    <div className="mb-4">
-                        <label className="block text-gray-700 mb-2">Address</label>
-                        <input
-                            type="text"
-                            name="address"
-                            value={formData.address}
-                            onChange={handleChange}
-                            className="w-full p-2 border rounded"
-                            required
-                        />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <label className="block text-gray-700 mb-2">Latitude</label>
-                            <input
-                                type="number"
-                                name="latitude"
-                                value={formData.latitude}
-                                onChange={handleChange}
-                                step="any"
-                                className="w-full p-2 border rounded"
-                                required
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-gray-700 mb-2">Longitude</label>
-                            <input
-                                type="number"
-                                name="longitude"
-                                value={formData.longitude}
-                                onChange={handleChange}
-                                step="any"
-                                className="w-full p-2 border rounded"
-                                required
-                            />
-                        </div>
-                    </div>
-                    <div className="mb-4">
-                        <label className="block text-gray-700 mb-2">Opening Hours</label>
-                        <textarea
-                            name="openingHours"
-                            value={formData.openingHours}
-                            onChange={handleChange}
-                            className="w-full p-2 border rounded"
-                            rows={4}
-                            placeholder="Example: Daily 09:00-22:00 or&#10;Monday-Friday: 10:00-20:00&#10;Saturday-Sunday: 11:00-21:00"
-                        />
-                        <p className="text-sm text-gray-500 mt-1">
-                            Enter opening hours in any format. Examples: "Daily 09:00-22:00" or "Mon-Fri: 10:00-20:00, Sat-Sun: 11:00-21:00"
-                        </p>
-                    </div>
-                    {error && <p className="text-red-500 mb-4">{error}</p>}
-                    {success && <p className="text-green-500 mb-4">{success}</p>}
-                    <button
-                        type="submit"
-                        disabled={isLoading}
-                        className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 disabled:bg-blue-300"
-                    >
-                        {isLoading ? 'Adding...' : 'Add Kebab Place'}
-                    </button>
-                </form>
-                </div>
+                )}
             </div>
         </div>
     );
-} 
+}
