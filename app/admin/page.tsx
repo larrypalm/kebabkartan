@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function AdminPage() {
@@ -12,18 +12,40 @@ export default function AdminPage() {
         address: '',
         latitude: '',
         longitude: '',
+        openingHours: '',
+        priceRange: '',
     });
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [places, setPlaces] = useState<any[]>([]);
+    const [loadingPlaces, setLoadingPlaces] = useState(false);
 
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
         if (password === process.env.NEXT_PUBLIC_LAMBDA_PASSWORD) {
             setIsAuthenticated(true);
             setError('');
+            fetchPlaces();
         } else {
             setError('Invalid password');
+        }
+    };
+
+    const fetchPlaces = async () => {
+        setLoadingPlaces(true);
+        try {
+            const response = await fetch('/api/kebab-places');
+            if (response.ok) {
+                const data = await response.json();
+                setPlaces(data);
+            } else {
+                setError('Failed to fetch places');
+            }
+        } catch (error) {
+            setError('Failed to fetch places');
+        } finally {
+            setLoadingPlaces(false);
         }
     };
 
@@ -56,8 +78,11 @@ export default function AdminPage() {
                 address: '',
                 latitude: '',
                 longitude: '',
+                openingHours: '',
+                priceRange: '',
             });
-            router.refresh();
+            // Refresh the places list
+            fetchPlaces();
         } catch (error) {
             setError('Failed to add kebab place. Please try again.');
         } finally {
@@ -65,7 +90,7 @@ export default function AdminPage() {
         }
     };
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
@@ -104,8 +129,110 @@ export default function AdminPage() {
 
     return (
         <div className="min-h-screen bg-gray-100 p-8">
-            <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-8">
-                <h1 className="text-2xl font-bold mb-6">Add New Kebab Place</h1>
+            <div className="max-w-4xl mx-auto">
+
+                {/* Existing Places List */}
+                <div className="bg-white rounded-lg shadow-md p-8 mb-6">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-2xl font-bold">Existing Places</h2>
+                        <button
+                            onClick={fetchPlaces}
+                            disabled={loadingPlaces}
+                            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 disabled:bg-gray-300"
+                        >
+                            {loadingPlaces ? 'Refreshing...' : 'Refresh'}
+                        </button>
+                    </div>
+
+                    {loadingPlaces ? (
+                        <div className="text-center py-8">
+                            <p>Loading places...</p>
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Name
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Address
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Rating
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Votes
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Created
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Actions
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {places.map((place) => (
+                                        <tr key={place.id} className="hover:bg-gray-50">
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm font-medium text-gray-900">
+                                                    {place.name}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm text-gray-900">
+                                                    {place.address}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm text-gray-900">
+                                                    {place.rating.toFixed(1)} ⭐
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm text-gray-900">
+                                                    {place.totalVotes}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm text-gray-900">
+                                                    {new Date(place.createdAt).toLocaleDateString()}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        onClick={() => router.push(`/admin/${place.id}`)}
+                                                        className="text-blue-600 hover:text-blue-900"
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                    <a
+                                                        href={`/place/${place.id}`}
+                                                        target="_blank"
+                                                        className="text-green-600 hover:text-green-900"
+                                                    >
+                                                        View
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                    {places.length === 0 && !loadingPlaces && (
+                        <div className="text-center py-8 text-gray-500">
+                            No places found.
+                        </div>
+                    )}
+                </div>
+                
+                <div id="add-place-form" className="bg-white rounded-lg shadow-md p-8">
+                    <h1 className="text-2xl font-bold mb-6">Add New Kebab Place</h1>
                 <form onSubmit={handleSubmit}>
                     <div className="mb-4">
                         <label className="block text-gray-700 mb-2">Name</label>
@@ -155,6 +282,34 @@ export default function AdminPage() {
                             />
                         </div>
                     </div>
+                    <div className="mb-4">
+                        <label className="block text-gray-700 mb-2">Opening Hours</label>
+                        <textarea
+                            name="openingHours"
+                            value={formData.openingHours}
+                            onChange={handleChange}
+                            className="w-full p-2 border rounded"
+                            rows={4}
+                            placeholder="Example: Daily 09:00-22:00 or&#10;Monday-Friday: 10:00-20:00&#10;Saturday-Sunday: 11:00-21:00"
+                        />
+                        <p className="text-sm text-gray-500 mt-1">
+                            Enter opening hours in any format. Examples: "Daily 09:00-22:00" or "Mon-Fri: 10:00-20:00, Sat-Sun: 11:00-21:00"
+                        </p>
+                    </div>
+                    <div className="mb-4">
+                        <label className="block text-gray-700 mb-2">Price Range</label>
+                        <input
+                            type="text"
+                            name="priceRange"
+                            value={formData.priceRange}
+                            onChange={handleChange}
+                            className="w-full p-2 border rounded"
+                            placeholder="Example: 100-300"
+                        />
+                        <p className="text-sm text-gray-500 mt-1">
+                            Enter the price range in SEK (e.g., "100-300" for 100 to 300 SEK)
+                        </p>
+                    </div>
                     {error && <p className="text-red-500 mb-4">{error}</p>}
                     {success && <p className="text-green-500 mb-4">{success}</p>}
                     <button
@@ -165,6 +320,7 @@ export default function AdminPage() {
                         {isLoading ? 'Adding...' : 'Add Kebab Place'}
                     </button>
                 </form>
+                </div>
             </div>
         </div>
     );

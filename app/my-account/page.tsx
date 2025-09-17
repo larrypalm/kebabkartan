@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { signOut, updatePassword, updateUserAttributes } from 'aws-amplify/auth';
 import { useRouter } from 'next/navigation';
+import AccountLayout from '@/app/components/AccountLayout';
 
 export default function MyAccountPage() {
   const { user, loading } = useAuth();
@@ -179,347 +180,461 @@ export default function MyAccountPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="text-center">
-          <div className="text-xl">Loading...</div>
+      <AccountLayout showMap={false}>
+        <div style={{ textAlign: 'center', padding: '40px' }}>
+          <div style={{ fontSize: '20px' }}>Loading...</div>
         </div>
-      </div>
+      </AccountLayout>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="bg-white p-8 rounded-lg shadow-md w-96 text-center">
-          <h1 className="text-2xl font-bold mb-6">Access Required</h1>
-          <p className="text-gray-600 mb-6">
+      <AccountLayout showMap={false}>
+        <div style={{ textAlign: 'center', padding: '40px' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '24px' }}>Access Required</h1>
+          <p style={{ color: '#6b7280', marginBottom: '24px' }}>
             You need to be signed in to access your account.
           </p>
-          <div className="space-y-3">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <button
               onClick={() => window.location.reload()}
-              className="w-full bg-yellow-500 text-white p-2 rounded hover:bg-yellow-600"
+              style={{
+                width: '100%',
+                backgroundColor: '#eab308',
+                color: 'white',
+                padding: '8px',
+                borderRadius: '6px',
+                border: 'none',
+                cursor: 'pointer'
+              }}
             >
               Refresh Page
             </button>
             <button
               onClick={() => router.push('/auth')}
-              className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
+              style={{
+                width: '100%',
+                backgroundColor: '#3b82f6',
+                color: 'white',
+                padding: '8px',
+                borderRadius: '6px',
+                border: 'none',
+                cursor: 'pointer'
+              }}
             >
               Go to Sign In
             </button>
             <button
               onClick={() => router.push('/')}
-              className="w-full bg-gray-500 text-white p-2 rounded hover:bg-gray-600"
+              style={{
+                width: '100%',
+                backgroundColor: '#6b7280',
+                color: 'white',
+                padding: '8px',
+                borderRadius: '6px',
+                border: 'none',
+                cursor: 'pointer'
+              }}
             >
               Go to Home
             </button>
           </div>
         </div>
-      </div>
+      </AccountLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          {/* Header */}
-          <div className="bg-blue-600 text-white p-6">
-            <h1 className="text-2xl font-bold">My Account</h1>
-            <p className="text-blue-100">Manage your profile and preferences</p>
-          </div>
+    <AccountLayout>
+      <div style={{ maxWidth: '100%' }}>
+        {/* Navigation Tabs */}
+        <div style={{ borderBottom: '1px solid #e5e7eb', marginBottom: '20px' }}>
+          <nav style={{ display: 'flex' }}>
+            <button
+              onClick={() => setActiveTab('profile')}
+              style={{
+                padding: '16px 24px',
+                fontSize: '14px',
+                fontWeight: '500',
+                backgroundColor: activeTab === 'profile' ? '#dbeafe' : 'transparent',
+                color: activeTab === 'profile' ? '#2563eb' : '#6b7280',
+                border: 'none',
+                borderBottom: activeTab === 'profile' ? '2px solid #2563eb' : '2px solid transparent',
+                cursor: 'pointer'
+              }}
+            >
+              Profile
+            </button>
+            <button
+              onClick={() => setActiveTab('security')}
+              style={{
+                padding: '16px 24px',
+                fontSize: '14px',
+                fontWeight: '500',
+                backgroundColor: activeTab === 'security' ? '#dbeafe' : 'transparent',
+                color: activeTab === 'security' ? '#2563eb' : '#6b7280',
+                border: 'none',
+                borderBottom: activeTab === 'security' ? '2px solid #2563eb' : '2px solid transparent',
+                cursor: 'pointer'
+              }}
+            >
+              Security
+            </button>
+            <button
+              onClick={() => setActiveTab('preferences')}
+              style={{
+                padding: '16px 24px',
+                fontSize: '14px',
+                fontWeight: '500',
+                backgroundColor: activeTab === 'preferences' ? '#dbeafe' : 'transparent',
+                color: activeTab === 'preferences' ? '#2563eb' : '#6b7280',
+                border: 'none',
+                borderBottom: activeTab === 'preferences' ? '2px solid #2563eb' : '2px solid transparent',
+                cursor: 'pointer'
+              }}
+            >
+              Preferences
+            </button>
+            <button
+              onClick={() => setActiveTab('votes')}
+              style={{
+                padding: '16px 24px',
+                fontSize: '14px',
+                fontWeight: '500',
+                backgroundColor: activeTab === 'votes' ? '#dbeafe' : 'transparent',
+                color: activeTab === 'votes' ? '#2563eb' : '#6b7280',
+                border: 'none',
+                borderBottom: activeTab === 'votes' ? '2px solid #2563eb' : '2px solid transparent',
+                cursor: 'pointer'
+              }}
+            >
+              My Votes
+            </button>
+          </nav>
+        </div>
 
-          {/* Navigation Tabs */}
-          <div className="border-b border-gray-200">
-            <nav className="flex">
-              <button
-                onClick={() => setActiveTab('profile')}
-                className={`px-6 py-4 text-sm font-medium ${
-                  activeTab === 'profile'
-                    ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                Profile
-              </button>
-              <button
-                onClick={() => setActiveTab('security')}
-                className={`px-6 py-4 text-sm font-medium ${
-                  activeTab === 'security'
-                    ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                Security
-              </button>
-              <button
-                onClick={() => setActiveTab('preferences')}
-                className={`px-6 py-4 text-sm font-medium ${
-                  activeTab === 'preferences'
-                    ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                Preferences
-              </button>
-              <button
-                onClick={() => setActiveTab('votes')}
-                className={`px-6 py-4 text-sm font-medium ${
-                  activeTab === 'votes'
-                    ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                My Votes
-              </button>
-            </nav>
-          </div>
+        {/* Content */}
+        <div>
+          {/* Message Display */}
+          {message.text && (
+            <div style={{
+              marginBottom: '24px',
+              padding: '16px',
+              borderRadius: '6px',
+              backgroundColor: message.type === 'success' ? '#dcfce7' : 
+                              message.type === 'error' ? '#fef2f2' : '#dbeafe',
+              color: message.type === 'success' ? '#166534' : 
+                     message.type === 'error' ? '#dc2626' : '#1d4ed8',
+              border: `1px solid ${message.type === 'success' ? '#bbf7d0' : 
+                                message.type === 'error' ? '#fecaca' : '#bfdbfe'}`
+            }}>
+              {message.text}
+            </div>
+          )}
 
-          {/* Content */}
-          <div className="p-6">
-            {/* Message Display */}
-            {message.text && (
-              <div className={`mb-6 p-4 rounded ${
-                message.type === 'success' ? 'bg-green-100 text-green-700 border border-green-200' :
-                message.type === 'error' ? 'bg-red-100 text-red-700 border border-red-200' :
-                'bg-blue-100 text-blue-700 border border-blue-200'
-              }`}>
-                {message.text}
+          {/* Profile Tab */}
+          {activeTab === 'profile' && (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <h2 style={{ fontSize: '20px', fontWeight: '600' }}>Profile Information</h2>
+                <button
+                  onClick={() => setIsEditing(!isEditing)}
+                  style={{
+                    backgroundColor: '#3b82f6',
+                    color: 'white',
+                    padding: '8px 16px',
+                    borderRadius: '6px',
+                    border: 'none',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {isEditing ? 'Cancel' : 'Edit Profile'}
+                </button>
               </div>
-            )}
 
-            {/* Profile Tab */}
-            {activeTab === 'profile' && (
-              <div>
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-semibold">Profile Information</h2>
-                  <button
-                    onClick={() => setIsEditing(!isEditing)}
-                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                  >
-                    {isEditing ? 'Cancel' : 'Edit Profile'}
-                  </button>
+              <form onSubmit={handleUpdateProfile}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '6px',
+                        backgroundColor: isEditing ? 'white' : '#f9fafb',
+                        color: isEditing ? '#111827' : '#6b7280'
+                      }}
+                      placeholder="Enter your full name"
+                    />
+                  </div>
                 </div>
+              </form>
+            </div>
+          )}
 
-                <form onSubmit={handleUpdateProfile}>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Full Name
-                      </label>
-                      <input
-                        type="text"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        disabled={!isEditing}
-                        className={`w-full p-3 border border-gray-300 rounded-md ${
-                          isEditing ? 'bg-white' : 'bg-gray-50 text-gray-500'
-                        }`}
-                        placeholder="Enter your full name"
-                      />
-                    </div>
-                  </div>
-                </form>
-              </div>
-            )}
-
-            {/* Security Tab */}
-            {activeTab === 'security' && (
-              <div>
-                <h2 className="text-xl font-semibold mb-6">Security Settings</h2>
-                
-                <form onSubmit={handleUpdatePassword} className="max-w-md">
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Current Password
-                      </label>
-                      <input
-                        type="password"
-                        name="currentPassword"
-                        value={formData.currentPassword}
-                        onChange={handleInputChange}
-                        className="w-full p-3 border border-gray-300 rounded-md"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        New Password
-                      </label>
-                      <input
-                        type="password"
-                        name="newPassword"
-                        value={formData.newPassword}
-                        onChange={handleInputChange}
-                        className="w-full p-3 border border-gray-300 rounded-md"
-                        required
-                        minLength={8}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Confirm New Password
-                      </label>
-                      <input
-                        type="password"
-                        name="confirmPassword"
-                        value={formData.confirmPassword}
-                        onChange={handleInputChange}
-                        className="w-full p-3 border border-gray-300 rounded-md"
-                        required
-                        minLength={8}
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="mt-6 bg-red-500 text-white px-6 py-2 rounded hover:bg-red-600 disabled:opacity-50"
-                  >
-                    {isLoading ? 'Updating...' : 'Update Password'}
-                  </button>
-                </form>
-              </div>
-            )}
-
-            {/* Preferences Tab */}
-            {activeTab === 'preferences' && (
-              <div>
-                <h2 className="text-xl font-semibold mb-6">Preferences</h2>
+          {/* Security Tab */}
+          {activeTab === 'security' && (
+            <div>
+              <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '24px' }}>Security Settings</h2>
               
-                <div className="space-y-6">
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <h3 className="text-lg font-medium mb-3">Account Actions</h3>
-                    <div className="space-y-3">
-                      <button
-                        onClick={handleSignOut}
-                        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                      >
-                        Sign Out
-                      </button>
-                      <button
-                        onClick={() => router.push('/')}
-                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 ml-3"
-                      >
-                        Back to Home
-                      </button>
-                    </div>
+              <form onSubmit={handleUpdatePassword} style={{ maxWidth: '400px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
+                      Current Password
+                    </label>
+                    <input
+                      type="password"
+                      name="currentPassword"
+                      value={formData.currentPassword}
+                      onChange={handleInputChange}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '6px'
+                      }}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
+                      New Password
+                    </label>
+                    <input
+                      type="password"
+                      name="newPassword"
+                      value={formData.newPassword}
+                      onChange={handleInputChange}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '6px'
+                      }}
+                      required
+                      minLength={8}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
+                      Confirm New Password
+                    </label>
+                    <input
+                      type="password"
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleInputChange}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '6px'
+                      }}
+                      required
+                      minLength={8}
+                    />
                   </div>
                 </div>
-              </div>
-            )}
 
-            {/* My Votes Tab */}
-            {activeTab === 'votes' && (
-              <div>
-                <h2 className="text-xl font-semibold mb-6">My Votes</h2>
-                
-                {loadingVotes ? (
-                  <div className="text-center py-8">
-                    <div className="text-gray-500">Loading your votes...</div>
-                  </div>
-                ) : userVotes.length === 0 ? (
-                  <div className="text-center py-8">
-                    <div className="text-gray-500 mb-4">You haven't voted on any kebab places yet.</div>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  style={{
+                    marginTop: '24px',
+                    backgroundColor: '#dc2626',
+                    color: 'white',
+                    padding: '8px 24px',
+                    borderRadius: '6px',
+                    border: 'none',
+                    cursor: isLoading ? 'not-allowed' : 'pointer',
+                    opacity: isLoading ? 0.5 : 1
+                  }}
+                >
+                  {isLoading ? 'Updating...' : 'Update Password'}
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* Preferences Tab */}
+          {activeTab === 'preferences' && (
+            <div>
+              <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '24px' }}>Preferences</h2>
+            
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '16px' }}>
+                  <h3 style={{ fontSize: '18px', fontWeight: '500', marginBottom: '12px' }}>Account Actions</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <button
-                      onClick={() => router.push('/')}
-                      className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                      onClick={handleSignOut}
+                      style={{
+                        backgroundColor: '#dc2626',
+                        color: 'white',
+                        padding: '8px 16px',
+                        borderRadius: '6px',
+                        border: 'none',
+                        cursor: 'pointer'
+                      }}
                     >
-                      Browse Kebab Places
+                      Sign Out
                     </button>
                   </div>
-                ) : (
-                  <div className="space-y-4">
-                    {userVotes.map((vote) => (
-                      <div key={vote.placeId} className="border border-gray-200 rounded-lg p-4">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className="font-medium">
-                                {placeDetails[vote.placeId]?.name || `Place ID: ${vote.placeId}`}
-                              </span>
-                              <div className="flex">
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                  <span key={star} className="text-lg">
-                                    {star <= vote.rating ? '❤️' : '🤍'}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                            {placeDetails[vote.placeId]?.address && (
-                              <div className="text-sm text-gray-500 mb-1">
-                                {placeDetails[vote.placeId].address}
-                              </div>
-                            )}
-                            <div className="text-sm text-gray-600">
-                              Rated {vote.rating} star{vote.rating > 1 ? 's' : ''} on{' '}
-                              {new Date(vote.createdAt).toLocaleDateString()}
-                              {vote.updatedAt !== vote.createdAt && (
-                                <span className="ml-2">
-                                  (Updated {new Date(vote.updatedAt).toLocaleDateString()})
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* My Votes Tab */}
+          {activeTab === 'votes' && (
+            <div>
+              <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '24px' }}>My Votes</h2>
+              
+              {loadingVotes ? (
+                <div style={{ textAlign: 'center', padding: '32px' }}>
+                  <div style={{ color: '#6b7280' }}>Loading your votes...</div>
+                </div>
+              ) : userVotes.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '32px' }}>
+                  <div style={{ color: '#6b7280', marginBottom: '16px' }}>You haven't voted on any kebab places yet.</div>
+                  <button
+                    onClick={() => router.push('/')}
+                    style={{
+                      backgroundColor: '#3b82f6',
+                      color: 'white',
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Browse Kebab Places
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {userVotes.map((vote) => (
+                    <div key={vote.placeId} style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '16px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                            <span style={{ fontWeight: '500' }}>
+                              {placeDetails[vote.placeId]?.name || `Place ID: ${vote.placeId}`}
+                            </span>
+                            <div style={{ display: 'flex' }}>
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <span key={star} style={{ fontSize: '18px' }}>
+                                  {star <= vote.rating ? '❤️' : '🤍'}
                                 </span>
-                              )}
+                              ))}
                             </div>
                           </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => router.push(`/place/${vote.placeId}`)}
-                              className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
-                            >
-                              View Place
-                            </button>
-                            {editingVote === vote.placeId ? (
-                              <div className="flex items-center gap-2">
-                                <div className="flex">
-                                  {[1, 2, 3, 4, 5].map((star) => {
-                                    const isAlreadyVoted = vote.rating === star;
-                                    return (
-                                      <button
-                                        key={star}
-                                        onClick={() => handleEditVote(vote.placeId, star)}
-                                        className="text-lg hover:scale-110 transition-transform"
-                                        style={{
-                                          cursor: isAlreadyVoted ? 'not-allowed' : 'pointer'
-                                        }}
-                                        title={isAlreadyVoted ? 'You already voted this rating' : `Rate ${star} star${star > 1 ? 's' : ''}`}
-                                      >
-                                        {star <= vote.rating ? '❤️' : '🤍'}
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                                <button
-                                  onClick={() => setEditingVote(null)}
-                                  className="bg-gray-500 text-white px-2 py-1 rounded text-xs hover:bg-gray-600"
-                                >
-                                  Cancel
-                                </button>
-                              </div>
-                            ) : (
-                              <button
-                                onClick={() => setEditingVote(vote.placeId)}
-                                className="bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600"
-                              >
-                                Edit Vote
-                              </button>
+                          {placeDetails[vote.placeId]?.address && (
+                            <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '4px' }}>
+                              {placeDetails[vote.placeId].address}
+                            </div>
+                          )}
+                          <div style={{ fontSize: '14px', color: '#4b5563' }}>
+                            Rated {vote.rating} star{vote.rating > 1 ? 's' : ''} on{' '}
+                            {new Date(vote.createdAt).toLocaleDateString()}
+                            {vote.updatedAt !== vote.createdAt && (
+                              <span style={{ marginLeft: '8px' }}>
+                                (Updated {new Date(vote.updatedAt).toLocaleDateString()})
+                              </span>
                             )}
                           </div>
                         </div>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button
+                            onClick={() => router.push(`/place/${vote.placeId}`)}
+                            style={{
+                              backgroundColor: '#3b82f6',
+                              color: 'white',
+                              padding: '4px 12px',
+                              borderRadius: '4px',
+                              border: 'none',
+                              cursor: 'pointer',
+                              fontSize: '14px'
+                            }}
+                          >
+                            View Place
+                          </button>
+                          {editingVote === vote.placeId ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <div style={{ display: 'flex' }}>
+                                {[1, 2, 3, 4, 5].map((star) => {
+                                  const isAlreadyVoted = vote.rating === star;
+                                  return (
+                                    <button
+                                      key={star}
+                                      onClick={() => handleEditVote(vote.placeId, star)}
+                                      style={{
+                                        fontSize: '18px',
+                                        background: 'none',
+                                        border: 'none',
+                                        cursor: isAlreadyVoted ? 'not-allowed' : 'pointer',
+                                        transform: 'scale(1)',
+                                        transition: 'transform 0.2s'
+                                      }}
+                                      title={isAlreadyVoted ? 'You already voted this rating' : `Rate ${star} star${star > 1 ? 's' : ''}`}
+                                    >
+                                      {star <= vote.rating ? '❤️' : '🤍'}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                              <button
+                                onClick={() => setEditingVote(null)}
+                                style={{
+                                  backgroundColor: '#6b7280',
+                                  color: 'white',
+                                  padding: '4px 8px',
+                                  borderRadius: '4px',
+                                  border: 'none',
+                                  cursor: 'pointer',
+                                  fontSize: '12px'
+                                }}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setEditingVote(vote.placeId)}
+                              style={{
+                                backgroundColor: '#eab308',
+                                color: 'white',
+                                padding: '4px 12px',
+                                borderRadius: '4px',
+                                border: 'none',
+                                cursor: 'pointer',
+                                fontSize: '14px'
+                              }}
+                            >
+                              Edit Vote
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
-    </div>
+    </AccountLayout>
   );
 }

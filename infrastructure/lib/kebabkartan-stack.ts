@@ -36,6 +36,19 @@ export class KebabkartanStack extends cdk.Stack {
             sortKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
         });
 
+        // DynamoDB table for restaurant suggestions
+        const suggestionsTable = new dynamodb.Table(this, 'SuggestionsTable', {
+            partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+            billingMode: dynamodb.BillingMode.PAY_PER_REQUEST, // Cost optimal
+            removalPolicy: cdk.RemovalPolicy.DESTROY, // For development - change for production
+        });
+
+        // Add GSI for status-based queries
+        suggestionsTable.addGlobalSecondaryIndex({
+            indexName: 'StatusIndex',
+            partitionKey: { name: 'status', type: dynamodb.AttributeType.STRING },
+            sortKey: { name: 'createdAt', type: dynamodb.AttributeType.STRING },
+        });
 
         // Output table names for environment variables
         new cdk.CfnOutput(this, 'KebabPlacesTableName', {
@@ -46,6 +59,11 @@ export class KebabkartanStack extends cdk.Stack {
         new cdk.CfnOutput(this, 'UserVotesTableName', {
             value: userVotesTable.tableName,
             description: 'User Votes table name',
+        });
+
+        new cdk.CfnOutput(this, 'SuggestionsTableName', {
+            value: suggestionsTable.tableName,
+            description: 'Suggestions table name',
         });
     }
 } 

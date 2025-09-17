@@ -63,6 +63,8 @@ export async function POST(request: Request) {
             address: body.address,
             latitude: body.latitude,
             longitude: body.longitude,
+            openingHours: body.openingHours || '',
+            priceRange: body.priceRange || '',
             rating: 0,
             totalVotes: 0,
             createdAt: now,

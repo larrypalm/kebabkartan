@@ -18,6 +18,8 @@ interface Location {
     longitude: number;
     rating: number;
     totalVotes: number;
+    openingHours?: string;
+    priceRange?: string;
 }
 
 interface RatingStarsProps {
@@ -243,6 +245,7 @@ const SetViewOnSelect: React.FC<SetViewOnSelectProps> = ({ lat, lng }) => {
 const ZoomableMarker: React.FC<ZoomableMarkerProps> = React.memo(({ location, onClickLocation, isSelected }) => {
     const map = useMap();
     const markerRef = useRef<L.Marker | null>(null);
+    const [isExpanded, setIsExpanded] = useState(false);
     
     const handleClick = () => {
         map.setView([location.latitude, location.longitude], 15);
@@ -253,6 +256,7 @@ const ZoomableMarker: React.FC<ZoomableMarkerProps> = React.memo(({ location, on
         window.history.pushState({}, '', '/');
         window.dispatchEvent(new PopStateEvent('popstate'));
         onClickLocation(null);
+        setIsExpanded(false); // Reset expansion state when popup closes
     };
 
     // Handle automatic popup opening/closing
@@ -291,6 +295,11 @@ const ZoomableMarker: React.FC<ZoomableMarkerProps> = React.memo(({ location, on
         }
     };
 
+    const handleExpandToggle = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setIsExpanded(!isExpanded);
+    };
+
     const pizzaIcon = useMemo(
         () =>
             L.icon({
@@ -315,32 +324,127 @@ const ZoomableMarker: React.FC<ZoomableMarkerProps> = React.memo(({ location, on
             icon={pizzaIcon} 
             eventHandlers={{ click: handleClick }}
         >
-            <Popup>
-                <div style={{ minWidth: '200px' }}>
-                    <strong>{location.name}</strong>
-                    <br />
-                    <strong>{location.address}</strong>
-                    <br />
+            <Popup maxWidth={isExpanded ? 350 : 250} minWidth={isExpanded ? 350 : 200}>
+                <div style={{ 
+                    padding: '12px'
+                }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                        <div style={{ flex: 1 }}>
+                            <h3 style={{ 
+                                fontSize: '16px', 
+                                fontWeight: 'bold', 
+                                margin: '0 0 4px 0',
+                                color: '#333'
+                            }}>
+                                {location.name}
+                            </h3>
+                            <p style={{ 
+                                fontSize: '12px', 
+                                color: '#666', 
+                                margin: '0',
+                                lineHeight: '1.3'
+                            }}>
+                                {location.address}
+                            </p>
+                        </div>
+                        <button
+                            onClick={handleExpandToggle}
+                            style={{
+                                background: '#f8f9fa',
+                                border: '1px solid #dee2e6',
+                                cursor: 'pointer',
+                                fontSize: '12px',
+                                padding: '6px 12px',
+                                borderRadius: '4px',
+                                transition: 'all 0.2s',
+                                marginLeft: '12px',
+                                fontWeight: '500',
+                                color: '#495057',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '4px'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = '#e9ecef';
+                                e.currentTarget.style.borderColor = '#adb5bd';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = '#f8f9fa';
+                                e.currentTarget.style.borderColor = '#dee2e6';
+                            }}
+                            title={isExpanded ? 'Collapse details' : 'Expand details'}
+                        >
+                            {isExpanded ? 'Less' : 'More'}
+                        </button>
+                    </div>
+                    
                     <RatingStars 
                         placeId={location.id}
                         currentRating={location.rating}
                         totalVotes={location.totalVotes}
                     />
-                    <button
-                        onClick={handleShare}
-                        style={{
-                            marginTop: '10px',
-                            width: '100%',
-                            backgroundColor: '#4CAF50',
-                            color: 'white',
-                            padding: '8px',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer'
-                        }}
-                    >
-                        Share Location
-                    </button>
+                    
+                    {isExpanded && (
+                        <div style={{ 
+                            marginTop: '12px',
+                            padding: '12px',
+                            backgroundColor: '#f8f9fa',
+                            borderRadius: '6px',
+                            border: '1px solid #e9ecef'
+                        }}>
+                            <h4 style={{ 
+                                fontSize: '13px', 
+                                fontWeight: '600',
+                                color: '#495057',
+                                margin: '0 0 8px 0'
+                            }}>
+                                Restaurant Details
+                            </h4>
+                            
+                            <div style={{ fontSize: '12px', lineHeight: '1.4', color: '#6c757d' }}>
+                                <div style={{ marginBottom: '6px', display: 'flex', alignItems: 'center' }}>
+                                    <span style={{ marginRight: '6px' }}>📍</span>
+                                    <span>{location.address}</span>
+                                </div>
+                                <div style={{ marginBottom: '6px', display: 'flex', alignItems: 'center' }}>
+                                    <span style={{ marginRight: '6px' }}>⭐</span>
+                                    <span>{location.rating.toFixed(1)}/5.0 ({location.totalVotes} votes)</span>
+                                </div>
+                                <div style={{ marginBottom: '6px', display: 'flex', alignItems: 'center' }}>
+                                    <span style={{ marginRight: '6px' }}>💰</span>
+                                    <span>{location.priceRange ? `${location.priceRange} SEK` : 'Price not specified'}</span>
+                                </div>
+                                <div style={{ marginBottom: '0', display: 'flex', alignItems: 'center' }}>
+                                    <span style={{ marginRight: '6px' }}>🕒</span>
+                                    <span>{location.openingHours || 'Hours not specified'}</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    
+                    <div style={{ marginTop: '12px' }}>
+                        <button
+                            onClick={handleShare}
+                            style={{
+                                width: '100%',
+                                backgroundColor: '#28a745',
+                                color: 'white',
+                                padding: '10px 16px',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '13px',
+                                fontWeight: '600',
+                                transition: 'background-color 0.2s',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#218838'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#28a745'}
+                        >
+                            📤 Share Location
+                        </button>
+                    </div>
                 </div>
             </Popup>
         </Marker>
@@ -369,7 +473,7 @@ const generateStructuredData = (location: Location) => {
         },
         url: `https://kebabkartan.se/place/${location.id}`,
         telephone: '',
-        priceRange: '$$',
+        priceRange: location.priceRange || '$$',
         servesCuisine: ['Kebab', 'Mellanöstern', 'Turkisk'],
         aggregateRating: {
             '@type': 'AggregateRating',

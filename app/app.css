@@ -19,7 +19,6 @@ main {
 
 .leaflet-popup-content {
   margin: 8px;
-  min-width: 200px !important;
 }
 
 /* Rating component styles */
