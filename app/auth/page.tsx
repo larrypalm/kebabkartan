@@ -41,10 +41,10 @@ export default function AuthPage() {
         username: formData.email,
         password: formData.password
       });
-      setMessage({ type: 'success', text: 'Successfully signed in!' });
+      setMessage({ type: 'success', text: 'Inloggning lyckades!' });
       router.push('/my-account');
     } catch (error: any) {
-      setMessage({ type: 'error', text: error.message || 'Failed to sign in' });
+      setMessage({ type: 'error', text: error.message || 'Inloggning misslyckades' });
     } finally {
       setIsLoading(false);
     }
@@ -56,7 +56,7 @@ export default function AuthPage() {
     setMessage({ type: '', text: '' });
 
     if (formData.password !== formData.confirmPassword) {
-      setMessage({ type: 'error', text: 'Passwords do not match' });
+      setMessage({ type: 'error', text: 'Lösenorden matchar inte' });
       setIsLoading(false);
       return;
     }
@@ -67,9 +67,9 @@ export default function AuthPage() {
         password: formData.password
       });
       setIsConfirming(true);
-      setMessage({ type: 'success', text: 'Account created! Please check your email for confirmation code.' });
+      setMessage({ type: 'success', text: 'Konto skapat! Kontrollera din e-post för bekräftelsekod.' });
     } catch (error: any) {
-      setMessage({ type: 'error', text: error.message || 'Failed to create account' });
+      setMessage({ type: 'error', text: error.message || 'Kontoskapande misslyckades' });
     } finally {
       setIsLoading(false);
     }
@@ -85,11 +85,11 @@ export default function AuthPage() {
         username: formData.email,
         confirmationCode: formData.confirmationCode
       });
-      setMessage({ type: 'success', text: 'Account confirmed! You can now sign in.' });
+      setMessage({ type: 'success', text: 'Konto bekräftat! Du kan nu logga in.' });
       setIsConfirming(false);
       setIsSignUp(false);
     } catch (error: any) {
-      setMessage({ type: 'error', text: error.message || 'Failed to confirm account' });
+      setMessage({ type: 'error', text: error.message || 'Kontobekräftelse misslyckades' });
     } finally {
       setIsLoading(false);
     }
@@ -98,9 +98,9 @@ export default function AuthPage() {
   const handleResendCode = async () => {
     try {
       await resendSignUpCode({ username: formData.email });
-      setMessage({ type: 'success', text: 'Confirmation code resent to your email.' });
+      setMessage({ type: 'success', text: 'Bekräftelsekod skickad igen till din e-post.' });
     } catch (error: any) {
-      setMessage({ type: 'error', text: error.message || 'Failed to resend code' });
+      setMessage({ type: 'error', text: error.message || 'Kunde inte skicka kod igen' });
     }
   };
 
@@ -108,7 +108,7 @@ export default function AuthPage() {
     return (
       <AccountLayout>
         <div style={{ textAlign: 'center', padding: '40px' }}>
-          <div style={{ color: '#6b7280' }}>Loading...</div>
+          <div style={{ color: '#6b7280' }}>Laddar...</div>
         </div>
       </AccountLayout>
     );
@@ -119,10 +119,10 @@ export default function AuthPage() {
       <AccountLayout>
         <div style={{ textAlign: 'center', padding: '40px' }}>
           <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '16px' }}>
-            Welcome, {user.username}!
+            Välkommen, {user.username}!
           </h2>
           <p style={{ color: '#6b7280', marginBottom: '24px' }}>
-            You are already signed in.
+            Du är redan inloggad.
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <button
@@ -137,7 +137,7 @@ export default function AuthPage() {
                 cursor: 'pointer'
               }}
             >
-              Go to My Account
+              Gå till Mitt Konto
             </button>
             <button
               onClick={() => router.push('/')}
@@ -151,7 +151,7 @@ export default function AuthPage() {
                 cursor: 'pointer'
               }}
             >
-              Go to Home
+              Gå till Hem
             </button>
           </div>
         </div>
@@ -163,7 +163,7 @@ export default function AuthPage() {
     <AccountLayout>
       <div style={{ maxWidth: '100%' }}>
         <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '24px', textAlign: 'center' }}>
-          {isConfirming ? 'Confirm Your Account' : isSignUp ? 'Create Account' : 'Sign In to Your Account'}
+          {isConfirming ? 'Bekräfta ditt konto' : isSignUp ? 'Skapa konto' : 'Logga in på ditt konto'}
         </h1>
 
         {/* Message Display */}
@@ -199,7 +199,7 @@ export default function AuthPage() {
               fontWeight: '500'
             }}
           >
-            Sign In
+            Logga in
           </button>
           <button
             onClick={() => {
@@ -218,7 +218,7 @@ export default function AuthPage() {
               fontWeight: '500'
             }}
           >
-            Create Account
+            Skapa konto
           </button>
         </div>
 
@@ -228,7 +228,7 @@ export default function AuthPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
-                  Email
+                  E-post
                 </label>
                 <input
                   type="email"
@@ -243,12 +243,12 @@ export default function AuthPage() {
                     borderRadius: '6px',
                     fontSize: '14px'
                   }}
-                  placeholder="Enter your Email"
+                  placeholder="Ange din e-post"
                 />
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
-                  Password
+                  Lösenord
                 </label>
                 <input
                   type="password"
@@ -263,7 +263,7 @@ export default function AuthPage() {
                     borderRadius: '6px',
                     fontSize: '14px'
                   }}
-                  placeholder="Enter your Password"
+                  placeholder="Ange ditt lösenord"
                 />
               </div>
               <button
@@ -282,7 +282,7 @@ export default function AuthPage() {
                   opacity: isLoading ? 0.7 : 1
                 }}
               >
-                {isLoading ? 'Signing in...' : 'Sign in'}
+                {isLoading ? 'Loggar in...' : 'Logga in'}
               </button>
             </div>
           </form>
@@ -294,7 +294,7 @@ export default function AuthPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
-                  Email
+                  E-post
                 </label>
                 <input
                   type="email"
@@ -309,12 +309,12 @@ export default function AuthPage() {
                     borderRadius: '6px',
                     fontSize: '14px'
                   }}
-                  placeholder="Enter your Email"
+                  placeholder="Ange din e-post"
                 />
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
-                  Password
+                  Lösenord
                 </label>
                 <input
                   type="password"
@@ -330,12 +330,12 @@ export default function AuthPage() {
                     borderRadius: '6px',
                     fontSize: '14px'
                   }}
-                  placeholder="Enter your Password"
+                  placeholder="Ange ditt lösenord"
                 />
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
-                  Confirm Password
+                  Bekräfta lösenord
                 </label>
                 <input
                   type="password"
@@ -351,7 +351,7 @@ export default function AuthPage() {
                     borderRadius: '6px',
                     fontSize: '14px'
                   }}
-                  placeholder="Confirm your Password"
+                  placeholder="Bekräfta ditt lösenord"
                 />
               </div>
               <button
@@ -370,7 +370,7 @@ export default function AuthPage() {
                   opacity: isLoading ? 0.7 : 1
                 }}
               >
-                {isLoading ? 'Creating account...' : 'Create Account'}
+                {isLoading ? 'Skapar konto...' : 'Skapa konto'}
               </button>
             </div>
           </form>
@@ -382,7 +382,7 @@ export default function AuthPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
-                  Confirmation Code
+                  Bekräftelsekod
                 </label>
                 <input
                   type="text"
@@ -397,7 +397,7 @@ export default function AuthPage() {
                     borderRadius: '6px',
                     fontSize: '14px'
                   }}
-                  placeholder="Enter confirmation code from email"
+                  placeholder="Ange bekräftelsekod från e-post"
                 />
               </div>
               <button
@@ -416,7 +416,7 @@ export default function AuthPage() {
                   opacity: isLoading ? 0.7 : 1
                 }}
               >
-                {isLoading ? 'Confirming...' : 'Confirm Account'}
+                {isLoading ? 'Bekräftar...' : 'Bekräfta konto'}
               </button>
               <button
                 type="button"
@@ -432,7 +432,7 @@ export default function AuthPage() {
                   fontSize: '14px'
                 }}
               >
-                Resend Code
+                Skicka kod igen
               </button>
             </div>
           </form>
@@ -452,7 +452,7 @@ export default function AuthPage() {
                 textDecoration: 'underline'
               }}
             >
-              Forgot your password?
+              Glömt ditt lösenord?
             </button>
           </div>
         )}

@@ -77,7 +77,7 @@ export default function MyAccountPage() {
       router.push('/');
     } catch (error) {
       console.error('Error signing out:', error);
-      setMessage({ type: 'error', text: 'Failed to sign out' });
+      setMessage({ type: 'error', text: 'Utloggning misslyckades' });
     }
   };
 
@@ -97,13 +97,13 @@ export default function MyAccountPage() {
         await updateUserAttributes({
           userAttributes: attributesToUpdate
         });
-        setMessage({ type: 'success', text: 'Profile updated successfully!' });
+        setMessage({ type: 'success', text: 'Profil uppdaterad!' });
         setIsEditing(false);
       } else {
-        setMessage({ type: 'info', text: 'No changes to save' });
+        setMessage({ type: 'info', text: 'Inga ändringar att spara' });
       }
     } catch (error: any) {
-      setMessage({ type: 'error', text: error.message || 'Failed to update profile' });
+      setMessage({ type: 'error', text: error.message || 'Profiluppdatering misslyckades' });
     } finally {
       setIsLoading(false);
     }
@@ -115,7 +115,7 @@ export default function MyAccountPage() {
     setMessage({ type: '', text: '' });
 
     if (formData.newPassword !== formData.confirmPassword) {
-      setMessage({ type: 'error', text: 'New passwords do not match' });
+      setMessage({ type: 'error', text: 'Nya lösenorden matchar inte' });
       setIsLoading(false);
       return;
     }
@@ -125,10 +125,10 @@ export default function MyAccountPage() {
         oldPassword: formData.currentPassword,
         newPassword: formData.newPassword
       });
-      setMessage({ type: 'success', text: 'Password updated successfully!' });
+      setMessage({ type: 'success', text: 'Lösenord uppdaterat!' });
       setFormData(prev => ({ ...prev, currentPassword: '', newPassword: '', confirmPassword: '' }));
     } catch (error: any) {
-      setMessage({ type: 'error', text: error.message || 'Failed to update password' });
+      setMessage({ type: 'error', text: error.message || 'Lösenordsuppdatering misslyckades' });
     } finally {
       setIsLoading(false);
     }
@@ -171,10 +171,10 @@ export default function MyAccountPage() {
       // Refresh votes after successful update
       await fetchUserVotes();
       setEditingVote(null);
-      setMessage({ type: 'success', text: 'Vote updated successfully!' });
+      setMessage({ type: 'success', text: 'Röst uppdaterad!' });
     } catch (error) {
       console.error('Error updating vote:', error);
-      setMessage({ type: 'error', text: 'Failed to update vote. Please try again.' });
+      setMessage({ type: 'error', text: 'Röstuppdatering misslyckades. Försök igen.' });
     }
   };
 
@@ -182,7 +182,7 @@ export default function MyAccountPage() {
     return (
       <AccountLayout showMap={false}>
         <div style={{ textAlign: 'center', padding: '40px' }}>
-          <div style={{ fontSize: '20px' }}>Loading...</div>
+          <div style={{ fontSize: '20px' }}>Laddar...</div>
         </div>
       </AccountLayout>
     );
@@ -192,9 +192,9 @@ export default function MyAccountPage() {
     return (
       <AccountLayout showMap={false}>
         <div style={{ textAlign: 'center', padding: '40px' }}>
-          <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '24px' }}>Access Required</h1>
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '24px' }}>Åtkomst krävs</h1>
           <p style={{ color: '#6b7280', marginBottom: '24px' }}>
-            You need to be signed in to access your account.
+            Du behöver vara inloggad för att komma åt ditt konto.
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <button
@@ -209,7 +209,7 @@ export default function MyAccountPage() {
                 cursor: 'pointer'
               }}
             >
-              Refresh Page
+              Uppdatera sida
             </button>
             <button
               onClick={() => router.push('/auth')}
@@ -223,7 +223,7 @@ export default function MyAccountPage() {
                 cursor: 'pointer'
               }}
             >
-              Go to Sign In
+              Gå till inloggning
             </button>
             <button
               onClick={() => router.push('/')}
@@ -237,7 +237,7 @@ export default function MyAccountPage() {
                 cursor: 'pointer'
               }}
             >
-              Go to Home
+              Gå till hem
             </button>
           </div>
         </div>
@@ -264,7 +264,7 @@ export default function MyAccountPage() {
                 cursor: 'pointer'
               }}
             >
-              Profile
+              Profil
             </button>
             <button
               onClick={() => setActiveTab('security')}
@@ -279,7 +279,7 @@ export default function MyAccountPage() {
                 cursor: 'pointer'
               }}
             >
-              Security
+              Säkerhet
             </button>
             <button
               onClick={() => setActiveTab('preferences')}
@@ -294,7 +294,7 @@ export default function MyAccountPage() {
                 cursor: 'pointer'
               }}
             >
-              Preferences
+              Inställningar
             </button>
             <button
               onClick={() => setActiveTab('votes')}
@@ -309,7 +309,7 @@ export default function MyAccountPage() {
                 cursor: 'pointer'
               }}
             >
-              My Votes
+              Mina röster
             </button>
           </nav>
         </div>
@@ -337,7 +337,7 @@ export default function MyAccountPage() {
           {activeTab === 'profile' && (
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                <h2 style={{ fontSize: '20px', fontWeight: '600' }}>Profile Information</h2>
+                <h2 style={{ fontSize: '20px', fontWeight: '600' }}>Profilinformation</h2>
                 <button
                   onClick={() => setIsEditing(!isEditing)}
                   style={{
@@ -349,7 +349,7 @@ export default function MyAccountPage() {
                     cursor: 'pointer'
                   }}
                 >
-                  {isEditing ? 'Cancel' : 'Edit Profile'}
+                  {isEditing ? 'Avbryt' : 'Redigera profil'}
                 </button>
               </div>
 
@@ -357,7 +357,7 @@ export default function MyAccountPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
-                      Full Name
+                      Fullständigt namn
                     </label>
                     <input
                       type="text"
@@ -373,7 +373,7 @@ export default function MyAccountPage() {
                         backgroundColor: isEditing ? 'white' : '#f9fafb',
                         color: isEditing ? '#111827' : '#6b7280'
                       }}
-                      placeholder="Enter your full name"
+                      placeholder="Ange ditt fullständiga namn"
                     />
                   </div>
                 </div>
@@ -384,13 +384,13 @@ export default function MyAccountPage() {
           {/* Security Tab */}
           {activeTab === 'security' && (
             <div>
-              <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '24px' }}>Security Settings</h2>
+              <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '24px' }}>Säkerhetsinställningar</h2>
               
               <form onSubmit={handleUpdatePassword} style={{ maxWidth: '400px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
-                      Current Password
+                      Nuvarande lösenord
                     </label>
                     <input
                       type="password"
@@ -409,7 +409,7 @@ export default function MyAccountPage() {
 
                   <div>
                     <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
-                      New Password
+                      Nytt lösenord
                     </label>
                     <input
                       type="password"
@@ -429,7 +429,7 @@ export default function MyAccountPage() {
 
                   <div>
                     <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
-                      Confirm New Password
+                      Bekräfta nytt lösenord
                     </label>
                     <input
                       type="password"
@@ -462,7 +462,7 @@ export default function MyAccountPage() {
                     opacity: isLoading ? 0.5 : 1
                   }}
                 >
-                  {isLoading ? 'Updating...' : 'Update Password'}
+                  {isLoading ? 'Uppdaterar...' : 'Uppdatera lösenord'}
                 </button>
               </form>
             </div>
@@ -471,11 +471,11 @@ export default function MyAccountPage() {
           {/* Preferences Tab */}
           {activeTab === 'preferences' && (
             <div>
-              <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '24px' }}>Preferences</h2>
+              <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '24px' }}>Inställningar</h2>
             
               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 <div style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '16px' }}>
-                  <h3 style={{ fontSize: '18px', fontWeight: '500', marginBottom: '12px' }}>Account Actions</h3>
+                  <h3 style={{ fontSize: '18px', fontWeight: '500', marginBottom: '12px' }}>Kontoåtgärder</h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <button
                       onClick={handleSignOut}
@@ -488,7 +488,7 @@ export default function MyAccountPage() {
                         cursor: 'pointer'
                       }}
                     >
-                      Sign Out
+                      Logga ut
                     </button>
                   </div>
                 </div>
@@ -499,15 +499,15 @@ export default function MyAccountPage() {
           {/* My Votes Tab */}
           {activeTab === 'votes' && (
             <div>
-              <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '24px' }}>My Votes</h2>
+              <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '24px' }}>Mina röster</h2>
               
               {loadingVotes ? (
                 <div style={{ textAlign: 'center', padding: '32px' }}>
-                  <div style={{ color: '#6b7280' }}>Loading your votes...</div>
+                  <div style={{ color: '#6b7280' }}>Laddar dina röster...</div>
                 </div>
               ) : userVotes.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '32px' }}>
-                  <div style={{ color: '#6b7280', marginBottom: '16px' }}>You haven't voted on any kebab places yet.</div>
+                  <div style={{ color: '#6b7280', marginBottom: '16px' }}>Du har inte röstat på några kebabställen än.</div>
                   <button
                     onClick={() => router.push('/')}
                     style={{
@@ -519,7 +519,7 @@ export default function MyAccountPage() {
                       cursor: 'pointer'
                     }}
                   >
-                    Browse Kebab Places
+                    Bläddra kebabställen
                   </button>
                 </div>
               ) : (
@@ -546,11 +546,11 @@ export default function MyAccountPage() {
                             </div>
                           )}
                           <div style={{ fontSize: '14px', color: '#4b5563' }}>
-                            Rated {vote.rating} star{vote.rating > 1 ? 's' : ''} on{' '}
+                            Betygsatt {vote.rating} stjärn{vote.rating > 1 ? 'or' : 'a'} den{' '}
                             {new Date(vote.createdAt).toLocaleDateString()}
                             {vote.updatedAt !== vote.createdAt && (
                               <span style={{ marginLeft: '8px' }}>
-                                (Updated {new Date(vote.updatedAt).toLocaleDateString()})
+                                (Uppdaterad {new Date(vote.updatedAt).toLocaleDateString()})
                               </span>
                             )}
                           </div>
@@ -568,7 +568,7 @@ export default function MyAccountPage() {
                               fontSize: '14px'
                             }}
                           >
-                            View Place
+                            Visa ställe
                           </button>
                           {editingVote === vote.placeId ? (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -587,7 +587,7 @@ export default function MyAccountPage() {
                                         transform: 'scale(1)',
                                         transition: 'transform 0.2s'
                                       }}
-                                      title={isAlreadyVoted ? 'You already voted this rating' : `Rate ${star} star${star > 1 ? 's' : ''}`}
+                                      title={isAlreadyVoted ? 'Du har redan röstat denna betyg' : `Betygsätt ${star} stjärn${star > 1 ? 'or' : 'a'}`}
                                     >
                                       {star <= vote.rating ? '❤️' : '🤍'}
                                     </button>
@@ -606,7 +606,7 @@ export default function MyAccountPage() {
                                   fontSize: '12px'
                                 }}
                               >
-                                Cancel
+                                Avbryt
                               </button>
                             </div>
                           ) : (
@@ -622,7 +622,7 @@ export default function MyAccountPage() {
                                 fontSize: '14px'
                               }}
                             >
-                              Edit Vote
+                              Redigera röst
                             </button>
                           )}
                         </div>

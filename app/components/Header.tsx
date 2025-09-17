@@ -87,7 +87,7 @@ const Header: React.FC<HeaderProps> = ({ permissionState }) => {
                         boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
                         fontSize: '20px'
                     }}
-                    aria-label="Toggle menu"
+                    aria-label="Växla meny"
                 >
                     ☰
                 </button>
@@ -132,7 +132,7 @@ const Header: React.FC<HeaderProps> = ({ permissionState }) => {
                 }}
                 tabIndex={0}
                 role="button"
-                aria-label="Go to home"
+                    aria-label="Gå till hem"
                 onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleLogoClick(); }}
             >
                 <Image
@@ -157,7 +157,7 @@ const Header: React.FC<HeaderProps> = ({ permissionState }) => {
                     <button
                         className="location-button"
                         onClick={handleLocationClick}
-                        aria-label={permissionState === 'granted' ? 'Show my location' : 'Use my location'}
+                        aria-label={permissionState === 'granted' ? 'Visa min plats' : 'Använd min plats'}
                         style={{
                             width: '100%',
                             padding: '12px 16px',
@@ -178,7 +178,7 @@ const Header: React.FC<HeaderProps> = ({ permissionState }) => {
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4CAF50'}
                     >
                         <span aria-hidden="true" style={{ fontSize: '18px' }}>📍</span>
-                        {permissionState === 'granted' ? 'Show My Location' : 'Use My Location'}
+                        {permissionState === 'granted' ? 'Visa min plats' : 'Använd min plats'}
                     </button>
                 )}
                 <button
