@@ -12,6 +12,7 @@ export default function AdminPage() {
         address: '',
         latitude: '',
         longitude: '',
+        openingHours: '',
     });
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -56,6 +57,7 @@ export default function AdminPage() {
                 address: '',
                 latitude: '',
                 longitude: '',
+                openingHours: '',
             });
             router.refresh();
         } catch (error) {
@@ -65,7 +67,7 @@ export default function AdminPage() {
         }
     };
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
@@ -154,6 +156,20 @@ export default function AdminPage() {
                                 required
                             />
                         </div>
+                    </div>
+                    <div className="mb-4">
+                        <label className="block text-gray-700 mb-2">Opening Hours</label>
+                        <textarea
+                            name="openingHours"
+                            value={formData.openingHours}
+                            onChange={handleChange}
+                            className="w-full p-2 border rounded"
+                            rows={4}
+                            placeholder="Example: Daily 09:00-22:00 or&#10;Monday-Friday: 10:00-20:00&#10;Saturday-Sunday: 11:00-21:00"
+                        />
+                        <p className="text-sm text-gray-500 mt-1">
+                            Enter opening hours in any format. Examples: "Daily 09:00-22:00" or "Mon-Fri: 10:00-20:00, Sat-Sun: 11:00-21:00"
+                        </p>
                     </div>
                     {error && <p className="text-red-500 mb-4">{error}</p>}
                     {success && <p className="text-green-500 mb-4">{success}</p>}
