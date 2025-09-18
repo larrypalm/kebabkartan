@@ -12,7 +12,7 @@ export default function AuthButton() {
   if (loading) {
     return (
       <button className="auth-button loading" disabled>
-        Loading...
+        Laddar...
       </button>
     );
   }
@@ -23,7 +23,7 @@ export default function AuthButton() {
         onClick={() => router.push('/my-account')} 
         className="auth-button my-account"
       >
-        My Account
+        Mitt konto
       </button>
     );
   }
@@ -34,7 +34,7 @@ export default function AuthButton() {
         onClick={() => router.push('/auth')} 
         className="auth-button sign-in"
       >
-        Sign In
+        Logga in
       </button>
       
       <style jsx>{`

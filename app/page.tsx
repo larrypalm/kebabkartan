@@ -13,7 +13,7 @@ export default function App() {
     const Map = useMemo(() => dynamic(
         () => import('./components/Map'),
         {
-            loading: () => <p>Kebabkartan is loading</p>,
+            loading: () => <p>Kebabkartan laddar</p>,
             ssr: false
         }
     ), [])

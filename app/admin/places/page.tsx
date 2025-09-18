@@ -58,10 +58,10 @@ export default function AdminPlacesPage() {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-100">
                 <div className="bg-white p-8 rounded-lg shadow-md w-96">
-                    <h1 className="text-2xl font-bold mb-6">Admin Login</h1>
+                    <h1 className="text-2xl font-bold mb-6">Admin-inloggning</h1>
                     <form onSubmit={handleLogin}>
                         <div className="mb-4">
-                            <label className="block text-gray-700 mb-2">Password</label>
+                            <label className="block text-gray-700 mb-2">Lösenord</label>
                             <input
                                 type="password"
                                 value={password}
@@ -75,7 +75,7 @@ export default function AdminPlacesPage() {
                             type="submit"
                             className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
                         >
-                            Login
+                            Logga in
                         </button>
                     </form>
                 </div>
@@ -87,20 +87,20 @@ export default function AdminPlacesPage() {
         <div className="min-h-screen bg-gray-100 p-8">
             <div className="max-w-6xl mx-auto">
                 <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-3xl font-bold">Manage Kebab Places</h1>
+                    <h1 className="text-3xl font-bold">Hantera kebabställen</h1>
                     <div className="flex gap-4">
                         <Link
                             href="/admin"
                             className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
                         >
-                            Add New Place
+                            Lägg till nytt ställe
                         </Link>
                         <button
                             onClick={fetchPlaces}
                             disabled={loading}
                             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-blue-300"
                         >
-                            {loading ? 'Refreshing...' : 'Refresh'}
+                            {loading ? 'Uppdaterar...' : 'Uppdatera'}
                         </button>
                     </div>
                 </div>
@@ -113,7 +113,7 @@ export default function AdminPlacesPage() {
 
                 {loading ? (
                     <div className="text-center py-8">
-                        <p>Loading places...</p>
+                        <p>Laddar ställen...</p>
                     </div>
                 ) : (
                     <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -122,25 +122,25 @@ export default function AdminPlacesPage() {
                                 <thead className="bg-gray-50">
                                     <tr>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Name
+                                            Namn
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Address
+                                            Adress
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Rating
+                                            Betyg
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Votes
+                                            Röster
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Price Range
+                                            Prisklass
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Created
+                                            Skapad
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Actions
+                                            Åtgärder
                                         </th>
                                     </tr>
                                 </thead>
@@ -169,7 +169,7 @@ export default function AdminPlacesPage() {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="text-sm text-gray-900">
-                                                    {place.priceRange ? `${place.priceRange} SEK` : 'Not set'}
+                                                    {place.priceRange ? `${place.priceRange} SEK` : 'Inte satt'}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
@@ -183,14 +183,14 @@ export default function AdminPlacesPage() {
                                                         href={`/admin/places/${place.id}`}
                                                         className="text-blue-600 hover:text-blue-900"
                                                     >
-                                                        Edit
+                                                        Redigera
                                                     </Link>
                                                     <Link
                                                         href={`/place/${place.id}`}
                                                         target="_blank"
                                                         className="text-green-600 hover:text-green-900"
                                                     >
-                                                        View
+                                                        Visa
                                                     </Link>
                                                 </div>
                                             </td>
@@ -201,7 +201,7 @@ export default function AdminPlacesPage() {
                         </div>
                         {places.length === 0 && (
                             <div className="text-center py-8 text-gray-500">
-                                No places found.
+                                Inga ställen hittades.
                             </div>
                         )}
                     </div>
