@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import MarkerClusterGroup from 'react-leaflet-cluster';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
@@ -736,6 +737,21 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null }) => {
     const [showAllPlaces, setShowAllPlaces] = useState(!initialPlaceId);
     const [permissionState, setPermissionState] = useState<PermissionState | null>(null);
 
+    const createClusterCustomIcon = (cluster: any) => {
+        const count = cluster.getChildCount();
+        return L.divIcon({
+            html: `
+                <div class="cluster-icon" role="img" aria-label="${count} places">
+                    <span class="cluster-emoji" aria-hidden="true" style="font-size: 54px !important;">🍕</span>
+                </div>
+            `,
+            className: 'marker-cluster-custom',
+            iconSize: [44, 44],
+            iconAnchor: [22, 44],
+            popupAnchor: [0, -44]
+        });
+    };
+
     useEffect(() => {
         // Check if geolocation permission is available
         if (navigator.permissions && navigator.permissions.query) {
@@ -856,16 +872,23 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null }) => {
                     onShowAllPlacesChange={setShowAllPlaces}
                 />
                 <CenterMapOnLocation location={selectedLocation} />
-                {markers
-                    .filter(location => showAllPlaces || location.id === selectedLocation?.id)
-                    .map((location) => (
-                        <ZoomableMarker 
-                            key={location.id} 
-                            location={location} 
-                            onClickLocation={setSelectedLocation}
-                            isSelected={selectedLocation?.id === location.id}
-                        />
-                    ))}
+                <MarkerClusterGroup
+                    chunkedLoading
+                    showCoverageOnHover={false}
+                    spiderfyOnMaxZoom
+                    iconCreateFunction={createClusterCustomIcon}
+                >
+                    {markers
+                        .filter(location => showAllPlaces || location.id === selectedLocation?.id)
+                        .map((location) => (
+                            <ZoomableMarker 
+                                key={location.id} 
+                                location={location} 
+                                onClickLocation={setSelectedLocation}
+                                isSelected={selectedLocation?.id === location.id}
+                            />
+                        ))}
+                </MarkerClusterGroup>
 
                 {selectedLocation && (
                     <SetViewOnSelect 
