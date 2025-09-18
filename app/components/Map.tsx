@@ -118,7 +118,7 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
 
         // Check if user is authenticated
         if (!user) {
-            const shouldSignIn = confirm('You need to sign in to vote on kebab places. Would you like to sign in now?');
+            const shouldSignIn = confirm('Du behöver logga in för att rösta på kebabställen. Vill du logga in nu?');
             if (shouldSignIn) {
                 router.push('/auth');
             }
@@ -131,7 +131,7 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
         }
 
         if (!executeRecaptcha) {
-            alert("reCAPTCHA is not ready. Please try again in a moment.");
+            alert("reCAPTCHA är inte redo. Försök igen om en stund.");
             return;
         }
 
@@ -157,8 +157,8 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
 
             if (!response.ok) {
                 const errorText = await response.text();
-                trackRatingSubmitError(placeId, rating, errorText || 'Failed to update rating');
-                throw new Error(errorText || 'Failed to update rating');
+                trackRatingSubmitError(placeId, rating, errorText || 'Misslyckades att uppdatera betyg');
+                throw new Error(errorText || 'Misslyckades att uppdatera betyg');
             }
 
             // Track the rating submission
@@ -170,7 +170,7 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
             window.location.reload();
         } catch (error) {
             console.error('Error updating rating:', error);
-            alert('Failed to update rating. Please try again.');
+            alert('Misslyckades att uppdatera betyg. Försök igen.');
         } finally {
             setIsSubmitting(false);
             setSubmittingRating(null);
@@ -204,7 +204,7 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
                                 transition: 'opacity 0.2s',
                                 filter: !isAuthenticated ? 'grayscale(0.3)' : 'none'
                             }}
-                            title={!isAuthenticated ? 'Sign in to vote' : (isAlreadyVoted ? 'You already voted this rating' : `Rate ${star} star${star > 1 ? 's' : ''}`)}
+                            title={!isAuthenticated ? 'Logga in för att rösta' : (isAlreadyVoted ? 'Du har redan röstat denna betyg' : `Betygsätt ${star} stjärn${star > 1 ? 'or' : 'a'}`)}
                         >
                             {(isActive || star <= (hoveredRating || userVote || currentRating)) ? '❤️' : '🤍'}
                         </button>
@@ -212,7 +212,7 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
                 })}
             </div>
             <div style={{ fontSize: '12px', marginTop: '4px' }}>
-                Average rating: {currentRating.toFixed(1)} ({totalVotes} votes)
+                Genomsnittsbetyg: {currentRating.toFixed(1)} ({totalVotes} röster)
             </div>
             {user && userVote && (
                 <div style={{ 
@@ -221,7 +221,7 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
                     color: '#e74c3c',
                     fontWeight: 'bold'
                 }}>
-                    Your rating: {userVote} star{userVote > 1 ? 's' : ''}
+                    Ditt betyg: {userVote} stjärn{userVote > 1 ? 'or' : 'a'}
                 </div>
             )}
             {!user && (
@@ -231,7 +231,7 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
                     color: '#666',
                     fontStyle: 'italic'
                 }}>
-                    Sign in to vote
+                    Logga in för att rösta
                 </div>
             )}
         </div>
@@ -297,14 +297,14 @@ const ZoomableMarker: React.FC<ZoomableMarkerProps> = React.memo(({ location, on
         if (navigator.share) {
             navigator.share({
                 title: `Kebabkartan - ${location.name}`,
-                text: `Check out ${location.name} on Kebabkartan!`,
+                text: `Kolla in ${location.name} på Kebabkartan!`,
                 url: url,
             }).then(() => trackMarkerShare(location.id, location.name, 'webshare'))
               .catch(console.error);
         } else {
             navigator.clipboard.writeText(url)
                 .then(() => { 
-                    alert('Link copied to clipboard!');
+                    alert('Länk kopierad till urklipp!');
                     trackMarkerShare(location.id, location.name, 'clipboard');
                 })
                 .catch(console.error);
@@ -391,7 +391,7 @@ const ZoomableMarker: React.FC<ZoomableMarkerProps> = React.memo(({ location, on
                                 e.currentTarget.style.backgroundColor = '#f8f9fa';
                                 e.currentTarget.style.borderColor = '#dee2e6';
                             }}
-                            title={isExpanded ? 'Collapse details' : 'Expand details'}
+                            title={isExpanded ? 'Dölj detaljer' : 'Visa detaljer'}
                         >
                             {isExpanded ? 'Minde' : 'Mer'}
                         </button>
@@ -417,7 +417,7 @@ const ZoomableMarker: React.FC<ZoomableMarkerProps> = React.memo(({ location, on
                                 color: '#495057',
                                 margin: '0 0 8px 0'
                             }}>
-                                Restaurant Details
+                                Restaurangdetaljer
                             </h4>
                             
                             <div style={{ fontSize: '12px', lineHeight: '1.4', color: '#6c757d' }}>
@@ -427,15 +427,15 @@ const ZoomableMarker: React.FC<ZoomableMarkerProps> = React.memo(({ location, on
                                 </div>
                                 <div style={{ marginBottom: '6px', display: 'flex', alignItems: 'center' }}>
                                     <span style={{ marginRight: '6px' }}>⭐</span>
-                                    <span>{location.rating.toFixed(1)}/5.0 ({location.totalVotes} votes)</span>
+                                    <span>{location.rating.toFixed(1)}/5.0 ({location.totalVotes} röster)</span>
                                 </div>
                                 <div style={{ marginBottom: '6px', display: 'flex', alignItems: 'center' }}>
                                     <span style={{ marginRight: '6px' }}>💰</span>
-                                    <span>{location.priceRange ? `${location.priceRange} SEK` : 'Price not specified'}</span>
+                                    <span>{location.priceRange ? `${location.priceRange} SEK` : 'Pris ej angivet'}</span>
                                 </div>
                                 <div style={{ marginBottom: '0', display: 'flex', alignItems: 'center' }}>
                                     <span style={{ marginRight: '6px' }}>🕒</span>
-                                    <span>{location.openingHours || 'Hours not specified'}</span>
+                                    <span>{location.openingHours || 'Öppettider ej angivna'}</span>
                                 </div>
                             </div>
                         </div>
@@ -460,7 +460,7 @@ const ZoomableMarker: React.FC<ZoomableMarkerProps> = React.memo(({ location, on
                             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#218838'}
                             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#28a745'}
                         >
-                            📤 Share Location
+                            📤 Dela plats
                         </button>
                     </div>
                 </div>
@@ -617,7 +617,7 @@ const MapControls: React.FC<{
                         <input
                             ref={searchInputRef}
                             type="text"
-                            placeholder="Search kebab places... (Ctrl/Cmd + K)"
+                            placeholder="Sök kebabställen... (Ctrl/Cmd + K)"
                             value={searchQuery}
                             onChange={(e) => {
                                 setSearchQuery(e.target.value);
@@ -706,7 +706,7 @@ const MapControls: React.FC<{
                     }}
                     onClick={() => { setShowAllPlaces(true); trackShowAllPlaces(); }}
                 >
-                    Show All Places
+                    Visa alla platser
                 </button>
             ) : null}
         </>

@@ -167,8 +167,8 @@ export default function MyAccountPage() {
 
       if (!response.ok) {
         const errorText = await response.text();
-        trackAccountVoteEditError(placeId, newRating, errorText || 'Failed to update rating');
-        throw new Error(errorText || 'Failed to update rating');
+        trackAccountVoteEditError(placeId, newRating, errorText || 'Misslyckades att uppdatera betyg');
+        throw new Error(errorText || 'Misslyckades att uppdatera betyg');
       }
 
       // Refresh votes after successful update
