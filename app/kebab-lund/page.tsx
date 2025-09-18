@@ -30,8 +30,7 @@ export default async function LundKebabPage() {
       {/* SEO Content - Compact header */}
       <div style={{
         position: 'absolute',
-        top: '20px',
-        left: '20px',
+        bottom: '20px',
         right: '20px',
         zIndex: 1000,
         background: 'rgba(255, 255, 255, 0.95)',
