@@ -10,13 +10,34 @@ declare global {
     }
 }
 
+// Determine if analytics tracking should be enabled
+export const isTrackingEnabled = (): boolean => {
+    if (typeof window === 'undefined') return false;
+
+    // Disable in non-production environments
+    if (process.env.NODE_ENV !== 'production') return false;
+
+    // Disable on localhost and common local domains
+    const hostname = window.location.hostname;
+    const isLocalHost =
+        hostname === 'localhost' ||
+        hostname === '127.0.0.1' ||
+        hostname.endsWith('.local');
+    if (isLocalHost) return false;
+
+    // Allow manual override via env flag
+    if (process.env.NEXT_PUBLIC_DISABLE_ANALYTICS === 'true') return false;
+
+    return true;
+};
+
 /**
  * Send event directly to GA4
  * @param eventName - The name of the event
  * @param params - Additional parameters for the event
  */
 export const trackEvent = (eventName: string, params?: EventParams) => {
-    console.log('trackEvent', eventName, params);
+    if (!isTrackingEnabled()) return;
     if (typeof window !== 'undefined' && window.gtag) {
         window.gtag('event', eventName, params);
     }
