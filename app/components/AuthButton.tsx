@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth } from '@/app/contexts/AuthContext';
+import { trackAuthNavClick } from '@/app/utils/analytics';
 import { useRouter } from 'next/navigation';
 
 export default function AuthButton() {
@@ -20,7 +21,7 @@ export default function AuthButton() {
   if (user) {
     return (
       <button 
-        onClick={() => router.push('/my-account')} 
+        onClick={() => { trackAuthNavClick('my-account'); router.push('/my-account'); }} 
         className="auth-button my-account"
       >
         Mitt konto
@@ -31,7 +32,7 @@ export default function AuthButton() {
   return (
     <>
       <button 
-        onClick={() => router.push('/auth')} 
+        onClick={() => { trackAuthNavClick('auth'); router.push('/auth'); }} 
         className="auth-button sign-in"
       >
         Logga in

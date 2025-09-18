@@ -1,9 +1,13 @@
 'use client';
 
 import Script from 'next/script';
-import { trackEvent, EventNames } from '@/app/utils/analytics';
+import { isTrackingEnabled } from '@/app/utils/analytics';
 
 export default function GoogleAnalytics({ GA_MEASUREMENT_ID }: { GA_MEASUREMENT_ID: string }) {
+    if (!isTrackingEnabled()) {
+        return null;
+    }
+    
     return (
         <>
             <Script

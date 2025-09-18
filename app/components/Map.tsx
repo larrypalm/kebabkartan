@@ -5,7 +5,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
-import { trackKebabPlaceView, trackRatingSubmitted, trackSearch, trackSearchResultSelect } from '@/app/utils/analytics';
+import { trackKebabPlaceView, trackRatingSubmitted, trackSearch, trackSearchResultSelect, trackMarkerClick, trackMarkerShare, trackMarkerExpand, trackMapLoaded, trackShowAllPlaces, trackIpLocationSuccess, trackIpLocationError, trackGeolocationPermission, trackRatingSubmitAttempt, trackRatingSubmitError, trackSearchOpen, trackSearchClear } from '@/app/utils/analytics';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Header from './Header';
@@ -132,6 +132,7 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
         }
 
         setIsSubmitting(true);
+        trackRatingSubmitAttempt(placeId, rating);
         setSubmittingRating(rating);
 
         try {
@@ -152,6 +153,7 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
 
             if (!response.ok) {
                 const errorText = await response.text();
+                trackRatingSubmitError(placeId, rating, errorText || 'Failed to update rating');
                 throw new Error(errorText || 'Failed to update rating');
             }
 
@@ -250,6 +252,7 @@ const ZoomableMarker: React.FC<ZoomableMarkerProps> = React.memo(({ location, on
     const handleClick = () => {
         map.setView([location.latitude, location.longitude], 15);
         onClickLocation(location);
+        trackMarkerClick(location.id, location.name);
     };
 
     const handlePopupClose = () => {
@@ -287,17 +290,23 @@ const ZoomableMarker: React.FC<ZoomableMarkerProps> = React.memo(({ location, on
                 title: `Kebabkartan - ${location.name}`,
                 text: `Check out ${location.name} on Kebabkartan!`,
                 url: url,
-            }).catch(console.error);
+            }).then(() => trackMarkerShare(location.id, location.name, 'webshare'))
+              .catch(console.error);
         } else {
             navigator.clipboard.writeText(url)
-                .then(() => alert('Link copied to clipboard!'))
+                .then(() => { 
+                    alert('Link copied to clipboard!');
+                    trackMarkerShare(location.id, location.name, 'clipboard');
+                })
                 .catch(console.error);
         }
     };
 
     const handleExpandToggle = (e: React.MouseEvent) => {
         e.stopPropagation();
-        setIsExpanded(!isExpanded);
+        const next = !isExpanded;
+        setIsExpanded(next);
+        trackMarkerExpand(location.id, location.name, next);
     };
 
     const pizzaIcon = useMemo(
@@ -606,6 +615,7 @@ const MapControls: React.FC<{
                                     trackSearch(e.target.value);
                                 }
                             }}
+                            onFocus={() => trackSearchOpen()}
                             style={{
                                 width: '100%',
                                 padding: '8px',
@@ -668,7 +678,6 @@ const MapControls: React.FC<{
                 </div>
             ) : (
                 <button
-                    onClick={() => setShowAllPlaces(true)}
                     className="mobile-search"
                     style={{
                         position: 'absolute',
@@ -685,6 +694,7 @@ const MapControls: React.FC<{
                         fontSize: '14px',
                         fontWeight: 'bold'
                     }}
+                    onClick={() => { setShowAllPlaces(true); trackShowAllPlaces(); }}
                 >
                     Show All Places
                 </button>
@@ -733,6 +743,7 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null }) => {
                 .query({ name: 'geolocation' })
                 .then((result) => {
                     setPermissionState(result.state);
+                    trackGeolocationPermission(result.state);
                     result.onchange = () => setPermissionState(result.state);
                 });
         }
@@ -752,10 +763,12 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null }) => {
                         longitude: data.longitude,
                         zoom: 11 // City level zoom
                     });
+                    trackIpLocationSuccess(data.latitude, data.longitude);
                 }
             } catch (error) {
                 console.error('Error getting location from IP:', error);
                 // Keep the Sweden view as fallback
+                trackIpLocationError(error instanceof Error ? error.message : 'Unknown error');
             }
         };
 
@@ -832,7 +845,7 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null }) => {
                     url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
                     attribution="&copy; OpenStreetMap contributor"
                     eventHandlers={{
-                        load: () => setMapLoaded(true),
+                        load: () => { setMapLoaded(true); trackMapLoaded(); },
                     }}
                 />
                 <Header permissionState={permissionState} />
