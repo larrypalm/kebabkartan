@@ -1,14 +1,20 @@
 User-agent: *
 Allow: /
 
-# Sitemap location
+# Sitemap
 Sitemap: https://www.kebabkartan.se/sitemap.xml
 
-# Crawl delay for better server performance
+# Crawl-delay for respectful crawling
 Crawl-delay: 1
 
 # Block admin and API routes
 Disallow: /admin/
 Disallow: /api/
-Disallow: /auth-test/
 Disallow: /dashboard/
+
+# Allow important pages
+Allow: /kebab-stockholm
+Allow: /kebab-goteborg
+Allow: /kebab-malmo
+Allow: /place/
+Allow: /suggestions

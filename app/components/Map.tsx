@@ -32,6 +32,8 @@ interface RatingStarsProps {
 
 interface MapProps {
     initialPlaceId?: string | null;
+    initialCenter?: [number, number];
+    initialZoom?: number;
 }
 
 interface ZoomableMarkerProps {
@@ -729,13 +731,17 @@ const useMapCentering = () => {
     return centerOnLocation;
 };
 
-const Map: React.FC<MapProps> = ({ initialPlaceId = null }) => {
+const Map: React.FC<MapProps> = ({ initialPlaceId = null, initialCenter, initialZoom }) => {
     const [markers, setMarkers] = useState<Location[]>([]);
     const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
     const [isInitialLoad, setIsInitialLoad] = useState(true);
     const [mapLoaded, setMapLoaded] = useState(false);
     const initialPlaceIdRef = useRef(initialPlaceId);
-    const [defaultView, setDefaultView] = useState<Coordinates>(SWEDEN_VIEW);
+    const [defaultView, setDefaultView] = useState<Coordinates>(
+        initialCenter && initialZoom 
+            ? { latitude: initialCenter[0], longitude: initialCenter[1], zoom: initialZoom }
+            : SWEDEN_VIEW
+    );
     const [showAllPlaces, setShowAllPlaces] = useState(!initialPlaceId);
     const [permissionState, setPermissionState] = useState<PermissionState | null>(null);
 
