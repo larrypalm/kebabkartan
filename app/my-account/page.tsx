@@ -357,6 +357,30 @@ export default function MyAccountPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
+                      E-postadress
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      disabled={true}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '6px',
+                        backgroundColor: '#f9fafb',
+                        color: '#6b7280',
+                        cursor: 'not-allowed'
+                      }}
+                      placeholder="E-postadress"
+                    />
+                    <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
+                      E-postadressen kan inte ändras här
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
                       Fullständigt namn
                     </label>
                     <input
