@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import AccountLayout from '@/app/components/AccountLayout';
 import { useAuth } from '@/app/contexts/AuthContext';
+import { trackAuthSigninAttempt, trackAuthSigninSuccess, trackAuthSigninError, trackAuthSignupAttempt, trackAuthSignupSuccess, trackAuthSignupError, trackAuthConfirmAttempt, trackAuthConfirmSuccess, trackAuthConfirmError, trackAuthResendCode, trackAuthForgotPasswordClick } from '@/app/utils/analytics';
 
 export default function AuthPage() {
   const router = useRouter();
@@ -35,6 +36,7 @@ export default function AuthPage() {
     e.preventDefault();
     setIsLoading(true);
     setMessage({ type: '', text: '' });
+    trackAuthSigninAttempt();
 
     try {
       await signIn({
@@ -42,9 +44,11 @@ export default function AuthPage() {
         password: formData.password
       });
       setMessage({ type: 'success', text: 'Inloggning lyckades!' });
+      trackAuthSigninSuccess();
       router.push('/my-account');
     } catch (error: any) {
       setMessage({ type: 'error', text: error.message || 'Inloggning misslyckades' });
+      trackAuthSigninError(error?.message || 'sign in error');
     } finally {
       setIsLoading(false);
     }
@@ -54,6 +58,7 @@ export default function AuthPage() {
     e.preventDefault();
     setIsLoading(true);
     setMessage({ type: '', text: '' });
+    trackAuthSignupAttempt();
 
     if (formData.password !== formData.confirmPassword) {
       setMessage({ type: 'error', text: 'Lösenorden matchar inte' });
@@ -68,8 +73,10 @@ export default function AuthPage() {
       });
       setIsConfirming(true);
       setMessage({ type: 'success', text: 'Konto skapat! Kontrollera din e-post för bekräftelsekod.' });
+      trackAuthSignupSuccess();
     } catch (error: any) {
       setMessage({ type: 'error', text: error.message || 'Kontoskapande misslyckades' });
+      trackAuthSignupError(error?.message || 'sign up error');
     } finally {
       setIsLoading(false);
     }
@@ -79,6 +86,7 @@ export default function AuthPage() {
     e.preventDefault();
     setIsLoading(true);
     setMessage({ type: '', text: '' });
+    trackAuthConfirmAttempt();
 
     try {
       await confirmSignUp({
@@ -88,8 +96,10 @@ export default function AuthPage() {
       setMessage({ type: 'success', text: 'Konto bekräftat! Du kan nu logga in.' });
       setIsConfirming(false);
       setIsSignUp(false);
+      trackAuthConfirmSuccess();
     } catch (error: any) {
       setMessage({ type: 'error', text: error.message || 'Kontobekräftelse misslyckades' });
+      trackAuthConfirmError(error?.message || 'confirm error');
     } finally {
       setIsLoading(false);
     }
@@ -99,6 +109,7 @@ export default function AuthPage() {
     try {
       await resendSignUpCode({ username: formData.email });
       setMessage({ type: 'success', text: 'Bekräftelsekod skickad igen till din e-post.' });
+      trackAuthResendCode();
     } catch (error: any) {
       setMessage({ type: 'error', text: error.message || 'Kunde inte skicka kod igen' });
     }
@@ -443,6 +454,7 @@ export default function AuthPage() {
           <div style={{ textAlign: 'center', marginTop: '16px' }}>
             <button
               type="button"
+              onClick={() => trackAuthForgotPasswordClick()}
               style={{
                 background: 'none',
                 border: 'none',

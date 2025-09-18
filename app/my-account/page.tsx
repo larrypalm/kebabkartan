@@ -5,6 +5,7 @@ import { useAuth } from '@/app/contexts/AuthContext';
 import { signOut, updatePassword, updateUserAttributes } from 'aws-amplify/auth';
 import { useRouter } from 'next/navigation';
 import AccountLayout from '@/app/components/AccountLayout';
+import { trackAccountVoteEditAttempt, trackAccountVoteEditSuccess, trackAccountVoteEditError } from '@/app/utils/analytics';
 
 export default function MyAccountPage() {
   const { user, loading } = useAuth();
@@ -150,6 +151,7 @@ export default function MyAccountPage() {
     }
 
     try {
+      trackAccountVoteEditAttempt(placeId, newRating);
       const response = await fetch('/api/ratings', {
         method: 'POST',
         headers: {
@@ -165,6 +167,7 @@ export default function MyAccountPage() {
 
       if (!response.ok) {
         const errorText = await response.text();
+        trackAccountVoteEditError(placeId, newRating, errorText || 'Failed to update rating');
         throw new Error(errorText || 'Failed to update rating');
       }
 
@@ -172,6 +175,7 @@ export default function MyAccountPage() {
       await fetchUserVotes();
       setEditingVote(null);
       setMessage({ type: 'success', text: 'Röst uppdaterad!' });
+      trackAccountVoteEditSuccess(placeId, newRating);
     } catch (error) {
       console.error('Error updating vote:', error);
       setMessage({ type: 'error', text: 'Röstuppdatering misslyckades. Försök igen.' });

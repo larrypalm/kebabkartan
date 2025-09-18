@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import AccountLayout from '@/app/components/AccountLayout';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { useGoogleReCaptcha, GoogleReCaptchaProvider } from 'react-google-recaptcha-v3';
+import { trackSuggestionSubmitAttempt, trackSuggestionSubmitSuccess, trackSuggestionSubmitError, trackNavClick } from '@/app/utils/analytics';
 
 const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!;
 
@@ -35,6 +36,7 @@ function SuggestionsForm() {
     e.preventDefault();
     setIsLoading(true);
     setMessage({ type: '', text: '' });
+    trackSuggestionSubmitAttempt();
 
     try {
       // Get reCAPTCHA token
@@ -64,12 +66,15 @@ function SuggestionsForm() {
           address: '',
           city: ''
         });
+        trackSuggestionSubmitSuccess();
       } else {
         const errorData = await response.json();
         setMessage({ type: 'error', text: errorData.message || 'Ett fel uppstod när förslaget skickades.' });
+        trackSuggestionSubmitError(errorData?.message || 'suggestion submit error');
       }
     } catch (error: any) {
       setMessage({ type: 'error', text: 'Ett fel uppstod när förslaget skickades. Försök igen senare.' });
+      trackSuggestionSubmitError(error?.message || 'suggestion submit error');
     } finally {
       setIsLoading(false);
     }
@@ -228,7 +233,7 @@ function SuggestionsForm() {
         <div style={{ textAlign: 'center', marginTop: '24px' }}>
           <button
             type="button"
-            onClick={() => router.push('/')}
+            onClick={() => { trackNavClick('back_to_home_from_suggestions'); router.push('/'); }}
             style={{
               background: 'none',
               border: 'none',
