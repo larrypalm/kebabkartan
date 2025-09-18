@@ -14,21 +14,29 @@ declare global {
 export const isTrackingEnabled = (): boolean => {
     if (typeof window === 'undefined') return false;
 
-    // Disable in non-production environments
-    if (process.env.NODE_ENV !== 'production') return false;
-
-    // Disable on localhost and common local domains
-    const hostname = window.location.hostname;
-    const isLocalHost =
-        hostname === 'localhost' ||
-        hostname === '127.0.0.1' ||
-        hostname.endsWith('.local');
-    if (isLocalHost) return false;
-
     // Allow manual override via env flag
     if (process.env.NEXT_PUBLIC_DISABLE_ANALYTICS === 'true') return false;
 
-    return true;
+    // In development mode, allow analytics without consent for testing
+    if (process.env.NODE_ENV === 'development') {
+        console.log('Analytics: Development mode - tracking enabled for testing');
+        return true;
+    }
+
+    // Check cookie consent for analytics
+    const consent = localStorage.getItem('kebabkartan-cookie-consent');
+    if (consent) {
+        try {
+            const preferences = JSON.parse(consent);
+            return preferences.analytics === true;
+        } catch (error) {
+            console.warn('Failed to parse cookie consent preferences:', error);
+            return false;
+        }
+    }
+
+    // If no consent given yet, don't track
+    return false;
 };
 
 /**
