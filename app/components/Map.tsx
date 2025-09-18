@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import MarkerClusterGroup from 'react-leaflet-cluster';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
@@ -9,6 +10,7 @@ import { trackKebabPlaceView, trackRatingSubmitted, trackSearch, trackSearchResu
 import { useAuth } from '@/app/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Header from './Header';
+import { MobileMenuProvider, useMobileMenu } from '@/app/contexts/MobileMenuContext';
 
 interface Location {
     id: string;
@@ -30,6 +32,8 @@ interface RatingStarsProps {
 
 interface MapProps {
     initialPlaceId?: string | null;
+    initialCenter?: [number, number];
+    initialZoom?: number;
 }
 
 interface ZoomableMarkerProps {
@@ -114,7 +118,7 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
 
         // Check if user is authenticated
         if (!user) {
-            const shouldSignIn = confirm('You need to sign in to vote on kebab places. Would you like to sign in now?');
+            const shouldSignIn = confirm('Du behöver logga in för att rösta på kebabställen. Vill du logga in nu?');
             if (shouldSignIn) {
                 router.push('/auth');
             }
@@ -127,7 +131,7 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
         }
 
         if (!executeRecaptcha) {
-            alert("reCAPTCHA is not ready. Please try again in a moment.");
+            alert("reCAPTCHA är inte redo. Försök igen om en stund.");
             return;
         }
 
@@ -153,8 +157,8 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
 
             if (!response.ok) {
                 const errorText = await response.text();
-                trackRatingSubmitError(placeId, rating, errorText || 'Failed to update rating');
-                throw new Error(errorText || 'Failed to update rating');
+                trackRatingSubmitError(placeId, rating, errorText || 'Misslyckades att uppdatera betyg');
+                throw new Error(errorText || 'Misslyckades att uppdatera betyg');
             }
 
             // Track the rating submission
@@ -166,7 +170,7 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
             window.location.reload();
         } catch (error) {
             console.error('Error updating rating:', error);
-            alert('Failed to update rating. Please try again.');
+            alert('Misslyckades att uppdatera betyg. Försök igen.');
         } finally {
             setIsSubmitting(false);
             setSubmittingRating(null);
@@ -200,7 +204,7 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
                                 transition: 'opacity 0.2s',
                                 filter: !isAuthenticated ? 'grayscale(0.3)' : 'none'
                             }}
-                            title={!isAuthenticated ? 'Sign in to vote' : (isAlreadyVoted ? 'You already voted this rating' : `Rate ${star} star${star > 1 ? 's' : ''}`)}
+                            title={!isAuthenticated ? 'Logga in för att rösta' : (isAlreadyVoted ? 'Du har redan röstat denna betyg' : `Betygsätt ${star} stjärn${star > 1 ? 'or' : 'a'}`)}
                         >
                             {(isActive || star <= (hoveredRating || userVote || currentRating)) ? '❤️' : '🤍'}
                         </button>
@@ -208,7 +212,7 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
                 })}
             </div>
             <div style={{ fontSize: '12px', marginTop: '4px' }}>
-                Average rating: {currentRating.toFixed(1)} ({totalVotes} votes)
+                Genomsnittsbetyg: {currentRating.toFixed(1)} ({totalVotes} röster)
             </div>
             {user && userVote && (
                 <div style={{ 
@@ -217,7 +221,7 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
                     color: '#e74c3c',
                     fontWeight: 'bold'
                 }}>
-                    Your rating: {userVote} star{userVote > 1 ? 's' : ''}
+                    Ditt betyg: {userVote} stjärn{userVote > 1 ? 'or' : 'a'}
                 </div>
             )}
             {!user && (
@@ -227,7 +231,7 @@ const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, total
                     color: '#666',
                     fontStyle: 'italic'
                 }}>
-                    Sign in to vote
+                    Logga in för att rösta
                 </div>
             )}
         </div>
@@ -250,16 +254,14 @@ const ZoomableMarker: React.FC<ZoomableMarkerProps> = React.memo(({ location, on
     const [isExpanded, setIsExpanded] = useState(false);
     
     const handleClick = () => {
+        console.log('Marker clicked:', location.name, location.id);
         map.setView([location.latitude, location.longitude], 15);
         onClickLocation(location);
         trackMarkerClick(location.id, location.name);
     };
 
     const handlePopupClose = () => {
-        window.history.pushState({}, '', '/');
-        window.dispatchEvent(new PopStateEvent('popstate'));
         onClickLocation(null);
-        setIsExpanded(false); // Reset expansion state when popup closes
     };
 
     // Handle automatic popup opening/closing
@@ -281,6 +283,13 @@ const ZoomableMarker: React.FC<ZoomableMarkerProps> = React.memo(({ location, on
         };
     }, []);
 
+    // Reset expansion state when marker is deselected
+    useEffect(() => {
+        if (!isSelected) {
+            setIsExpanded(false);
+        }
+    }, [isSelected]);
+
     const handleShare = (e: React.MouseEvent) => {
         e.stopPropagation();
         const url = `${window.location.origin}/place/${location.id}`;
@@ -288,14 +297,14 @@ const ZoomableMarker: React.FC<ZoomableMarkerProps> = React.memo(({ location, on
         if (navigator.share) {
             navigator.share({
                 title: `Kebabkartan - ${location.name}`,
-                text: `Check out ${location.name} on Kebabkartan!`,
+                text: `Kolla in ${location.name} på Kebabkartan!`,
                 url: url,
             }).then(() => trackMarkerShare(location.id, location.name, 'webshare'))
               .catch(console.error);
         } else {
             navigator.clipboard.writeText(url)
                 .then(() => { 
-                    alert('Link copied to clipboard!');
+                    alert('Länk kopierad till urklipp!');
                     trackMarkerShare(location.id, location.name, 'clipboard');
                 })
                 .catch(console.error);
@@ -382,9 +391,9 @@ const ZoomableMarker: React.FC<ZoomableMarkerProps> = React.memo(({ location, on
                                 e.currentTarget.style.backgroundColor = '#f8f9fa';
                                 e.currentTarget.style.borderColor = '#dee2e6';
                             }}
-                            title={isExpanded ? 'Collapse details' : 'Expand details'}
+                            title={isExpanded ? 'Dölj detaljer' : 'Visa detaljer'}
                         >
-                            {isExpanded ? 'Less' : 'More'}
+                            {isExpanded ? 'Minde' : 'Mer'}
                         </button>
                     </div>
                     
@@ -408,7 +417,7 @@ const ZoomableMarker: React.FC<ZoomableMarkerProps> = React.memo(({ location, on
                                 color: '#495057',
                                 margin: '0 0 8px 0'
                             }}>
-                                Restaurant Details
+                                Restaurangdetaljer
                             </h4>
                             
                             <div style={{ fontSize: '12px', lineHeight: '1.4', color: '#6c757d' }}>
@@ -418,15 +427,15 @@ const ZoomableMarker: React.FC<ZoomableMarkerProps> = React.memo(({ location, on
                                 </div>
                                 <div style={{ marginBottom: '6px', display: 'flex', alignItems: 'center' }}>
                                     <span style={{ marginRight: '6px' }}>⭐</span>
-                                    <span>{location.rating.toFixed(1)}/5.0 ({location.totalVotes} votes)</span>
+                                    <span>{location.rating.toFixed(1)}/5.0 ({location.totalVotes} röster)</span>
                                 </div>
                                 <div style={{ marginBottom: '6px', display: 'flex', alignItems: 'center' }}>
                                     <span style={{ marginRight: '6px' }}>💰</span>
-                                    <span>{location.priceRange ? `${location.priceRange} SEK` : 'Price not specified'}</span>
+                                    <span>{location.priceRange ? `${location.priceRange} SEK` : 'Pris ej angivet'}</span>
                                 </div>
                                 <div style={{ marginBottom: '0', display: 'flex', alignItems: 'center' }}>
                                     <span style={{ marginRight: '6px' }}>🕒</span>
-                                    <span>{location.openingHours || 'Hours not specified'}</span>
+                                    <span>{location.openingHours || 'Öppettider ej angivna'}</span>
                                 </div>
                             </div>
                         </div>
@@ -451,7 +460,7 @@ const ZoomableMarker: React.FC<ZoomableMarkerProps> = React.memo(({ location, on
                             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#218838'}
                             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#28a745'}
                         >
-                            📤 Share Location
+                            📤 Dela plats
                         </button>
                     </div>
                 </div>
@@ -524,6 +533,7 @@ const MapControls: React.FC<{
     const [showAllPlaces, setShowAllPlaces] = useState(!initialPlaceId);
     const searchInputRef = useRef<HTMLInputElement>(null);
     const map = useMap();
+    const { isMenuOpen } = useMobileMenu();
 
     useEffect(() => {
         onShowAllPlacesChange(showAllPlaces);
@@ -590,7 +600,7 @@ const MapControls: React.FC<{
 
     return (
         <>
-            {showAllPlaces ? (
+            {showAllPlaces && !isMenuOpen ? (
                 <div className="mobile-search" style={{
                     position: 'absolute',
                     top: '20px',
@@ -603,11 +613,11 @@ const MapControls: React.FC<{
                     borderRadius: '8px',
                     boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
                 }}>
-                    <div style={{ position: 'relative' }}>
+                    <div style={{ position: 'relative', display: 'flex' }}>
                         <input
                             ref={searchInputRef}
                             type="text"
-                            placeholder="Search kebab places... (Ctrl/Cmd + K)"
+                            placeholder="Sök kebabställen... (Ctrl/Cmd + K)"
                             value={searchQuery}
                             onChange={(e) => {
                                 setSearchQuery(e.target.value);
@@ -676,7 +686,7 @@ const MapControls: React.FC<{
                         </div>
                     )}
                 </div>
-            ) : (
+            ) : !isMenuOpen ? (
                 <button
                     className="mobile-search"
                     style={{
@@ -696,9 +706,9 @@ const MapControls: React.FC<{
                     }}
                     onClick={() => { setShowAllPlaces(true); trackShowAllPlaces(); }}
                 >
-                    Show All Places
+                    Visa alla platser
                 </button>
-            )}
+            ) : null}
         </>
     );
 };
@@ -726,15 +736,40 @@ const useMapCentering = () => {
     return centerOnLocation;
 };
 
-const Map: React.FC<MapProps> = ({ initialPlaceId = null }) => {
+const Map: React.FC<MapProps> = ({ initialPlaceId = null, initialCenter, initialZoom }) => {
     const [markers, setMarkers] = useState<Location[]>([]);
     const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+    
+    // Debug function to log location selection
+    const handleLocationSelect = (location: Location | null) => {
+        console.log('Location selected:', location?.name, location?.id);
+        setSelectedLocation(location);
+    };
     const [isInitialLoad, setIsInitialLoad] = useState(true);
     const [mapLoaded, setMapLoaded] = useState(false);
     const initialPlaceIdRef = useRef(initialPlaceId);
-    const [defaultView, setDefaultView] = useState<Coordinates>(SWEDEN_VIEW);
+    const [defaultView, setDefaultView] = useState<Coordinates>(
+        initialCenter && initialZoom 
+            ? { latitude: initialCenter[0], longitude: initialCenter[1], zoom: initialZoom }
+            : SWEDEN_VIEW
+    );
     const [showAllPlaces, setShowAllPlaces] = useState(!initialPlaceId);
     const [permissionState, setPermissionState] = useState<PermissionState | null>(null);
+
+    const createClusterCustomIcon = (cluster: any) => {
+        const count = cluster.getChildCount();
+        return L.divIcon({
+            html: `
+                <div class="cluster-icon" role="img" aria-label="${count} places">
+                    <span class="cluster-emoji" aria-hidden="true" style="font-size: 54px !important;">🍕</span>
+                </div>
+            `,
+            className: 'marker-cluster-custom',
+            iconSize: [44, 44],
+            iconAnchor: [22, 44],
+            popupAnchor: [0, -44]
+        });
+    };
 
     useEffect(() => {
         // Check if geolocation permission is available
@@ -812,75 +847,108 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null }) => {
             if (window.location.pathname !== newPath) {
                 window.history.pushState({}, '', newPath);
             }
+        } else if (!isInitialLoad && !selectedLocation) {
+            // Reset URL when no location is selected
+            if (window.location.pathname !== '/') {
+                window.history.pushState({}, '', '/');
+            }
         }
     }, [selectedLocation, isInitialLoad]);
 
-    return (
-        <div style={{ position: 'relative', width: '100vw', height: '100vh', display: 'flex' }}>
-            {!mapLoaded && (
-                <img
-                    src={MAP_PLACEHOLDER}
-                    alt="Map loading"
-                    style={{
-                        position: 'absolute',
-                        width: 'calc(100% - 280px)',
-                        height: '100%',
-                        objectFit: 'cover',
-                        zIndex: 1,
-                        top: 0,
-                        left: '280px'
-                    }}
-                />
-            )}
-            <MapContainer
-                center={selectedLocation 
-                    ? [selectedLocation.latitude, selectedLocation.longitude]
-                    : [defaultView.latitude, defaultView.longitude]}
-                zoom={selectedLocation ? 15 : defaultView.zoom}
-                scrollWheelZoom={true}
-                touchZoom={true}
-                zoomControl={false}
-            >
-                <TileLayer
-                    url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution="&copy; OpenStreetMap contributor"
-                    eventHandlers={{
-                        load: () => { setMapLoaded(true); trackMapLoaded(); },
-                    }}
-                />
-                <Header permissionState={permissionState} />
-                <MapControls 
-                    markers={markers} 
-                    onLocationSelect={setSelectedLocation}
-                    initialPlaceId={initialPlaceId}
-                    onShowAllPlacesChange={setShowAllPlaces}
-                />
-                <CenterMapOnLocation location={selectedLocation} />
-                {markers
-                    .filter(location => showAllPlaces || location.id === selectedLocation?.id)
-                    .map((location) => (
-                        <ZoomableMarker 
-                            key={location.id} 
-                            location={location} 
-                            onClickLocation={setSelectedLocation}
-                            isSelected={selectedLocation?.id === location.id}
-                        />
-                    ))}
+    // Handle browser back/forward navigation
+    useEffect(() => {
+        const handlePopState = () => {
+            const pathParts = window.location.pathname.split('/');
+            const placeId = pathParts[2]; // /place/[id]
+            
+            if (placeId && placeId !== selectedLocation?.id) {
+                // Find the place with this ID and select it
+                const place = markers.find(marker => marker.id === placeId);
+                if (place) {
+                    setSelectedLocation(place);
+                }
+            } else if (!placeId && selectedLocation) {
+                // URL doesn't have a place ID, deselect current location
+                setSelectedLocation(null);
+            }
+        };
 
-                {selectedLocation && (
-                    <SetViewOnSelect 
-                        lat={selectedLocation.latitude} 
-                        lng={selectedLocation.longitude} 
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, [markers, selectedLocation]);
+
+    return (
+        <MobileMenuProvider>
+            <div style={{ position: 'relative', width: '100vw', height: '100vh', display: 'flex' }}>
+                {!mapLoaded && (
+                    <img
+                        src={MAP_PLACEHOLDER}
+                        alt="Map loading"
+                        style={{
+                            position: 'absolute',
+                            width: 'calc(100% - 280px)',
+                            height: '100%',
+                            objectFit: 'cover',
+                            zIndex: 1,
+                            top: 0,
+                            left: '280px'
+                        }}
                     />
                 )}
-            </MapContainer>
+                <MapContainer
+                    center={selectedLocation 
+                        ? [selectedLocation.latitude, selectedLocation.longitude]
+                        : [defaultView.latitude, defaultView.longitude]}
+                    zoom={selectedLocation ? 15 : defaultView.zoom}
+                    scrollWheelZoom={true}
+                    touchZoom={true}
+                    zoomControl={false}
+                >
+                    <TileLayer
+                        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        attribution="&copy; OpenStreetMap contributor"
+                        eventHandlers={{
+                            load: () => { setMapLoaded(true); trackMapLoaded(); },
+                        }}
+                    />
+                    <Header permissionState={permissionState} />
+                    <MapControls 
+                        markers={markers} 
+                        onLocationSelect={handleLocationSelect}
+                        initialPlaceId={initialPlaceId}
+                        onShowAllPlacesChange={setShowAllPlaces}
+                    />
+                    <CenterMapOnLocation location={selectedLocation} />
+                    {/* Temporarily disable cluster group to test click events */}
+                    {markers
+                        .filter(location => showAllPlaces || location.id === selectedLocation?.id)
+                        .map((location) => {
+                            console.log('Rendering marker:', location.name, 'showAllPlaces:', showAllPlaces, 'selectedLocation:', selectedLocation?.id);
+                            return (
+                            <ZoomableMarker 
+                                key={location.id} 
+                                location={location} 
+                                onClickLocation={handleLocationSelect}
+                                isSelected={selectedLocation?.id === location.id}
+                            />
+                            );
+                        })}
 
-            {selectedLocation && (
-                <script type="application/ld+json">
-                    {JSON.stringify(generateStructuredData(selectedLocation))}
-                </script>
-            )}
-        </div>
+                    {selectedLocation && (
+                        <SetViewOnSelect 
+                            lat={selectedLocation.latitude} 
+                            lng={selectedLocation.longitude} 
+                        />
+                    )}
+                </MapContainer>
+
+                {selectedLocation && (
+                    <script type="application/ld+json">
+                        {JSON.stringify(generateStructuredData(selectedLocation))}
+                    </script>
+                )}
+            </div>
+        </MobileMenuProvider>
     );
 };
 

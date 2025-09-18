@@ -45,10 +45,10 @@ export default function AdminPlacesPage() {
                 const data = await response.json();
                 setPlaces(data);
             } else {
-                setError('Failed to fetch places');
+                setError('Misslyckades att hämta platser');
             }
         } catch (error) {
-            setError('Failed to fetch places');
+            setError('Misslyckades att hämta platser');
         } finally {
             setLoading(false);
         }
