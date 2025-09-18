@@ -30,55 +30,48 @@ export default async function GoteborgKebabPage() {
   console.log('places', places)
 
   return (
-    <>
-      {/* SEO Content - Hidden but accessible to search engines */}
-      <div className="sr-only">
-        <h1>Bästa Kebab i Göteborg | Kebabkartan</h1>
-        <p>Upptäck Göteborgs bästa kebabställen med hjälp av våra användares recensioner och betyg. Hitta din nya favorit kebab i Göteborg!</p>
+    <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
+      {/* SEO Content - Compact header */}
+      <div style={{
+        position: 'absolute',
+        top: '20px',
+        left: '20px',
+        right: '20px',
+        zIndex: 1000,
+        background: 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(10px)',
+        borderRadius: '12px',
+        padding: '16px',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+        maxWidth: '600px'
+      }}>
+        <h1 style={{ 
+          fontSize: '24px', 
+          fontWeight: 'bold', 
+          margin: '0 0 8px 0',
+          color: '#1f2937'
+        }}>
+          Bästa Kebab i Göteborg
+        </h1>
+        <p style={{ 
+          fontSize: '14px', 
+          color: '#6b7280', 
+          margin: '0 0 12px 0',
+          lineHeight: '1.4'
+        }}>
+          Upptäck Göteborgs bästa kebabställen med hjälp av våra användares recensioner och betyg.
+        </p>
         
-        <h2>Varför välja Kebabkartan för kebab i Göteborg?</h2>
-        <ul>
-          <li>Verifierade recensioner från riktiga kebabälskare</li>
-          <li>Uppdaterade betyg för alla kebabställen i Göteborg</li>
-          <li>Enkel navigation med interaktiv karta</li>
-          <li>Lokala insikter om Göteborgs bästa kebab</li>
-        </ul>
-
-        <h2>Populära kebabställen i Göteborg</h2>
-        <p>Här är några av de mest omtyckta kebabställena i Göteborg enligt våra användare:</p>
-        
-        {goteborgPlaces.length > 0 && (
-          <div>
-            {goteborgPlaces.slice(0, 5).map((place: any) => (
-              <div key={place.id}>
-                <h3>{place.name}</h3>
-                <p>{place.address}</p>
-                {place.rating && <p>Betyg: {place.rating}/5</p>}
-              </div>
-            ))}
-          </div>
-        )}
-
-        <h2>Så här hittar du bästa kebaben i Göteborg</h2>
-        <div>
-          <h3>1. Använd vår karta</h3>
-          <p>Zooma in på Göteborg i vår interaktiva karta för att se alla kebabställen i området.</p>
-          
-          <h3>2. Läs recensioner</h3>
-          <p>Kolla vad andra kebabälskare säger om olika ställen innan du beställer.</p>
-          
-          <h3>3. Jämför betyg</h3>
-          <p>Se genomsnittsbetyg för att snabbt hitta de bästa kebabställena.</p>
-          
-          <h3>4. Dela dina erfarenheter</h3>
-          <p>Betygsätt och recensera kebabställen för att hjälpa andra kebabälskare.</p>
+        {/* Quick info */}
+        <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#6b7280' }}>
+          <span>✓ Verifierade recensioner</span>
+          <span>✓ Uppdaterade betyg</span>
+          <span>✓ Interaktiv karta</span>
         </div>
       </div>
       
       {/* Interactive Map - Full Screen */}
-      <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
-        <Map initialPlaceId={null} initialCenter={[57.7089, 11.9746]} initialZoom={12} />
-      </div>
-    </>
+      <Map initialPlaceId={null} initialCenter={[57.7089, 11.9746]} initialZoom={12} />
+    </div>
   );
 }

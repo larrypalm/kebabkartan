@@ -28,55 +28,48 @@ export default async function LinkopingKebabPage() {
   );
 
   return (
-    <>
-      {/* SEO Content - Hidden but accessible to search engines */}
-      <div className="sr-only">
-        <h1>Bästa Kebab i Linköping | Kebabkartan</h1>
-        <p>Upptäck Linköpings bästa kebabställen med hjälp av våra användares recensioner och betyg. Hitta din nya favorit kebab i Linköping!</p>
+    <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
+      {/* SEO Content - Compact header */}
+      <div style={{
+        position: 'absolute',
+        top: '20px',
+        left: '20px',
+        right: '20px',
+        zIndex: 1000,
+        background: 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(10px)',
+        borderRadius: '12px',
+        padding: '16px',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+        maxWidth: '600px'
+      }}>
+        <h1 style={{ 
+          fontSize: '24px', 
+          fontWeight: 'bold', 
+          margin: '0 0 8px 0',
+          color: '#1f2937'
+        }}>
+          Bästa Kebab i Linköping
+        </h1>
+        <p style={{ 
+          fontSize: '14px', 
+          color: '#6b7280', 
+          margin: '0 0 12px 0',
+          lineHeight: '1.4'
+        }}>
+          Upptäck Linköpings bästa kebabställen med hjälp av våra användares recensioner och betyg.
+        </p>
         
-        <h2>Varför välja Kebabkartan för kebab i Linköping?</h2>
-        <ul>
-          <li>Verifierade recensioner från riktiga kebabälskare</li>
-          <li>Uppdaterade betyg för alla kebabställen i Linköping</li>
-          <li>Enkel navigation med interaktiv karta</li>
-          <li>Lokala insikter om Linköpings bästa kebab</li>
-        </ul>
-
-        <h2>Populära kebabställen i Linköping</h2>
-        <p>Här är några av de mest omtyckta kebabställena i Linköping enligt våra användare:</p>
-        
-        {linkopingPlaces.length > 0 && (
-          <div>
-            {linkopingPlaces.slice(0, 5).map((place: any) => (
-              <div key={place.id}>
-                <h3>{place.name}</h3>
-                <p>{place.address}</p>
-                {place.rating && <p>Betyg: {place.rating}/5</p>}
-              </div>
-            ))}
-          </div>
-        )}
-
-        <h2>Så här hittar du bästa kebaben i Linköping</h2>
-        <div>
-          <h3>1. Använd vår karta</h3>
-          <p>Zooma in på Linköping i vår interaktiva karta för att se alla kebabställen i området.</p>
-          
-          <h3>2. Läs recensioner</h3>
-          <p>Kolla vad andra kebabälskare säger om olika ställen innan du beställer.</p>
-          
-          <h3>3. Jämför betyg</h3>
-          <p>Se genomsnittsbetyg för att snabbt hitta de bästa kebabställena.</p>
-          
-          <h3>4. Dela dina erfarenheter</h3>
-          <p>Betygsätt och recensera kebabställen för att hjälpa andra kebabälskare.</p>
+        {/* Quick info */}
+        <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#6b7280' }}>
+          <span>✓ Verifierade recensioner</span>
+          <span>✓ Uppdaterade betyg</span>
+          <span>✓ Interaktiv karta</span>
         </div>
       </div>
       
       {/* Interactive Map - Full Screen */}
-      <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
-        <Map initialPlaceId={null} initialCenter={[58.4108, 15.6214]} initialZoom={12} />
-      </div>
-    </>
+      <Map initialPlaceId={null} initialCenter={[58.4108, 15.6214]} initialZoom={12} />
+    </div>
   );
 }
