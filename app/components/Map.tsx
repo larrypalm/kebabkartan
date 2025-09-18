@@ -613,7 +613,7 @@ const MapControls: React.FC<{
                     borderRadius: '8px',
                     boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
                 }}>
-                    <div style={{ position: 'relative' }}>
+                    <div style={{ position: 'relative', display: 'flex' }}>
                         <input
                             ref={searchInputRef}
                             type="text"
