@@ -7,6 +7,8 @@ import Image from 'next/image';
 import AuthButton from './AuthButton';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { useMobileMenu } from '@/app/contexts/MobileMenuContext';
+import { CityNavigation } from '@/app/components/ui';
+import { cities } from '@/app/data/cities';
 
 interface HeaderProps {
     permissionState: PermissionState | null;
@@ -122,6 +124,7 @@ const Header: React.FC<HeaderProps> = ({ permissionState }) => {
                     backgroundColor: 'rgba(255, 255, 255, 0.95)',
                     backdropFilter: 'blur(10px)',
                     borderRight: isMobile ? 'none' : '1px solid rgba(0, 0, 0, 0.1)',
+                    maxWidth: '20vw',
                     boxShadow: '2px 0 10px rgba(0, 0, 0, 0.1)',
                     ...(isMobile && {
                         left: sidebarOpen ? '0' : '-100vw',
@@ -218,209 +221,16 @@ const Header: React.FC<HeaderProps> = ({ permissionState }) => {
                 </button>
                 
                 {/* Location quick links */}
-                <div style={{ 
-                    width: '100%', 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    gap: '8px',
-                    marginBottom: '12px'
-                }}>
-                    <div style={{ 
-                        fontSize: '12px', 
-                        fontWeight: '600', 
-                        color: '#6b7280', 
-                        textAlign: 'center',
-                        marginBottom: '4px'
-                    }}>
-                        Populära städer
-                    </div>
-                    <button
-                        onClick={() => {
-                            router.push('/kebab-stockholm');
-                            if (isMobile) {
-                                setSidebarOpen(false);
-                                setIsMenuOpen(false);
-                            }
-                        }}
-                        style={{
-                            width: '100%',
-                            padding: '8px 12px',
-                            backgroundColor: 'transparent',
-                            color: '#374151',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            fontSize: '12px',
-                            fontWeight: '500',
-                            transition: 'all 0.2s'
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = '#f3f4f6';
-                            e.currentTarget.style.borderColor = '#9ca3af';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                            e.currentTarget.style.borderColor = '#d1d5db';
-                        }}
-                    >
-                        Stockholm
-                    </button>
-                    <button
-                        onClick={() => {
-                            router.push('/kebab-goteborg');
-                            if (isMobile) {
-                                setSidebarOpen(false);
-                                setIsMenuOpen(false);
-                            }
-                        }}
-                        style={{
-                            width: '100%',
-                            padding: '8px 12px',
-                            backgroundColor: 'transparent',
-                            color: '#374151',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            fontSize: '12px',
-                            fontWeight: '500',
-                            transition: 'all 0.2s'
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = '#f3f4f6';
-                            e.currentTarget.style.borderColor = '#9ca3af';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                            e.currentTarget.style.borderColor = '#d1d5db';
-                        }}
-                    >
-                        Göteborg
-                    </button>
-                    <button
-                        onClick={() => {
-                            router.push('/kebab-malmo');
-                            if (isMobile) {
-                                setSidebarOpen(false);
-                                setIsMenuOpen(false);
-                            }
-                        }}
-                        style={{
-                            width: '100%',
-                            padding: '8px 12px',
-                            backgroundColor: 'transparent',
-                            color: '#374151',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            fontSize: '12px',
-                            fontWeight: '500',
-                            transition: 'all 0.2s'
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = '#f3f4f6';
-                            e.currentTarget.style.borderColor = '#9ca3af';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                            e.currentTarget.style.borderColor = '#d1d5db';
-                        }}
-                    >
-                        Malmö
-                    </button>
-                    <button
-                        onClick={() => {
-                            router.push('/kebab-jonkoping');
-                            if (isMobile) {
-                                setSidebarOpen(false);
-                                setIsMenuOpen(false);
-                            }
-                        }}
-                        style={{
-                            width: '100%',
-                            padding: '8px 12px',
-                            backgroundColor: 'transparent',
-                            color: '#374151',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            fontSize: '12px',
-                            fontWeight: '500',
-                            transition: 'all 0.2s'
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = '#f3f4f6';
-                            e.currentTarget.style.borderColor = '#9ca3af';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                            e.currentTarget.style.borderColor = '#d1d5db';
-                        }}
-                    >
-                        Jönköping
-                    </button>
-                    <button
-                        onClick={() => {
-                            router.push('/kebab-linkoping');
-                            if (isMobile) {
-                                setSidebarOpen(false);
-                                setIsMenuOpen(false);
-                            }
-                        }}
-                        style={{
-                            width: '100%',
-                            padding: '8px 12px',
-                            backgroundColor: 'transparent',
-                            color: '#374151',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            fontSize: '12px',
-                            fontWeight: '500',
-                            transition: 'all 0.2s'
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = '#f3f4f6';
-                            e.currentTarget.style.borderColor = '#9ca3af';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                            e.currentTarget.style.borderColor = '#d1d5db';
-                        }}
-                    >
-                        Linköping
-                    </button>
-                    <button
-                        onClick={() => {
-                            router.push('/kebab-lund');
-                            if (isMobile) {
-                                setSidebarOpen(false);
-                                setIsMenuOpen(false);
-                            }
-                        }}
-                        style={{
-                            width: '100%',
-                            padding: '8px 12px',
-                            backgroundColor: 'transparent',
-                            color: '#374151',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            fontSize: '12px',
-                            fontWeight: '500',
-                            transition: 'all 0.2s'
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = '#f3f4f6';
-                            e.currentTarget.style.borderColor = '#9ca3af';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                            e.currentTarget.style.borderColor = '#d1d5db';
-                        }}
-                    >
-                        Lund
-                    </button>
-                </div>
+                <CityNavigation 
+                    cities={cities}
+                    onCityClick={() => {
+                        if (isMobile) {
+                            setSidebarOpen(false);
+                            setIsMenuOpen(false);
+                        }
+                    }}
+                    style={{ marginBottom: '12px' }}
+                />
                 
                 <AuthButton />
             </div>

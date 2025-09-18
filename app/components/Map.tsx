@@ -254,16 +254,14 @@ const ZoomableMarker: React.FC<ZoomableMarkerProps> = React.memo(({ location, on
     const [isExpanded, setIsExpanded] = useState(false);
     
     const handleClick = () => {
+        console.log('Marker clicked:', location.name, location.id);
         map.setView([location.latitude, location.longitude], 15);
         onClickLocation(location);
         trackMarkerClick(location.id, location.name);
     };
 
     const handlePopupClose = () => {
-        window.history.pushState({}, '', '/');
-        window.dispatchEvent(new PopStateEvent('popstate'));
         onClickLocation(null);
-        setIsExpanded(false); // Reset expansion state when popup closes
     };
 
     // Handle automatic popup opening/closing
@@ -284,6 +282,13 @@ const ZoomableMarker: React.FC<ZoomableMarkerProps> = React.memo(({ location, on
             }
         };
     }, []);
+
+    // Reset expansion state when marker is deselected
+    useEffect(() => {
+        if (!isSelected) {
+            setIsExpanded(false);
+        }
+    }, [isSelected]);
 
     const handleShare = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -388,7 +393,7 @@ const ZoomableMarker: React.FC<ZoomableMarkerProps> = React.memo(({ location, on
                             }}
                             title={isExpanded ? 'Collapse details' : 'Expand details'}
                         >
-                            {isExpanded ? 'Less' : 'More'}
+                            {isExpanded ? 'Minde' : 'Mer'}
                         </button>
                     </div>
                     
@@ -734,6 +739,12 @@ const useMapCentering = () => {
 const Map: React.FC<MapProps> = ({ initialPlaceId = null, initialCenter, initialZoom }) => {
     const [markers, setMarkers] = useState<Location[]>([]);
     const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+    
+    // Debug function to log location selection
+    const handleLocationSelect = (location: Location | null) => {
+        console.log('Location selected:', location?.name, location?.id);
+        setSelectedLocation(location);
+    };
     const [isInitialLoad, setIsInitialLoad] = useState(true);
     const [mapLoaded, setMapLoaded] = useState(false);
     const initialPlaceIdRef = useRef(initialPlaceId);
@@ -836,8 +847,35 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null, initialCenter, initial
             if (window.location.pathname !== newPath) {
                 window.history.pushState({}, '', newPath);
             }
+        } else if (!isInitialLoad && !selectedLocation) {
+            // Reset URL when no location is selected
+            if (window.location.pathname !== '/') {
+                window.history.pushState({}, '', '/');
+            }
         }
     }, [selectedLocation, isInitialLoad]);
+
+    // Handle browser back/forward navigation
+    useEffect(() => {
+        const handlePopState = () => {
+            const pathParts = window.location.pathname.split('/');
+            const placeId = pathParts[2]; // /place/[id]
+            
+            if (placeId && placeId !== selectedLocation?.id) {
+                // Find the place with this ID and select it
+                const place = markers.find(marker => marker.id === placeId);
+                if (place) {
+                    setSelectedLocation(place);
+                }
+            } else if (!placeId && selectedLocation) {
+                // URL doesn't have a place ID, deselect current location
+                setSelectedLocation(null);
+            }
+        };
+
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, [markers, selectedLocation]);
 
     return (
         <MobileMenuProvider>
@@ -876,28 +914,25 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null, initialCenter, initial
                     <Header permissionState={permissionState} />
                     <MapControls 
                         markers={markers} 
-                        onLocationSelect={setSelectedLocation}
+                        onLocationSelect={handleLocationSelect}
                         initialPlaceId={initialPlaceId}
                         onShowAllPlacesChange={setShowAllPlaces}
                     />
                     <CenterMapOnLocation location={selectedLocation} />
-                    <MarkerClusterGroup
-                        chunkedLoading
-                        showCoverageOnHover={false}
-                        spiderfyOnMaxZoom
-                        iconCreateFunction={createClusterCustomIcon}
-                    >
-                        {markers
-                            .filter(location => showAllPlaces || location.id === selectedLocation?.id)
-                            .map((location) => (
-                                <ZoomableMarker 
-                                    key={location.id} 
-                                    location={location} 
-                                    onClickLocation={setSelectedLocation}
-                                    isSelected={selectedLocation?.id === location.id}
-                                />
-                            ))}
-                    </MarkerClusterGroup>
+                    {/* Temporarily disable cluster group to test click events */}
+                    {markers
+                        .filter(location => showAllPlaces || location.id === selectedLocation?.id)
+                        .map((location) => {
+                            console.log('Rendering marker:', location.name, 'showAllPlaces:', showAllPlaces, 'selectedLocation:', selectedLocation?.id);
+                            return (
+                            <ZoomableMarker 
+                                key={location.id} 
+                                location={location} 
+                                onClickLocation={handleLocationSelect}
+                                isSelected={selectedLocation?.id === location.id}
+                            />
+                            );
+                        })}
 
                     {selectedLocation && (
                         <SetViewOnSelect 
