@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import AuthButton from './AuthButton';
 import { useAuth } from '@/app/contexts/AuthContext';
+import { useMobileMenu } from '@/app/contexts/MobileMenuContext';
 
 interface HeaderProps {
     permissionState: PermissionState | null;
@@ -15,6 +16,7 @@ const Header: React.FC<HeaderProps> = ({ permissionState }) => {
     const map = useMap();
     const router = useRouter();
     const { user } = useAuth();
+    const { isMenuOpen, setIsMenuOpen } = useMobileMenu();
     const [isMobile, setIsMobile] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -43,6 +45,10 @@ const Header: React.FC<HeaderProps> = ({ permissionState }) => {
         } else {
             map.setView([62.5, 16.5], 5);
         }
+        if (isMobile) {
+            setSidebarOpen(false);
+            setIsMenuOpen(false);
+        }
     };
 
     const handleLogoClick = () => {
@@ -50,6 +56,7 @@ const Header: React.FC<HeaderProps> = ({ permissionState }) => {
         router.push('/');
         if (isMobile) {
             setSidebarOpen(false);
+            setIsMenuOpen(false);
         }
     };
 
@@ -61,11 +68,14 @@ const Header: React.FC<HeaderProps> = ({ permissionState }) => {
         }
         if (isMobile) {
             setSidebarOpen(false);
+            setIsMenuOpen(false);
         }
     };
 
     const toggleSidebar = () => {
-        setSidebarOpen(!sidebarOpen);
+        const newState = !sidebarOpen;
+        setSidebarOpen(newState);
+        setIsMenuOpen(newState);
     };
 
     return (

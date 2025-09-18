@@ -10,6 +10,7 @@ import { trackKebabPlaceView, trackRatingSubmitted, trackSearch, trackSearchResu
 import { useAuth } from '@/app/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Header from './Header';
+import { MobileMenuProvider, useMobileMenu } from '@/app/contexts/MobileMenuContext';
 
 interface Location {
     id: string;
@@ -525,6 +526,7 @@ const MapControls: React.FC<{
     const [showAllPlaces, setShowAllPlaces] = useState(!initialPlaceId);
     const searchInputRef = useRef<HTMLInputElement>(null);
     const map = useMap();
+    const { isMenuOpen } = useMobileMenu();
 
     useEffect(() => {
         onShowAllPlacesChange(showAllPlaces);
@@ -591,7 +593,7 @@ const MapControls: React.FC<{
 
     return (
         <>
-            {showAllPlaces ? (
+            {showAllPlaces && !isMenuOpen ? (
                 <div className="mobile-search" style={{
                     position: 'absolute',
                     top: '20px',
@@ -677,7 +679,7 @@ const MapControls: React.FC<{
                         </div>
                     )}
                 </div>
-            ) : (
+            ) : !isMenuOpen ? (
                 <button
                     className="mobile-search"
                     style={{
@@ -699,7 +701,7 @@ const MapControls: React.FC<{
                 >
                     Show All Places
                 </button>
-            )}
+            ) : null}
         </>
     );
 };
@@ -832,78 +834,80 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null }) => {
     }, [selectedLocation, isInitialLoad]);
 
     return (
-        <div style={{ position: 'relative', width: '100vw', height: '100vh', display: 'flex' }}>
-            {!mapLoaded && (
-                <img
-                    src={MAP_PLACEHOLDER}
-                    alt="Map loading"
-                    style={{
-                        position: 'absolute',
-                        width: 'calc(100% - 280px)',
-                        height: '100%',
-                        objectFit: 'cover',
-                        zIndex: 1,
-                        top: 0,
-                        left: '280px'
-                    }}
-                />
-            )}
-            <MapContainer
-                center={selectedLocation 
-                    ? [selectedLocation.latitude, selectedLocation.longitude]
-                    : [defaultView.latitude, defaultView.longitude]}
-                zoom={selectedLocation ? 15 : defaultView.zoom}
-                scrollWheelZoom={true}
-                touchZoom={true}
-                zoomControl={false}
-            >
-                <TileLayer
-                    url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution="&copy; OpenStreetMap contributor"
-                    eventHandlers={{
-                        load: () => { setMapLoaded(true); trackMapLoaded(); },
-                    }}
-                />
-                <Header permissionState={permissionState} />
-                <MapControls 
-                    markers={markers} 
-                    onLocationSelect={setSelectedLocation}
-                    initialPlaceId={initialPlaceId}
-                    onShowAllPlacesChange={setShowAllPlaces}
-                />
-                <CenterMapOnLocation location={selectedLocation} />
-                <MarkerClusterGroup
-                    chunkedLoading
-                    showCoverageOnHover={false}
-                    spiderfyOnMaxZoom
-                    iconCreateFunction={createClusterCustomIcon}
-                >
-                    {markers
-                        .filter(location => showAllPlaces || location.id === selectedLocation?.id)
-                        .map((location) => (
-                            <ZoomableMarker 
-                                key={location.id} 
-                                location={location} 
-                                onClickLocation={setSelectedLocation}
-                                isSelected={selectedLocation?.id === location.id}
-                            />
-                        ))}
-                </MarkerClusterGroup>
-
-                {selectedLocation && (
-                    <SetViewOnSelect 
-                        lat={selectedLocation.latitude} 
-                        lng={selectedLocation.longitude} 
+        <MobileMenuProvider>
+            <div style={{ position: 'relative', width: '100vw', height: '100vh', display: 'flex' }}>
+                {!mapLoaded && (
+                    <img
+                        src={MAP_PLACEHOLDER}
+                        alt="Map loading"
+                        style={{
+                            position: 'absolute',
+                            width: 'calc(100% - 280px)',
+                            height: '100%',
+                            objectFit: 'cover',
+                            zIndex: 1,
+                            top: 0,
+                            left: '280px'
+                        }}
                     />
                 )}
-            </MapContainer>
+                <MapContainer
+                    center={selectedLocation 
+                        ? [selectedLocation.latitude, selectedLocation.longitude]
+                        : [defaultView.latitude, defaultView.longitude]}
+                    zoom={selectedLocation ? 15 : defaultView.zoom}
+                    scrollWheelZoom={true}
+                    touchZoom={true}
+                    zoomControl={false}
+                >
+                    <TileLayer
+                        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        attribution="&copy; OpenStreetMap contributor"
+                        eventHandlers={{
+                            load: () => { setMapLoaded(true); trackMapLoaded(); },
+                        }}
+                    />
+                    <Header permissionState={permissionState} />
+                    <MapControls 
+                        markers={markers} 
+                        onLocationSelect={setSelectedLocation}
+                        initialPlaceId={initialPlaceId}
+                        onShowAllPlacesChange={setShowAllPlaces}
+                    />
+                    <CenterMapOnLocation location={selectedLocation} />
+                    <MarkerClusterGroup
+                        chunkedLoading
+                        showCoverageOnHover={false}
+                        spiderfyOnMaxZoom
+                        iconCreateFunction={createClusterCustomIcon}
+                    >
+                        {markers
+                            .filter(location => showAllPlaces || location.id === selectedLocation?.id)
+                            .map((location) => (
+                                <ZoomableMarker 
+                                    key={location.id} 
+                                    location={location} 
+                                    onClickLocation={setSelectedLocation}
+                                    isSelected={selectedLocation?.id === location.id}
+                                />
+                            ))}
+                    </MarkerClusterGroup>
 
-            {selectedLocation && (
-                <script type="application/ld+json">
-                    {JSON.stringify(generateStructuredData(selectedLocation))}
-                </script>
-            )}
-        </div>
+                    {selectedLocation && (
+                        <SetViewOnSelect 
+                            lat={selectedLocation.latitude} 
+                            lng={selectedLocation.longitude} 
+                        />
+                    )}
+                </MapContainer>
+
+                {selectedLocation && (
+                    <script type="application/ld+json">
+                        {JSON.stringify(generateStructuredData(selectedLocation))}
+                    </script>
+                )}
+            </div>
+        </MobileMenuProvider>
     );
 };
 
