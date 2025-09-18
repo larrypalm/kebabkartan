@@ -253,15 +253,18 @@ const ZoomableMarker: React.FC<ZoomableMarkerProps> = React.memo(({ location, on
     const markerRef = useRef<L.Marker | null>(null);
     const [isExpanded, setIsExpanded] = useState(false);
     
-    const handleClick = () => {
+    const handleClick = (e: L.LeafletMouseEvent) => {
         console.log('Marker clicked:', location.name, location.id);
+        e.originalEvent.stopPropagation();
         map.setView([location.latitude, location.longitude], 15);
         onClickLocation(location);
         trackMarkerClick(location.id, location.name);
     };
 
     const handlePopupClose = () => {
-        onClickLocation(null);
+        // Don't automatically reset location on popup close
+        // This prevents URL flashing when markers are clicked
+        // The location will only be reset when explicitly clicking elsewhere
     };
 
     // Handle automatic popup opening/closing
@@ -726,6 +729,29 @@ const CenterMapOnLocation: React.FC<{ location: Location | null }> = ({ location
     return null;
 };
 
+const MapClickHandler: React.FC<{ onMapClick: () => void }> = ({ onMapClick }) => {
+    const map = useMap();
+    
+    useEffect(() => {
+        const handleMapClick = (e: L.LeafletMouseEvent) => {
+            // Only reset if clicking on the map itself, not on markers or clusters
+            const target = e.originalEvent.target as HTMLElement;
+            if (target && (target.classList.contains('leaflet-container') || 
+                target.classList.contains('leaflet-tile-pane'))) {
+                console.log('Map clicked, resetting location');
+                onMapClick();
+            }
+        };
+
+        map.on('click', handleMapClick);
+        return () => {
+            map.off('click', handleMapClick);
+        };
+    }, [map, onMapClick]);
+    
+    return null;
+};
+
 const useMapCentering = () => {
     const map = useMap();
     
@@ -743,6 +769,7 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null, initialCenter, initial
     // Debug function to log location selection
     const handleLocationSelect = (location: Location | null) => {
         console.log('Location selected:', location?.name, location?.id);
+        console.log('Current URL before update:', window.location.pathname);
         setSelectedLocation(location);
     };
     const [isInitialLoad, setIsInitialLoad] = useState(true);
@@ -842,15 +869,32 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null, initialCenter, initial
 
     // Effect for handling client-side navigation
     useEffect(() => {
+        console.log('URL update effect triggered:', { isInitialLoad, selectedLocation: selectedLocation?.name, selectedLocationId: selectedLocation?.id });
+        
+        const currentPath = window.location.pathname;
+        const isMainPage = currentPath === '/';
+        const isPlacePage = currentPath.startsWith('/place/');
+        const isCityPage = currentPath.startsWith('/kebab-');
+        
         if (!isInitialLoad && selectedLocation) {
+            // Always update URL when a location is selected, regardless of page type
             const newPath = `/place/${selectedLocation.id}`;
-            if (window.location.pathname !== newPath) {
+            console.log('Updating URL to:', newPath);
+            if (currentPath !== newPath) {
                 window.history.pushState({}, '', newPath);
+                console.log('URL updated successfully');
             }
         } else if (!isInitialLoad && !selectedLocation) {
-            // Reset URL when no location is selected
-            if (window.location.pathname !== '/') {
-                window.history.pushState({}, '', '/');
+            // Only reset URL when no location is selected, and only on main page
+            // Don't reset URL on city pages when no marker is selected
+            if (isMainPage) {
+                console.log('Resetting URL to /');
+                if (currentPath !== '/') {
+                    window.history.pushState({}, '', '/');
+                    console.log('URL reset successfully');
+                }
+            } else if (isCityPage) {
+                console.log('On city page with no selection, keeping city URL');
             }
         }
     }, [selectedLocation, isInitialLoad]);
@@ -858,8 +902,10 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null, initialCenter, initial
     // Handle browser back/forward navigation
     useEffect(() => {
         const handlePopState = () => {
-            const pathParts = window.location.pathname.split('/');
+            const currentPath = window.location.pathname;
+            const pathParts = currentPath.split('/');
             const placeId = pathParts[2]; // /place/[id]
+            const isCityPage = currentPath.startsWith('/kebab-');
             
             if (placeId && placeId !== selectedLocation?.id) {
                 // Find the place with this ID and select it
@@ -919,20 +965,30 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null, initialCenter, initial
                         onShowAllPlacesChange={setShowAllPlaces}
                     />
                     <CenterMapOnLocation location={selectedLocation} />
-                    {/* Temporarily disable cluster group to test click events */}
-                    {markers
-                        .filter(location => showAllPlaces || location.id === selectedLocation?.id)
-                        .map((location) => {
-                            console.log('Rendering marker:', location.name, 'showAllPlaces:', showAllPlaces, 'selectedLocation:', selectedLocation?.id);
-                            return (
-                            <ZoomableMarker 
-                                key={location.id} 
-                                location={location} 
-                                onClickLocation={handleLocationSelect}
-                                isSelected={selectedLocation?.id === location.id}
-                            />
-                            );
-                        })}
+                    <MapClickHandler onMapClick={() => handleLocationSelect(null)} />
+                    <MarkerClusterGroup
+                        chunkedLoading
+                        maxClusterRadius={60}
+                        spiderfyOnMaxZoom={true}
+                        showCoverageOnHover={false}
+                        zoomToBoundsOnClick={true}
+                        iconCreateFunction={createClusterCustomIcon}
+                        disableClusteringAtZoom={15}
+                    >
+                        {markers
+                            .filter(location => showAllPlaces || location.id === selectedLocation?.id)
+                            .map((location) => {
+                                console.log('Rendering marker:', location.name, 'showAllPlaces:', showAllPlaces, 'selectedLocation:', selectedLocation?.id);
+                                return (
+                                <ZoomableMarker 
+                                    key={location.id} 
+                                    location={location} 
+                                    onClickLocation={handleLocationSelect}
+                                    isSelected={selectedLocation?.id === location.id}
+                                />
+                                );
+                            })}
+                    </MarkerClusterGroup>
 
                     {selectedLocation && (
                         <SetViewOnSelect 

@@ -286,3 +286,16 @@ header {
     overflow-x: hidden;
   }
 }
+
+.cluster-icon {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.cluster-emoji {
+  font-size: 24px !important;
+  line-height: 1 !important;
+}
