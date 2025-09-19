@@ -50,6 +50,13 @@ export default function CookieConsent({ onConsentChange }: CookieConsentProps) {
         setShowBanner(false);
         setShowSettings(false);
         onConsentChange?.(newPreferences);
+        
+        // Force a re-check of tracking status after a short delay
+        setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('consent-updated', { 
+                detail: newPreferences 
+            }));
+        }, 50);
     };
 
     const acceptAll = () => {

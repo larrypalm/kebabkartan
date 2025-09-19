@@ -12,10 +12,16 @@ declare global {
 
 // Determine if analytics tracking should be enabled
 export const isTrackingEnabled = (): boolean => {
-    if (typeof window === 'undefined') return false;
+    if (typeof window === 'undefined') {
+        console.log('Analytics: Window undefined, tracking disabled');
+        return false;
+    }
 
     // Allow manual override via env flag
-    if (process.env.NEXT_PUBLIC_DISABLE_ANALYTICS === 'true') return false;
+    if (process.env.NEXT_PUBLIC_DISABLE_ANALYTICS === 'true') {
+        console.log('Analytics: Disabled via NEXT_PUBLIC_DISABLE_ANALYTICS');
+        return false;
+    }
 
     // Check cookie consent for analytics using the same system as CookieConsent
     const getCookie = (name: string): string | null => {
@@ -26,11 +32,15 @@ export const isTrackingEnabled = (): boolean => {
     };
 
     const consentCookie = getCookie('kebabkartan-cookie-consent');
+    console.log('Analytics: Checking consent cookie:', consentCookie);
+    
     if (consentCookie) {
         try {
             const preferences = JSON.parse(consentCookie);
             console.log('Analytics: Consent preferences:', preferences);
-            return preferences.analytics === true;
+            const analyticsEnabled = preferences.analytics === true;
+            console.log('Analytics: Analytics enabled:', analyticsEnabled);
+            return analyticsEnabled;
         } catch (error) {
             console.warn('Failed to parse cookie consent preferences:', error);
             return false;
