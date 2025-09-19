@@ -32,7 +32,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('AuthContext: User fetched:', currentUser);
       setUser(currentUser);
     } catch (err) {
-      console.log('AuthContext: No user found:', err);
+      // Only log if it's not an expected unauthenticated error
+      if (err instanceof Error && err.name !== 'UserUnAuthenticatedException') {
+        console.log('AuthContext: Authentication error:', err);
+      } else {
+        console.log('AuthContext: No authenticated user found');
+      }
       setUser(null);
     } finally {
       setLoading(false);
@@ -54,10 +59,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    // Initial fetch with delay
-    setTimeout(() => {
+    // Initial fetch with delay to ensure Amplify is fully configured
+    const timeoutId = setTimeout(() => {
       fetchUser();
-    }, 500);
+    }, 1000);
 
     // Removed periodic check to prevent excessive re-renders
     // The Hub listener should handle most authentication state changes
@@ -96,6 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.addEventListener('focus', handleFocus);
 
     return () => {
+      clearTimeout(timeoutId);
       unsubscribe();
       window.removeEventListener('focus', handleFocus);
       // Removed interval cleanup since we removed the periodic check

@@ -771,6 +771,14 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null, initialCenter, initial
         console.log('Location selected:', location?.name, location?.id);
         console.log('Current URL before update:', window.location.pathname);
         setSelectedLocation(location);
+        
+        // Update document title when location is selected
+        if (location) {
+            document.title = `${location.name} | Betygsätt och recensera | Kebabkartan`;
+        } else {
+            // Reset to default title when no location is selected
+            document.title = 'Kebabkartan | Hitta och betygsätt din favorit kebab';
+        }
     };
     const [isInitialLoad, setIsInitialLoad] = useState(true);
     const [mapLoaded, setMapLoaded] = useState(false);
@@ -855,6 +863,8 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null, initialCenter, initial
                     const targetPlace = data.find((place: Location) => place.id === targetPlaceId);
                     if (targetPlace) {
                         setSelectedLocation(targetPlace);
+                        // Update document title for initial load
+                        document.title = `${targetPlace.name} | Betygsätt och recensera | Kebabkartan`;
                     }
                 }
             } catch (error) {
@@ -912,10 +922,14 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null, initialCenter, initial
                 const place = markers.find(marker => marker.id === placeId);
                 if (place) {
                     setSelectedLocation(place);
+                    // Update document title for back/forward navigation
+                    document.title = `${place.name} | Betygsätt och recensera | Kebabkartan`;
                 }
             } else if (!placeId && selectedLocation) {
                 // URL doesn't have a place ID, deselect current location
                 setSelectedLocation(null);
+                // Reset to default title when no location is selected
+                document.title = 'Kebabkartan | Hitta och betygsätt din favorit kebab';
             }
         };
 
