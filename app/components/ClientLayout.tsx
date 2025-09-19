@@ -6,6 +6,7 @@ import PerformanceOptimizer from './PerformanceOptimizer';
 import PerformanceMonitor from './PerformanceMonitor';
 import LCPOptimizer from './LCPOptimizer';
 import CookieConsent from './CookieConsent';
+import AnalyticsDebug from './AnalyticsDebug';
 
 export default function ClientLayout({
     children,
@@ -22,6 +23,7 @@ export default function ClientLayout({
             <Breadcrumbs />
             {children}
             <CookieConsent />
+            <AnalyticsDebug />
         </>
     );
 } 

@@ -3,10 +3,11 @@ interface EventParams {
     [key: string]: any;
 }
 
-// Declare gtag as a global variable
+// Declare gtag and dataLayer as global variables
 declare global {
     interface Window {
         gtag: (...args: any[]) => void;
+        dataLayer: any[];
     }
 }
 
@@ -58,9 +59,28 @@ export const isTrackingEnabled = (): boolean => {
  * @param params - Additional parameters for the event
  */
 export const trackEvent = (eventName: string, params?: EventParams) => {
-    if (!isTrackingEnabled()) return;
-    if (typeof window !== 'undefined' && window.gtag) {
+    if (!isTrackingEnabled()) {
+        console.log('Analytics: Event not tracked - tracking disabled:', eventName);
+        return;
+    }
+    
+    if (typeof window === 'undefined') {
+        console.log('Analytics: Event not tracked - window undefined:', eventName);
+        return;
+    }
+    
+    if (!window.gtag) {
+        console.warn('Analytics: gtag function not available, event not tracked:', eventName);
+        console.log('Analytics: Available on window:', Object.keys(window).filter(key => key.includes('gtag') || key.includes('dataLayer')));
+        return;
+    }
+    
+    try {
+        console.log('Analytics: Tracking event:', eventName, params);
         window.gtag('event', eventName, params);
+        console.log('Analytics: Event sent successfully:', eventName);
+    } catch (error) {
+        console.error('Analytics: Error sending event:', eventName, error);
     }
 };
 
