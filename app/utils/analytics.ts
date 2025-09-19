@@ -17,17 +17,19 @@ export const isTrackingEnabled = (): boolean => {
     // Allow manual override via env flag
     if (process.env.NEXT_PUBLIC_DISABLE_ANALYTICS === 'true') return false;
 
-    // In development mode, allow analytics without consent for testing
-    if (process.env.NODE_ENV === 'development') {
-        console.log('Analytics: Development mode - tracking enabled for testing');
-        return true;
-    }
+    // Check cookie consent for analytics using the same system as CookieConsent
+    const getCookie = (name: string): string | null => {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+        return null;
+    };
 
-    // Check cookie consent for analytics
-    const consent = localStorage.getItem('kebabkartan-cookie-consent');
-    if (consent) {
+    const consentCookie = getCookie('kebabkartan-cookie-consent');
+    if (consentCookie) {
         try {
-            const preferences = JSON.parse(consent);
+            const preferences = JSON.parse(consentCookie);
+            console.log('Analytics: Consent preferences:', preferences);
             return preferences.analytics === true;
         } catch (error) {
             console.warn('Failed to parse cookie consent preferences:', error);
@@ -36,6 +38,7 @@ export const isTrackingEnabled = (): boolean => {
     }
 
     // If no consent given yet, don't track
+    console.log('Analytics: No consent cookie found, tracking disabled');
     return false;
 };
 
