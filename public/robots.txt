@@ -11,10 +11,17 @@ Crawl-delay: 1
 Disallow: /admin/
 Disallow: /api/
 Disallow: /dashboard/
+Disallow: /auth
+Disallow: /my-account
+Disallow: /test-modal
 
 # Allow important pages
 Allow: /kebab-stockholm
 Allow: /kebab-goteborg
 Allow: /kebab-malmo
+Allow: /kebab-jonkoping
+Allow: /kebab-linkoping
+Allow: /kebab-lund
 Allow: /place/
 Allow: /suggestions
+Allow: /faq
