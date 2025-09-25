@@ -14,7 +14,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({
     onAcceptAll,
     onAcceptNecessary,
     onRejectAll,
-    onOpenSettings
+    onOpenSettings,
 }) => {
     return (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black bg-opacity-50" style={{ zIndex: 9999 }}>
@@ -102,13 +102,6 @@ const CookieBanner: React.FC<CookieBannerProps> = ({
                             >
                                 Inställningar
                             </Button>
-                        </div>
-                        
-                        {/* Read more link */}
-                        <div className="text-center">
-                            <button className="text-blue-900 underline text-sm hover:text-blue-700">
-                                Läs mer
-                            </button>
                         </div>
                     </div>
                 </div>

@@ -96,7 +96,7 @@ export default function CookieConsent({ onConsentChange }: CookieConsentProps) {
     };
 
     const openSettings = () => {
-        setShowSettings(true);
+        setShowSettings(!showSettings);
     };
 
     const closeSettings = () => {
@@ -107,22 +107,37 @@ export default function CookieConsent({ onConsentChange }: CookieConsentProps) {
         setShowBanner(true);
     };
 
+    const closeConsentBanner = () => {
+        setShowBanner(false);
+    };
+
     console.log('CookieConsent: Rendering, showBanner:', showBanner, 'showSettings:', showSettings);
 
     // Render nothing on server
     if (!isMounted) return null;
 
+    const showBannerStyle = {
+        zIndex: 99999,
+        position: 'fixed' as const,
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'white'
+    };
+
+    const hideBannerStyle = {
+        zIndex: 99999,
+        position: 'fixed' as const,
+        right: 0,
+        bottom: 0,
+        background: 'white'
+    };
+
     const content = (
-        <div>
-            {/* Development indicator */}
-            {process.env.NODE_ENV === 'development' && (
-                <div className="fixed top-0 right-0 bg-red-500 text-white p-2 text-xs z-[9999]" style={{ zIndex: 9999 }}>
-                    CookieConsent Active
-                </div>
-            )}
-            
+        <div style={showBanner ? showBannerStyle : hideBannerStyle}>
             {/* Floating Cookie Settings Button */}
-            <FloatingCookieButton onClick={openConsentBanner} />
+            {!showBanner && <FloatingCookieButton onClick={openConsentBanner} />}
 
             {/* Cookie Banner */}
             {showBanner && (
@@ -135,15 +150,13 @@ export default function CookieConsent({ onConsentChange }: CookieConsentProps) {
             )}
 
             {/* Cookie Settings Modal */}
-            {showBanner && (
-                <CookieSettingsModal
-                    isOpen={showSettings}
-                    onClose={closeSettings}
-                    preferences={preferences}
-                    onPreferencesChange={setPreferences}
-                    onSave={saveCustomPreferences}
-                />
-            )}
+            <CookieSettingsModal
+                isOpen={showSettings}
+                onClose={closeSettings}
+                preferences={preferences}
+                onPreferencesChange={setPreferences}
+                onSave={saveCustomPreferences}
+            />
         </div>
     );
 

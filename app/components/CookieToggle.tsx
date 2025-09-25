@@ -30,14 +30,19 @@ const CookieToggle: React.FC<CookieToggleProps> = ({
                     <button
                         onClick={onToggle}
                         disabled={isDisabled}
-                        className={`w-12 h-6 rounded-full flex items-center transition-all duration-200 ease-in-out ${
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
                             isEnabled 
-                                ? 'bg-blue-600 justify-end' 
-                                : 'bg-gray-300 justify-start'
-                        } ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:opacity-80'}`}
+                                ? 'bg-blue-600' 
+                                : 'bg-gray-300'
+                        } ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                         aria-label={`${isEnabled ? 'Disable' : 'Enable'} ${title}`}
                     >
-                        <div className="w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-200"></div>
+                        <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform duration-200 ease-in-out ${
+                                isEnabled ? 'translate-x-6' : 'translate-x-1'
+                            }`}
+                        />
+                        {isEnabled ? 'Enabled' : 'Disabled'}
                     </button>
                 </div>
             </div>
