@@ -22,6 +22,6 @@ Allow: /kebab-malmo
 Allow: /kebab-jonkoping
 Allow: /kebab-linkoping
 Allow: /kebab-lund
-Allow: /place/
+Allow: /restaurang/
 Allow: /suggestions
 Allow: /faq

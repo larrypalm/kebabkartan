@@ -16,8 +16,10 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
             // If it's a UUID, find by ID
             place = places.find((p: any) => p.id === params.id);
         } else {
-            // If it's a slug, find by admin-defined slug
-            place = places.find((p: any) => p.slug === params.id);
+            // If it's a slug, find by admin-defined slug with restaurang/ prefix
+            place = places.find((p: any) => 
+                p.slug === `restaurang/${params.id}`
+            );
         }
         
         console.log(place);

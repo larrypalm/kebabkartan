@@ -6,7 +6,7 @@ import MarkerClusterGroup from 'react-leaflet-cluster';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
-import { trackKebabPlaceView, trackRatingSubmitted, trackSearch, trackSearchResultSelect, trackMarkerClick, trackMarkerShare, trackMarkerExpand, trackMapLoaded, trackShowAllPlaces, trackIpLocationSuccess, trackIpLocationError, trackGeolocationPermission, trackRatingSubmitAttempt, trackRatingSubmitError, trackSearchOpen, trackSearchClear } from '@/app/utils/analytics';
+import { trackKebabPlaceView, trackRatingSubmitted, trackSearch, trackSearchResultSelect, trackMarkerClick, trackMarkerShare, trackMarkerExpand, trackMapLoaded, trackIpLocationSuccess, trackIpLocationError, trackGeolocationPermission, trackRatingSubmitAttempt, trackRatingSubmitError, trackSearchOpen, trackSearchClear } from '@/app/utils/analytics';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Header from './Header';
@@ -276,7 +276,6 @@ const ZoomableMarker: React.FC<ZoomableMarkerProps> = React.memo(({ location, on
     const [isExpanded, setIsExpanded] = useState(false);
     
     const handleClick = (e: L.LeafletMouseEvent) => {
-        console.log('Marker clicked:', location.name, location.id);
         e.originalEvent.stopPropagation();
         map.setView([location.latitude, location.longitude], 15);
         onClickLocation(location);
@@ -554,18 +553,13 @@ const MapControls: React.FC<{
     markers: Location[];
     onLocationSelect: (location: Location) => void;
     initialPlaceId: string | null;
-    onShowAllPlacesChange: (show: boolean) => void;
-}> = ({ markers, onLocationSelect, initialPlaceId, onShowAllPlacesChange }) => {
+}> = ({ markers, onLocationSelect, initialPlaceId }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedResultIndex, setSelectedResultIndex] = useState(-1);
-    const [showAllPlaces, setShowAllPlaces] = useState(!initialPlaceId);
     const searchInputRef = useRef<HTMLInputElement>(null);
     const map = useMap();
     const { isMenuOpen } = useMobileMenu();
 
-    useEffect(() => {
-        onShowAllPlacesChange(showAllPlaces);
-    }, [showAllPlaces, onShowAllPlacesChange]);
 
     const filteredMarkers = useMemo(() => {
         if (!searchQuery.trim()) return markers;
@@ -628,7 +622,7 @@ const MapControls: React.FC<{
 
     return (
         <>
-            {showAllPlaces && !isMenuOpen ? (
+            {!isMenuOpen ? (
                 <div className="mobile-search" style={{
                     position: 'absolute',
                     top: '20px',
@@ -714,28 +708,6 @@ const MapControls: React.FC<{
                         </div>
                     )}
                 </div>
-            ) : !isMenuOpen ? (
-                <button
-                    className="mobile-search"
-                    style={{
-                        position: 'absolute',
-                        top: '20px',
-                        left: 'calc(50% + 140px)',
-                        transform: 'translateX(-50%)',
-                        zIndex: 1000,
-                        backgroundColor: 'white',
-                        padding: '10px 20px',
-                        borderRadius: '8px',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                        border: 'none',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        fontWeight: 'bold'
-                    }}
-                    onClick={() => { setShowAllPlaces(true); trackShowAllPlaces(); }}
-                >
-                    Visa alla platser
-                </button>
             ) : null}
         </>
     );
@@ -745,6 +717,7 @@ const CenterMapOnLocation: React.FC<{ location: Location | null }> = ({ location
     const map = useMap();
     useEffect(() => {
         if (location) {
+            console.log('CenterMapOnLocation: Centering map on:', location.name, location.latitude, location.longitude);
             map.setView([location.latitude, location.longitude], 15, {
                 animate: true,
                 duration: 0.5,
@@ -763,7 +736,6 @@ const MapClickHandler: React.FC<{ onMapClick: () => void }> = ({ onMapClick }) =
             const target = e.originalEvent.target as HTMLElement;
             if (target && (target.classList.contains('leaflet-container') || 
                 target.classList.contains('leaflet-tile-pane'))) {
-                console.log('Map clicked, resetting location');
                 onMapClick();
             }
         };
@@ -790,11 +762,11 @@ const useMapCentering = () => {
 const Map: React.FC<MapProps> = ({ initialPlaceId = null, initialCenter, initialZoom }) => {
     const [markers, setMarkers] = useState<Location[]>([]);
     const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+    const [initialPlace, setInitialPlace] = useState<Location | null>(null);
+    const [isReady, setIsReady] = useState(false);
     
     // Debug function to log location selection
     const handleLocationSelect = (location: Location | null) => {
-        console.log('Location selected:', location?.name, location?.id);
-        console.log('Current URL before update:', window.location.pathname);
         setSelectedLocation(location);
         
         // Update document title when location is selected
@@ -805,15 +777,40 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null, initialCenter, initial
             document.title = 'Kebabkartan | Hitta och betygsätt din favorit kebab';
         }
     };
+
     const [isInitialLoad, setIsInitialLoad] = useState(true);
     const [mapLoaded, setMapLoaded] = useState(false);
     const initialPlaceIdRef = useRef(initialPlaceId);
+    
+    // Update the ref when initialPlaceId prop changes
+    useEffect(() => {
+        initialPlaceIdRef.current = initialPlaceId;
+    }, [initialPlaceId]);
+    
     const [defaultView, setDefaultView] = useState<Coordinates>(
         initialCenter && initialZoom 
             ? { latitude: initialCenter[0], longitude: initialCenter[1], zoom: initialZoom }
             : SWEDEN_VIEW
     );
-    const [showAllPlaces, setShowAllPlaces] = useState(!initialPlaceId);
+    
+    // Calculate initial center based on initial place ID
+    const getInitialCenter = (): [number, number] => {
+        if (initialPlace) {
+            console.log('Map: Using initial place center:', initialPlace.name, initialPlace.latitude, initialPlace.longitude);
+            return [initialPlace.latitude, initialPlace.longitude];
+        }
+        if (selectedLocation) {
+            return [selectedLocation.latitude, selectedLocation.longitude];
+        }
+        return [defaultView.latitude, defaultView.longitude];
+    };
+    
+    const getInitialZoom = () => {
+        if (initialPlace || selectedLocation) {
+            return 15;
+        }
+        return defaultView.zoom;
+    };
     const [permissionState, setPermissionState] = useState<PermissionState | null>(null);
 
     const createClusterCustomIcon = (cluster: any) => {
@@ -872,6 +869,50 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null, initialCenter, initial
         }
     }, []);
 
+    // Effect to find initial place before map renders
+    useEffect(() => {
+        const findInitialPlace = async () => {
+            if (!initialPlaceId) {
+                setIsReady(true);
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/kebab-places');
+                const data = await response.json();
+                
+                // Check if it's a UUID or a slug
+                const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(initialPlaceId);
+                
+                let targetPlace = null;
+                if (isUUID) {
+                    // If it's a UUID, find by ID
+                    targetPlace = data.find((place: Location) => place.id === initialPlaceId);
+                } else {
+                    // If it's a slug, find by admin-defined slug with restaurang/ prefix
+                    console.log('BAAA', data, initialPlaceId)
+                    targetPlace = data.find((place: Location) => 
+                        place.slug === `restaurang/${initialPlaceId}`
+                    );
+                }
+                
+                console.log('Map: Found initial place:', targetPlace);
+                
+                if (targetPlace) {
+                    setInitialPlace(targetPlace);
+                    setSelectedLocation(targetPlace);
+                    document.title = `${targetPlace.name} | Betygsätt och recensera | Kebabkartan`;
+                }
+            } catch (error) {
+                console.error('Error fetching initial place:', error);
+            } finally {
+                setIsReady(true);
+            }
+        };
+
+        findInitialPlace();
+    }, [initialPlaceId]);
+
     // Effect for handling direct navigation and initial load
     useEffect(() => {
         const fetchLocations = async () => {
@@ -881,15 +922,37 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null, initialCenter, initial
                 setMarkers(data);
                 
                 // Handle initial place ID from URL or prop
-                const urlPlaceId = window.location.pathname.split('/')[2];
+                const pathParts = window.location.pathname.split('/');
+                const urlPlaceId = pathParts[2]; // /restaurang/[id]
                 const targetPlaceId = urlPlaceId || initialPlaceIdRef.current;
                 
-                if (targetPlaceId) {
-                    const targetPlace = data.find((place: Location) => place.id === targetPlaceId);
+                console.log('Map: Looking for place with ID:', targetPlaceId);
+                
+                if (targetPlaceId && !initialPlace) {
+                    // Check if it's a UUID or a slug
+                    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetPlaceId);
+                    
+                    let targetPlace = null;
+                    if (isUUID) {
+                        // If it's a UUID, find by ID
+                        targetPlace = data.find((place: Location) => place.id === targetPlaceId);
+                    } else {
+                        // If it's a slug, find by admin-defined slug with restaurang/ prefix
+                        targetPlace = data.find((place: Location) => 
+                            place.slug === `restaurang/${targetPlaceId}`
+                        );
+                    }
+                    
+                    console.log('Map: Found place:', targetPlace);
+                    
                     if (targetPlace) {
+                        console.log('Map: Setting selected location:', targetPlace);
                         setSelectedLocation(targetPlace);
+                        setInitialPlace(targetPlace);
                         // Update document title for initial load
                         document.title = `${targetPlace.name} | Betygsätt och recensera | Kebabkartan`;
+                    } else {
+                        console.warn('Map: Place not found for ID:', targetPlaceId);
                     }
                 }
             } catch (error) {
@@ -900,39 +963,30 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null, initialCenter, initial
         };
 
         fetchLocations();
-    }, []);
+    }, [initialPlace]);
 
     // Effect for handling client-side navigation
     useEffect(() => {
-        console.log('URL update effect triggered:', { isInitialLoad, selectedLocation: selectedLocation?.name, selectedLocationId: selectedLocation?.id });
-        
         const currentPath = window.location.pathname;
         const isMainPage = currentPath === '/';
-        const isPlacePage = currentPath.startsWith('/place/');
-        const isCityPage = currentPath.startsWith('/kebab-');
         
         if (!isInitialLoad && selectedLocation) {
             // Always update URL when a location is selected, regardless of page type
             
             // Use admin-defined slug
             const slug = selectedLocation.slug;
-            const newPath = `/restaurang/${slug}`;
-            console.log('Updating URL to:', newPath);
+            const newPath = `/${slug}`;
+
             if (currentPath !== newPath) {
                 window.history.pushState({}, '', newPath);
-                console.log('URL updated successfully');
             }
         } else if (!isInitialLoad && !selectedLocation) {
             // Only reset URL when no location is selected, and only on main page
             // Don't reset URL on city pages when no marker is selected
             if (isMainPage) {
-                console.log('Resetting URL to /');
                 if (currentPath !== '/') {
                     window.history.pushState({}, '', '/');
-                    console.log('URL reset successfully');
                 }
-            } else if (isCityPage) {
-                console.log('On city page with no selection, keeping city URL');
             }
         }
     }, [selectedLocation, isInitialLoad]);
@@ -942,12 +996,24 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null, initialCenter, initial
         const handlePopState = () => {
             const currentPath = window.location.pathname;
             const pathParts = currentPath.split('/');
-            const placeId = pathParts[2]; // /place/[id]
+            const placeId = pathParts[2]; // /restaurang/[id]
             const isCityPage = currentPath.startsWith('/kebab-');
             
-            if (placeId && placeId !== selectedLocation?.id) {
-                // Find the place with this ID and select it
-                const place = markers.find(marker => marker.id === placeId);
+            if (placeId && placeId !== selectedLocation?.id && placeId !== selectedLocation?.slug) {
+                // Check if it's a UUID or a slug
+                const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(placeId);
+                
+                let place = null;
+                if (isUUID) {
+                    // If it's a UUID, find by ID
+                    place = markers.find(marker => marker.id === placeId);
+                } else {
+                    // If it's a slug, find by admin-defined slug with restaurang/ prefix
+                    place = markers.find(marker => 
+                        marker.slug === `restaurang/${placeId}`
+                    );
+                }
+                
                 if (place) {
                     setSelectedLocation(place);
                     // Update document title for back/forward navigation
@@ -964,6 +1030,29 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null, initialCenter, initial
         window.addEventListener('popstate', handlePopState);
         return () => window.removeEventListener('popstate', handlePopState);
     }, [markers, selectedLocation]);
+
+    // Don't render map until we're ready
+    if (!isReady) {
+        return (
+            <MobileMenuProvider>
+                <div style={{ position: 'relative', width: '100vw', height: '100vh', display: 'flex' }}>
+                    <img
+                        src={MAP_PLACEHOLDER}
+                        alt="Map loading"
+                        style={{
+                            position: 'absolute',
+                            width: 'calc(100% - 280px)',
+                            height: '100%',
+                            objectFit: 'cover',
+                            zIndex: 1,
+                            top: 0,
+                            left: '280px'
+                        }}
+                    />
+                </div>
+            </MobileMenuProvider>
+        );
+    }
 
     return (
         <MobileMenuProvider>
@@ -984,10 +1073,8 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null, initialCenter, initial
                     />
                 )}
                 <MapContainer
-                    center={selectedLocation 
-                        ? [selectedLocation.latitude, selectedLocation.longitude]
-                        : [defaultView.latitude, defaultView.longitude]}
-                    zoom={selectedLocation ? 15 : defaultView.zoom}
+                    center={getInitialCenter()}
+                    zoom={getInitialZoom()}
                     scrollWheelZoom={true}
                     touchZoom={true}
                     zoomControl={false}
@@ -1004,7 +1091,6 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null, initialCenter, initial
                         markers={markers} 
                         onLocationSelect={handleLocationSelect}
                         initialPlaceId={initialPlaceId}
-                        onShowAllPlacesChange={setShowAllPlaces}
                     />
                     <CenterMapOnLocation location={selectedLocation} />
                     <MapClickHandler onMapClick={() => handleLocationSelect(null)} />
@@ -1018,16 +1104,14 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null, initialCenter, initial
                         disableClusteringAtZoom={15}
                     >
                         {markers
-                            .filter(location => showAllPlaces || location.id === selectedLocation?.id)
                             .map((location) => {
-                                console.log('Rendering marker:', location.name, 'showAllPlaces:', showAllPlaces, 'selectedLocation:', selectedLocation?.id);
                                 return (
-                                <ZoomableMarker 
-                                    key={location.id} 
-                                    location={location} 
-                                    onClickLocation={handleLocationSelect}
-                                    isSelected={selectedLocation?.id === location.id}
-                                />
+                                    <ZoomableMarker 
+                                        key={location.id} 
+                                        location={location} 
+                                        onClickLocation={handleLocationSelect}
+                                        isSelected={selectedLocation?.id === location.id}
+                                    />
                                 );
                             })}
                     </MarkerClusterGroup>
