@@ -35,12 +35,15 @@ export default function PlacePageClient({ id }: { id: string }) {
                     // If it's a UUID, find by ID
                     place = places.find((p: any) => p.id === currentPlaceId);
                 } else {
-                    // If it's a slug, find by admin-defined slug
-                    place = places.find((p: any) => p.slug === currentPlaceId);
+                    // If it's a slug, find by admin-defined slug with restaurang/ prefix
+                    place = places.find((p: any) => 
+                        p.slug === `restaurang/${currentPlaceId}`
+                    );
                 }
                 
                 if (!place) {
-                    router.push('/'); // Redirect to home if place doesn't exist
+                    // Don't redirect immediately, let the Map component handle it
+                    console.warn('Place not found:', currentPlaceId);
                 } else {
                     // Track the place view
                     trackKebabPlaceView(place.id, place.name);
@@ -50,7 +53,7 @@ export default function PlacePageClient({ id }: { id: string }) {
                     // If we found by UUID but the URL should be slug-based, redirect to the proper slug URL
                     if (isUUID && currentPlaceId === place.id) {
                         const slug = place.slug;
-                        if (slug !== currentPlaceId) {
+                        if (slug && slug !== currentPlaceId) {
                             router.replace(`/restaurang/${slug}`);
                             return;
                         }
