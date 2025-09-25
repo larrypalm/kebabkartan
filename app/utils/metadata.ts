@@ -3,11 +3,11 @@ import { City } from '@/app/data/cities';
 
 export const generateCityMetadata = (city: City): Metadata => ({
   title: `Bästa Kebab i ${city.name} | Kebabkartan`,
-  description: `Hitta de bästa kebabställena i ${city.name}. Läs recensioner, se betyg och upptäck nya favoriter. Kebabkartan hjälper dig hitta perfekt kebab i ${city.name}.`,
+  description: `🔥 Upptäck ${city.name}s bästa kebabställen! Läs äkta recensioner, se betyg från lokala experter och hitta din nya favorit. Gratis guide till toppkvalitet kebab i ${city.name}.`,
   keywords: city.keywords,
   openGraph: {
     title: `Bästa Kebab i ${city.name} | Kebabkartan`,
-    description: `Hitta de bästa kebabställena i ${city.name}. Läs recensioner, se betyg och upptäck nya favoriter.`,
+    description: `🔥 Upptäck ${city.name}s bästa kebabställen! Läs äkta recensioner, se betyg från lokala experter och hitta din nya favorit.`,
     images: ['/static/logo.png'],
   },
 });

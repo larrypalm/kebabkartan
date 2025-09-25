@@ -5,7 +5,6 @@ import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { GoogleReCaptchaProvider } from "react-google-recaptcha-v3";
 import { trackKebabPlaceView } from '@/app/utils/analytics';
-import { createSlug } from '@/app/lib/slugUtils';
 
 const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!;
 
@@ -36,11 +35,8 @@ export default function PlacePageClient({ id }: { id: string }) {
                     // If it's a UUID, find by ID
                     place = places.find((p: any) => p.id === currentPlaceId);
                 } else {
-                    // If it's a slug, find by matching slug
-                    place = places.find((p: any) => {
-                        const expectedSlug = createSlug(p.name, p.city);
-                        return expectedSlug === currentPlaceId;
-                    });
+                    // If it's a slug, find by admin-defined slug
+                    place = places.find((p: any) => p.slug === currentPlaceId);
                 }
                 
                 if (!place) {
@@ -53,7 +49,7 @@ export default function PlacePageClient({ id }: { id: string }) {
                     
                     // If we found by UUID but the URL should be slug-based, redirect to the proper slug URL
                     if (isUUID && currentPlaceId === place.id) {
-                        const slug = createSlug(place.name, place.city);
+                        const slug = place.slug;
                         if (slug !== currentPlaceId) {
                             router.replace(`/restaurang/${slug}`);
                             return;
