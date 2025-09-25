@@ -14,6 +14,8 @@ export default function AdminPage() {
         longitude: '',
         openingHours: '',
         priceRange: '',
+        slug: '',
+        city: '',
     });
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -23,6 +25,12 @@ export default function AdminPage() {
 
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
+        
+        if (process.env.NEXT_PUBLIC_LAMBDA_PASSWORD === undefined) {
+            setError('Environment variable not configured');
+            return;
+        }
+        
         if (password === process.env.NEXT_PUBLIC_LAMBDA_PASSWORD) {
             setIsAuthenticated(true);
             setError('');
@@ -80,6 +88,8 @@ export default function AdminPage() {
                 longitude: '',
                 openingHours: '',
                 priceRange: '',
+                slug: '',
+                city: '',
             });
             // Refresh the places list
             fetchPlaces();
@@ -92,11 +102,24 @@ export default function AdminPage() {
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
+        
         setFormData(prev => ({
             ...prev,
             [name]: value,
         }));
     };
+
+    // Validate slug format
+    const isSlugValid = (slug: string) => {
+        if (!slug) return true; // Empty slug is valid (will be required by form)
+        // Check if slug starts with "restaurang/" and contains only lowercase letters, numbers, and hyphens
+        // and doesn't start or end with hyphens in the slug part
+        if (!slug.startsWith('restaurang/')) return false;
+        const slugPart = slug.replace('restaurang/', '');
+        return /^[a-z0-9-]+$/.test(slugPart) && !slugPart.startsWith('-') && !slugPart.endsWith('-');
+    };
+
+    const hasInvalidSlug = Boolean(formData.slug && !isSlugValid(formData.slug));
 
     if (!isAuthenticated) {
         return (
@@ -310,11 +333,57 @@ export default function AdminPage() {
                             Enter the price range in SEK (e.g., "100-300" for 100 to 300 SEK)
                         </p>
                     </div>
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label className="block text-gray-700 mb-2">URL Slug</label>
+                            <input
+                                type="text"
+                                name="slug"
+                                value={formData.slug}
+                                onChange={handleChange}
+                                className="w-full p-2 border rounded"
+                                placeholder="restaurang/baretta-pizzeria-goteborg"
+                                required
+                            />
+                            <p className="text-sm text-gray-500 mt-1">
+                                Enter the full URL slug (e.g., "restaurang/baretta-pizzeria-goteborg")
+                            </p>
+                            {hasInvalidSlug && (
+                                <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded">
+                                    <p className="text-sm text-red-800">
+                                        <strong>Invalid slug:</strong> Must start with "restaurang/" followed by only lowercase letters, numbers, and hyphens. Cannot start or end with hyphens.
+                                    </p>
+                                </div>
+                            )}
+                            {formData.slug && !hasInvalidSlug && (
+                                <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded">
+                                    <p className="text-sm text-blue-800">
+                                        <strong>Full URL:</strong> kebabkartan.se/{formData.slug}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                        <div>
+                            <label className="block text-gray-700 mb-2">City</label>
+                            <input
+                                type="text"
+                                name="city"
+                                value={formData.city}
+                                onChange={handleChange}
+                                className="w-full p-2 border rounded"
+                                placeholder="Göteborg"
+                                required
+                            />
+                            <p className="text-sm text-gray-500 mt-1">
+                                City name (e.g., "Göteborg", "Stockholm")
+                            </p>
+                        </div>
+                    </div>
                     {error && <p className="text-red-500 mb-4">{error}</p>}
                     {success && <p className="text-green-500 mb-4">{success}</p>}
                     <button
                         type="submit"
-                        disabled={isLoading}
+                        disabled={isLoading || hasInvalidSlug}
                         className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 disabled:bg-blue-300"
                     >
                         {isLoading ? 'Adding...' : 'Add Kebab Place'}

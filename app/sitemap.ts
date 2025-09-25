@@ -79,12 +79,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   
   try {
     const places = await getKebabPlaces()
-    dynamicPages = places.map((place: any) => ({
-      url: `${baseUrl}/place/${place.id}`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 0.8,
-    }))
+        dynamicPages = places.map((place: any) => {
+            // Use admin-defined slug
+            const slug = place.slug;
+            return {
+                url: `${baseUrl}/restaurang/${slug}`,
+                lastModified: new Date(),
+                changeFrequency: 'weekly' as const,
+                priority: 0.8,
+            };
+        })
   } catch (error) {
     console.error('Error generating sitemap for places:', error)
   }

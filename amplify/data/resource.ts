@@ -15,6 +15,8 @@ const schema = a.schema({
       description: a.string(),
       website: a.string(),
       phone: a.string(),
+      slug: a.string(),
+      city: a.string(),
     })
     .authorization((allow) => [
       allow.authenticated().to(['create', 'read', 'update', 'delete']),

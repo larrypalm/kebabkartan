@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
-import { redirect } from 'next/navigation';
+import PlacePageClient from '@/app/restaurang/[id]/PlacePageClient';
 import { getKebabPlaces } from '@/lib/getKebabPlaces';
-import { createSlug, createPlaceTitle, createPlaceDescription } from '@/app/lib/slugUtils';
+import { createPlaceTitle, createPlaceDescription } from '@/app/lib/slugUtils';
 
 // Generate metadata for the place page
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
@@ -16,11 +16,8 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
             // If it's a UUID, find by ID
             place = places.find((p: any) => p.id === params.id);
         } else {
-            // If it's a slug, find by matching slug
-            place = places.find((p: any) => {
-                const expectedSlug = createSlug(p.name, p.city);
-                return expectedSlug === params.id;
-            });
+            // If it's a slug, find by admin-defined slug
+            place = places.find((p: any) => p.slug === params.id);
         }
         
         console.log(place);
@@ -31,7 +28,8 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
             };
         }
 
-        const slug = createSlug(place.name, place.city);
+        // Use admin-defined slug
+        const slug = place.slug;
         const title = createPlaceTitle(place);
         const description = createPlaceDescription(place);
 
@@ -71,34 +69,6 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     }
 }
 
-export default async function PlacePage({ params }: { params: { id: string } }) {
-    try {
-        const places = await getKebabPlaces();
-        
-        // First try to find by slug (if it's not a UUID)
-        let place = null;
-        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(params.id);
-        
-        if (isUUID) {
-            // If it's a UUID, find by ID
-            place = places.find((p: any) => p.id === params.id);
-        } else {
-            // If it's a slug, find by matching slug
-            place = places.find((p: any) => {
-                const expectedSlug = createSlug(p.name, p.city);
-                return expectedSlug === params.id;
-            });
-        }
-        
-        if (!place) {
-            redirect('/');
-        }
-
-        // Redirect to the new restaurang URL
-        const slug = place.slug || createSlug(place.name, place.city);
-        redirect(`/restaurang/${slug}`);
-    } catch (error) {
-        console.error('Error in PlacePage redirect:', error);
-        redirect('/');
-    }
+export default function PlacePage({ params }: { params: { id: string } }) {
+    return <PlacePageClient id={params.id} />;
 } 

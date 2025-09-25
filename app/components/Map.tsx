@@ -12,6 +12,26 @@ import { useRouter } from 'next/navigation';
 import Header from './Header';
 import { MobileMenuProvider, useMobileMenu } from '@/app/contexts/MobileMenuContext';
 
+// Helper function to extract city from address
+const extractCityFromAddress = (address: string): string => {
+    // Common Swedish cities to look for
+    const cities = ['Stockholm', 'Göteborg', 'Malmö', 'Uppsala', 'Linköping', 'Jönköping', 'Lund', 'Umeå', 'Västerås', 'Örebro'];
+    
+    for (const city of cities) {
+        if (address.toLowerCase().includes(city.toLowerCase())) {
+            return city;
+        }
+    }
+    
+    // If no known city found, try to extract the last part of the address
+    const parts = address.split(',').map(part => part.trim());
+    if (parts.length > 1) {
+        return parts[parts.length - 1];
+    }
+    
+    return 'Sverige';
+};
+
 interface Location {
     id: string;
     name: string;
@@ -22,6 +42,8 @@ interface Location {
     totalVotes: number;
     openingHours?: string;
     priceRange?: string;
+    city?: string;
+    slug?: string;
 }
 
 interface RatingStarsProps {
@@ -295,7 +317,10 @@ const ZoomableMarker: React.FC<ZoomableMarkerProps> = React.memo(({ location, on
 
     const handleShare = (e: React.MouseEvent) => {
         e.stopPropagation();
-        const url = `${window.location.origin}/place/${location.id}`;
+        
+        // Use admin-defined slug
+        const slug = location.slug;
+        const url = `${window.location.origin}/restaurang/${slug}`;
         
         if (navigator.share) {
             navigator.share({
@@ -888,7 +913,10 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null, initialCenter, initial
         
         if (!isInitialLoad && selectedLocation) {
             // Always update URL when a location is selected, regardless of page type
-            const newPath = `/place/${selectedLocation.id}`;
+            
+            // Use admin-defined slug
+            const slug = selectedLocation.slug;
+            const newPath = `/restaurang/${slug}`;
             console.log('Updating URL to:', newPath);
             if (currentPath !== newPath) {
                 window.history.pushState({}, '', newPath);

@@ -12,6 +12,8 @@ interface KebabPlace {
     longitude: number;
     openingHours?: string;
     priceRange?: string;
+    slug?: string;
+    city?: string;
     rating: number;
     totalVotes: number;
     createdAt: string;
@@ -36,10 +38,24 @@ export default function EditPlacePage({ params }: EditPlacePageProps) {
         longitude: '',
         openingHours: '',
         priceRange: '',
+        slug: '',
+        city: '',
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+
+    // Validate slug format
+    const isSlugValid = (slug: string) => {
+        if (!slug) return true; // Empty slug is valid (will be required by form)
+        // Check if slug starts with "restaurang/" and contains only lowercase letters, numbers, and hyphens
+        // and doesn't start or end with hyphens in the slug part
+        if (!slug.startsWith('restaurang/')) return false;
+        const slugPart = slug.replace('restaurang/', '');
+        return /^[a-z0-9-]+$/.test(slugPart) && !slugPart.startsWith('-') && !slugPart.endsWith('-');
+    };
+
+    const hasInvalidSlug = Boolean(formData.slug && !isSlugValid(formData.slug));
 
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
@@ -59,6 +75,7 @@ export default function EditPlacePage({ params }: EditPlacePageProps) {
             if (response.ok) {
                 const data = await response.json();
                 setPlace(data);
+                console.log('data', data);
                 setFormData({
                     name: data.name,
                     address: data.address,
@@ -66,6 +83,8 @@ export default function EditPlacePage({ params }: EditPlacePageProps) {
                     longitude: data.longitude.toString(),
                     openingHours: data.openingHours || '',
                     priceRange: data.priceRange || '',
+                    slug: data.slug || '',
+                    city: data.city || '',
                 });
             } else {
                 setError('Kunde inte hämta ställets detaljer');
@@ -112,6 +131,7 @@ export default function EditPlacePage({ params }: EditPlacePageProps) {
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
+        
         setFormData(prev => ({
             ...prev,
             [name]: value,
@@ -163,7 +183,7 @@ export default function EditPlacePage({ params }: EditPlacePageProps) {
                 <div className="text-center">
                     <h1 className="text-2xl font-bold mb-4">Ställe hittades inte</h1>
                     <Link
-                        href="/admin/places"
+                        href="/admin/restaurang"
                         className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                     >
                         Tillbaka till ställen
@@ -173,6 +193,17 @@ export default function EditPlacePage({ params }: EditPlacePageProps) {
         );
     }
 
+    // Don't render the form until we have the place data and form data is populated
+    if (!place || !formData.name) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-100">
+                <div className="text-center">
+                    <p>Laddar ställets detaljer...</p>
+                </div>
+            </div>
+        );
+    }
+    
     return (
         <div className="min-h-screen bg-gray-100 p-8">
             <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-8">
@@ -180,7 +211,7 @@ export default function EditPlacePage({ params }: EditPlacePageProps) {
                     <h1 className="text-2xl font-bold">Redigera kebabställe</h1>
                     <div className="flex gap-2">
                         <Link
-                            href="/admin/places"
+                            href="/admin/restaurang"
                             className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
                         >
                             Tillbaka till ställen
@@ -290,11 +321,57 @@ export default function EditPlacePage({ params }: EditPlacePageProps) {
                             Ange prisklass i SEK (t.ex. "100-300" för 100 till 300 SEK)
                         </p>
                     </div>
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label className="block text-gray-700 mb-2">URL Slug</label>
+                            <input
+                                type="text"
+                                name="slug"
+                                value={formData.slug}
+                                onChange={handleChange}
+                                className="w-full p-2 border rounded"
+                                placeholder={formData.slug ? "" : "restaurang/baretta-pizzeria-goteborg"}
+                                required
+                            />
+                            <p className="text-sm text-gray-500 mt-1">
+                                Ange den fullständiga URL-slugen (t.ex. "restaurang/baretta-pizzeria-goteborg")
+                            </p>
+                            {hasInvalidSlug && (
+                                <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded">
+                                    <p className="text-sm text-red-800">
+                                        <strong>Ogiltig slug:</strong> Måste börja med "restaurang/" och följas av endast små bokstäver, siffror och bindestreck. Kan inte börja eller sluta med bindestreck.
+                                    </p>
+                                </div>
+                            )}
+                            {formData.slug && !hasInvalidSlug && (
+                                <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded">
+                                    <p className="text-sm text-blue-800">
+                                        <strong>Full URL:</strong> kebabkartan.se/{formData.slug}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                        <div>
+                            <label className="block text-gray-700 mb-2">Stad</label>
+                            <input
+                                type="text"
+                                name="city"
+                                value={formData.city}
+                                onChange={handleChange}
+                                className="w-full p-2 border rounded"
+                                placeholder="Göteborg"
+                                required
+                            />
+                            <p className="text-sm text-gray-500 mt-1">
+                                Stad (t.ex. "Göteborg", "Stockholm")
+                            </p>
+                        </div>
+                    </div>
                     {error && <p className="text-red-500 mb-4">{error}</p>}
                     {success && <p className="text-green-500 mb-4">{success}</p>}
                     <button
                         type="submit"
-                        disabled={loading}
+                        disabled={loading || hasInvalidSlug}
                         className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 disabled:bg-blue-300"
                     >
                         {loading ? 'Uppdaterar...' : 'Uppdatera kebabställe'}

@@ -14,7 +14,7 @@ export default function AdminRedirectPage({ params }: AdminRedirectPageProps) {
 
     useEffect(() => {
         // Redirect to the places edit page
-        router.replace(`/admin/places/${params.id}`);
+        router.replace(`/admin/restaurang/${params.id}`);
     }, [router, params.id]);
 
     return (

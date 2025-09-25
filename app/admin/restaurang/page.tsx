@@ -180,7 +180,7 @@ export default function AdminPlacesPage() {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                 <div className="flex gap-2">
                                                     <Link
-                                                        href={`/admin/places/${place.id}`}
+                                                        href={`/admin/restaurang/${place.id}`}
                                                         className="text-blue-600 hover:text-blue-900"
                                                     >
                                                         Redigera
