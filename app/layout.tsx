@@ -19,7 +19,7 @@ export const metadata: Metadata = {
         default: 'Kebabkartan | Hitta och betygsätt din favorit kebab',
         template: '%s | Kebabkartan'
     },
-    description: 'Hitta och betygsätt din favorit kebab i Sverige. Utforska kebabställen nära dig, läs recensioner och dela dina erfarenheter.',
+    description: '🔥 Sveriges bästa kebabguide! Hitta toppkvalitet kebab i Stockholm, Göteborg, Malmö & fler städer. Läs äkta recensioner, se betyg & upptäck dina nya favoriter. Gratis & uppdaterat dagligen!',
     keywords: ['kebab', 'kebabställen', 'restauranger', 'mat', 'betygsättning', 'Sverige', 'kebabkarta'],
     authors: [{ name: 'Kebabkartan' }],
     creator: 'Kebabkartan',
