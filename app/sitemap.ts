@@ -83,7 +83,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             // Use admin-defined slug
             const slug = place.slug;
             return {
-                url: `${baseUrl}/restaurang/${slug}`,
+                url: `${baseUrl}/${slug}`,
                 lastModified: new Date(),
                 changeFrequency: 'weekly' as const,
                 priority: 0.8,
