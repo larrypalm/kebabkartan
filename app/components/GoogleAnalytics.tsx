@@ -3,11 +3,13 @@
 import Script from 'next/script';
 import { useEffect, useState } from 'react';
 import { isTrackingEnabled } from '@/app/utils/analytics';
+import { usePathname } from 'next/navigation';
 
 export default function GoogleAnalytics({ GA_MEASUREMENT_ID }: { GA_MEASUREMENT_ID: string }) {
     const [shouldLoad, setShouldLoad] = useState(false);
     const [scriptLoaded, setScriptLoaded] = useState(false);
     const [gtagInitialized, setGtagInitialized] = useState(false);
+    const pathname = usePathname();
 
     useEffect(() => {
         // Validate GA_MEASUREMENT_ID
@@ -21,7 +23,14 @@ export default function GoogleAnalytics({ GA_MEASUREMENT_ID }: { GA_MEASUREMENT_
             return;
         }
 
-        // Check if analytics should be enabled
+        // Disable on admin routes
+        const isAdminRoute = pathname?.startsWith('/admin');
+        if (isAdminRoute) {
+            setShouldLoad(false);
+            return;
+        }
+
+        // Check if analytics should be enabled (consent etc.)
         const trackingEnabled = isTrackingEnabled();
         console.log('GoogleAnalytics: isTrackingEnabled:', trackingEnabled);
         console.log('GoogleAnalytics: GA_MEASUREMENT_ID:', GA_MEASUREMENT_ID);
@@ -67,7 +76,7 @@ export default function GoogleAnalytics({ GA_MEASUREMENT_ID }: { GA_MEASUREMENT_
             window.removeEventListener('consent-updated', handleConsentChange);
             clearInterval(checkInterval);
         };
-    }, [shouldLoad, GA_MEASUREMENT_ID]);
+    }, [shouldLoad, GA_MEASUREMENT_ID, pathname]);
 
     // Check if gtag is available and working
     useEffect(() => {

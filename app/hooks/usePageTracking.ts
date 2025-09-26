@@ -8,6 +8,8 @@ export function usePageTracking() {
     const pathname = usePathname();
 
     useEffect(() => {
-        trackPageView(pathname);
+        if (!pathname?.startsWith('/admin')) {
+            trackPageView(pathname);
+        }
     }, [pathname]);
 } 
