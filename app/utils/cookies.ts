@@ -6,9 +6,21 @@ export const getCookie = (name: string): string | null => {
     return null;
 };
 
-export const setCookie = (name: string, value: string) => {
-    // Session cookie (no expires/max-age = session cookie)
-    document.cookie = `${name}=${value}; path=/; SameSite=Lax`;
+export const setCookie = (
+    name: string,
+    value: string,
+    ttlDays: number,
+) => {
+    const maxAge = ttlDays * 24 * 60 * 60; // days -> seconds
+    const isSecure = window.location.protocol === 'https:';
+
+    let cookie = `${name}=${value}; path=/; SameSite=Lax; max-age=${maxAge}`;
+
+    if (isSecure) {
+        cookie += '; Secure';
+    }
+
+    document.cookie = cookie;
 };
 
 export const deleteCookie = (name: string) => {
@@ -25,14 +37,12 @@ export const CONSENT_COOKIE_NAME = 'kebabkartan-cookie-consent';
 
 export const getConsentPreferences = (): ConsentPreferences | null => {
     const consentCookie = getCookie(CONSENT_COOKIE_NAME);
-    console.log('getConsentPreferences: Looking for cookie:', CONSENT_COOKIE_NAME);
-    console.log('getConsentPreferences: Found cookie value:', consentCookie);
-    
+
     if (!consentCookie) return null;
-    
+
     try {
         const parsed = JSON.parse(consentCookie);
-        console.log('getConsentPreferences: Parsed preferences:', parsed);
+
         return parsed;
     } catch (error) {
         console.error('Error parsing consent cookie:', error);
@@ -40,11 +50,13 @@ export const getConsentPreferences = (): ConsentPreferences | null => {
     }
 };
 
-export const saveConsentPreferences = (preferences: ConsentPreferences) => {
-    setCookie(CONSENT_COOKIE_NAME, JSON.stringify(preferences));
-    
-    // Dispatch custom event for other components to listen to
-    window.dispatchEvent(new CustomEvent('consent-updated', { 
-        detail: preferences 
-    }));
+export const saveConsentPreferences = (
+    preferences: ConsentPreferences,
+    ttlDays: number = 180 // e.g. 6 months; change to 30 if you prefer
+) => {
+    setCookie(CONSENT_COOKIE_NAME, JSON.stringify(preferences), ttlDays);
+
+    window.dispatchEvent(
+        new CustomEvent('consent-updated', { detail: preferences })
+    );
 };
