@@ -56,7 +56,7 @@ export default function StructuredData({ type, data }: StructuredDataProps) {
           telephone: data.phone,
           url: data.website,
           priceRange: data.priceRange,
-          servesCuisine: 'Turkish',
+          servesCuisine: '',
           aggregateRating: data.rating ? {
             '@type': 'AggregateRating',
             ratingValue: data.rating,

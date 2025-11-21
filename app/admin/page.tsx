@@ -233,7 +233,7 @@ export default function AdminPage() {
                                                         Edit
                                                     </button>
                                                     <a
-                                                        href={`/place/${place.id}`}
+                                                        href={`/${place.slug}`}
                                                         target="_blank"
                                                         className="text-green-600 hover:text-green-900"
                                                     >
