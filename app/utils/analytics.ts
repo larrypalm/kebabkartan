@@ -11,20 +11,32 @@ declare global {
     }
 }
 
-// Determine if analytics tracking should be enabled
+// =========================
+// Logging Helpers
+// =========================
+
+const shouldLog = (): boolean => {
+    if (typeof window === 'undefined') return false;
+
+    if (process.env.NEXT_PUBLIC_DEBUG_ANALYTICS === 'true') return true;
+
+    return false;
+};
+
+const log = (...args: any[]) => shouldLog() && console.log(...args);
+const warn = (...args: any[]) => shouldLog() && console.warn(...args);
+const error = (...args: any[]) => shouldLog() && console.error(...args);
+
+// =========================
+// Consent / Tracking Logic
+// =========================
+
 export const isTrackingEnabled = (): boolean => {
     if (typeof window === 'undefined') {
-        console.log('Analytics: Window undefined, tracking disabled');
+        log('Analytics: Window undefined, tracking disabled');
         return false;
     }
 
-    // Allow manual override via env flag
-    if (process.env.NEXT_PUBLIC_DISABLE_ANALYTICS === 'true') {
-        console.log('Analytics: Disabled via NEXT_PUBLIC_DISABLE_ANALYTICS');
-        return false;
-    }
-
-    // Check cookie consent for analytics using the same system as CookieConsent
     const getCookie = (name: string): string | null => {
         const value = `; ${document.cookie}`;
         const parts = value.split(`; ${name}=`);
@@ -33,58 +45,58 @@ export const isTrackingEnabled = (): boolean => {
     };
 
     const consentCookie = getCookie('kebabkartan-cookie-consent');
-    console.log('Analytics: Checking consent cookie:', consentCookie);
-    
+    log('Analytics: Checking consent cookie:', consentCookie);
+
     if (consentCookie) {
         try {
             const preferences = JSON.parse(consentCookie);
-            console.log('Analytics: Consent preferences:', preferences);
+            log('Analytics: Consent preferences:', preferences);
             const analyticsEnabled = preferences.analytics === true;
-            console.log('Analytics: Analytics enabled:', analyticsEnabled);
+            log('Analytics: Analytics enabled:', analyticsEnabled);
             return analyticsEnabled;
-        } catch (error) {
-            console.warn('Failed to parse cookie consent preferences:', error);
+        } catch (err) {
+            warn('Failed to parse cookie consent preferences:', err);
             return false;
         }
     }
 
-    // If no consent given yet, don't track
-    console.log('Analytics: No consent cookie found, tracking disabled');
+    log('Analytics: No consent cookie found, tracking disabled');
     return false;
 };
 
 /**
  * Send event directly to GA4
- * @param eventName - The name of the event
- * @param params - Additional parameters for the event
  */
 export const trackEvent = (eventName: string, params?: EventParams) => {
     if (!isTrackingEnabled()) {
-        console.log('Analytics: Event not tracked - tracking disabled:', eventName);
+        log('Analytics: Event not tracked - tracking disabled:', eventName);
         return;
     }
-    
+
     if (typeof window === 'undefined') {
-        console.log('Analytics: Event not tracked - window undefined:', eventName);
+        log('Analytics: Event not tracked - window undefined:', eventName);
         return;
     }
-    
+
     if (!window.gtag) {
-        console.warn('Analytics: gtag function not available, event not tracked:', eventName);
-        console.log('Analytics: Available on window:', Object.keys(window).filter(key => key.includes('gtag') || key.includes('dataLayer')));
+        warn('Analytics: gtag not available, event not tracked:', eventName);
+        log('Analytics: Available keys:', Object.keys(window).filter(k => k.includes('gtag') || k.includes('dataLayer')));
         return;
     }
-    
+
     try {
-        console.log('Analytics: Tracking event:', eventName, params);
+        log('Analytics: Tracking event:', eventName, params);
         window.gtag('event', eventName, params);
-        console.log('Analytics: Event sent successfully:', eventName);
-    } catch (error) {
-        console.error('Analytics: Error sending event:', eventName, error);
+        log('Analytics: Event sent successfully:', eventName);
+    } catch (err) {
+        error('Analytics: Error sending event:', eventName, err);
     }
 };
 
-// Event names
+// =========================
+// Event Names
+// =========================
+
 export const EventNames = {
     PAGE_VIEW: 'page_view',
     KEBAB_PLACE_VIEW: 'kebab_place_view',
@@ -124,96 +136,66 @@ export const EventNames = {
     ACCOUNT_VOTE_EDIT_ERROR: 'account_vote_edit_error',
 } as const;
 
-// Helper functions for specific events
+// =========================
+// Helper Event Trackers
+// =========================
+
 export const trackPageView = (url: string) => {
     trackEvent(EventNames.PAGE_VIEW, { page_path: url });
 };
 
 export const trackKebabPlaceView = (placeId: string, placeName: string) => {
-    trackEvent(EventNames.KEBAB_PLACE_VIEW, {
-        place_id: placeId,
-        place_name: placeName
-    });
+    trackEvent(EventNames.KEBAB_PLACE_VIEW, { place_id: placeId, place_name: placeName });
 };
 
 export const trackRatingSubmitted = (placeId: string, placeName: string, rating: number) => {
-    trackEvent(EventNames.RATING_SUBMITTED, {
-        place_id: placeId,
-        place_name: placeName,
-        rating: rating
-    });
+    trackEvent(EventNames.RATING_SUBMITTED, { place_id: placeId, place_name: placeName, rating });
 };
 
 export const trackRatingSubmitAttempt = (placeId: string, rating: number) => {
-    trackEvent(EventNames.RATING_SUBMIT_ATTEMPT, {
-        place_id: placeId,
-        rating
-    });
+    trackEvent(EventNames.RATING_SUBMIT_ATTEMPT, { place_id: placeId, rating });
 };
 
 export const trackRatingSubmitError = (placeId: string, rating: number, message: string) => {
-    trackEvent(EventNames.RATING_SUBMIT_ERROR, {
-        place_id: placeId,
-        rating,
-        message
-    });
+    trackEvent(EventNames.RATING_SUBMIT_ERROR, { place_id: placeId, rating, message });
 };
 
-export const trackSearch = (query: string) => {
-    trackEvent(EventNames.SEARCH, { query });
-};
+export const trackSearch = (query: string) => trackEvent(EventNames.SEARCH, { query });
 
-export const trackSearchResultSelect = (placeId: string, placeName: string) => {
+export const trackSearchResultSelect = (placeId: string, placeName: string) =>
     trackEvent(EventNames.SEARCH_RESULT_SELECT, { place_id: placeId, place_name: placeName });
-}; 
 
-export const trackSearchOpen = () => {
-    trackEvent(EventNames.SEARCH_OPEN);
-};
+export const trackSearchOpen = () => trackEvent(EventNames.SEARCH_OPEN);
 
-export const trackSearchClear = () => {
-    trackEvent(EventNames.SEARCH_CLEAR);
-};
+export const trackSearchClear = () => trackEvent(EventNames.SEARCH_CLEAR);
 
-export const trackMarkerClick = (placeId: string, placeName: string) => {
+export const trackMarkerClick = (placeId: string, placeName: string) =>
     trackEvent(EventNames.MARKER_CLICK, { place_id: placeId, place_name: placeName });
-};
 
-export const trackMarkerShare = (placeId: string, placeName: string, method: 'webshare' | 'clipboard') => {
+export const trackMarkerShare = (placeId: string, placeName: string, method: 'webshare' | 'clipboard') =>
     trackEvent(EventNames.MARKER_SHARE, { place_id: placeId, place_name: placeName, method });
-};
 
-export const trackMarkerExpand = (placeId: string, placeName: string, expanded: boolean) => {
+export const trackMarkerExpand = (placeId: string, placeName: string, expanded: boolean) =>
     trackEvent(EventNames.MARKER_EXPAND, { place_id: placeId, place_name: placeName, expanded });
-};
 
-export const trackMapLoaded = () => {
-    trackEvent(EventNames.MAP_LOADED);
-};
+export const trackMapLoaded = () => trackEvent(EventNames.MAP_LOADED);
 
-export const trackShowAllPlaces = () => {
-    trackEvent(EventNames.SHOW_ALL_PLACES);
-};
+export const trackShowAllPlaces = () => trackEvent(EventNames.SHOW_ALL_PLACES);
 
-export const trackIpLocationSuccess = (latitude: number, longitude: number) => {
+export const trackIpLocationSuccess = (latitude: number, longitude: number) =>
     trackEvent(EventNames.IP_LOCATION_SUCCESS, { latitude, longitude });
-};
 
-export const trackIpLocationError = (message: string) => {
+export const trackIpLocationError = (message: string) =>
     trackEvent(EventNames.IP_LOCATION_ERROR, { message });
-};
 
-export const trackGeolocationPermission = (state: PermissionState) => {
+export const trackGeolocationPermission = (state: PermissionState) =>
     trackEvent(EventNames.GEOLOCATION_PERMISSION, { state });
-};
 
-export const trackAuthNavClick = (target: 'auth' | 'my-account') => {
+export const trackAuthNavClick = (target: 'auth' | 'my-account') =>
     trackEvent(EventNames.AUTH_NAV_CLICK, { target });
-};
 
-export const trackNavClick = (target: string) => {
+export const trackNavClick = (target: string) =>
     trackEvent(EventNames.NAV_CLICK, { target });
-};
 
 export const trackAuthSigninAttempt = () => trackEvent(EventNames.AUTH_SIGNIN_ATTEMPT);
 export const trackAuthSigninSuccess = () => trackEvent(EventNames.AUTH_SIGNIN_SUCCESS);
@@ -232,11 +214,14 @@ export const trackAuthForgotPasswordClick = () => trackEvent(EventNames.AUTH_FOR
 
 export const trackSuggestionSubmitAttempt = () => trackEvent(EventNames.SUGGESTION_SUBMIT_ATTEMPT);
 export const trackSuggestionSubmitSuccess = () => trackEvent(EventNames.SUGGESTION_SUBMIT_SUCCESS);
-export const trackSuggestionSubmitError = (message: string) => trackEvent(EventNames.SUGGESTION_SUBMIT_ERROR, { message });
+export const trackSuggestionSubmitError = (message: string) =>
+    trackEvent(EventNames.SUGGESTION_SUBMIT_ERROR, { message });
 
 export const trackAccountVoteEditAttempt = (placeId: string, newRating: number) =>
     trackEvent(EventNames.ACCOUNT_VOTE_EDIT_ATTEMPT, { place_id: placeId, rating: newRating });
+
 export const trackAccountVoteEditSuccess = (placeId: string, newRating: number) =>
     trackEvent(EventNames.ACCOUNT_VOTE_EDIT_SUCCESS, { place_id: placeId, rating: newRating });
+
 export const trackAccountVoteEditError = (placeId: string, newRating: number, message: string) =>
     trackEvent(EventNames.ACCOUNT_VOTE_EDIT_ERROR, { place_id: placeId, rating: newRating, message });
