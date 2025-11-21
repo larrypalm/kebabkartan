@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { 
-    getConsentPreferences, 
-    saveConsentPreferences, 
-    ConsentPreferences 
+import {
+    getConsentPreferences,
+    saveConsentPreferences,
+    ConsentPreferences
 } from '@/app/utils/cookies';
 import CookieBanner from './CookieBanner';
 import CookieSettingsModal from './CookieSettingsModal';
@@ -27,17 +27,11 @@ export default function CookieConsent({ onConsentChange }: CookieConsentProps) {
 
     useEffect(() => {
         setIsMounted(true);
-        console.log('CookieConsent: Component mounted');
-        
         const savedPreferences = getConsentPreferences();
-        console.log('CookieConsent: Saved preferences:', savedPreferences);
-        console.log('CookieConsent: All cookies:', document.cookie);
-        
+
         if (!savedPreferences) {
-            console.log('CookieConsent: No consent preferences found, showing banner');
             setShowBanner(true);
         } else {
-            console.log('CookieConsent: Consent preferences found, loading preferences');
             setPreferences(savedPreferences);
             setShowBanner(false); // Hide banner since consent exists
             onConsentChange?.(savedPreferences);
@@ -50,11 +44,11 @@ export default function CookieConsent({ onConsentChange }: CookieConsentProps) {
         setShowBanner(false);
         setShowSettings(false);
         onConsentChange?.(newPreferences);
-        
+
         // Force a re-check of tracking status after a short delay
         setTimeout(() => {
-            window.dispatchEvent(new CustomEvent('consent-updated', { 
-                detail: newPreferences 
+            window.dispatchEvent(new CustomEvent('consent-updated', {
+                detail: newPreferences
             }));
         }, 50);
     };
@@ -107,46 +101,57 @@ export default function CookieConsent({ onConsentChange }: CookieConsentProps) {
         setShowBanner(true);
     };
 
-    console.log('CookieConsent: Rendering, showBanner:', showBanner, 'showSettings:', showSettings);
 
     // Render nothing on server
     if (!isMounted) return null;
 
     const content = (
-        <div>
-            {/* Development indicator */}
-            {process.env.NODE_ENV === 'development' && (
-                <div className="fixed top-0 right-0 bg-red-500 text-white p-2 text-xs z-[9999]" style={{ zIndex: 9999 }}>
-                    CookieConsent Active
-                </div>
-            )}
-            
-            {/* Floating Cookie Settings Button */}
-            <FloatingCookieButton onClick={openConsentBanner} />
+        <div
+            style={{
+                position: 'fixed',
+                bottom: '10px',
+                right: showBanner ? '10px' : 'auto',
+                left: '10px',
+                background: 'rgba(0,0,0,0.8)',
+                color: 'white',
+                padding: '10px',
+                borderRadius: '5px',
+                fontSize: '12px',
+                zIndex: 9999,
+                fontFamily: 'monospace'
+            }}
+        >
+            {/* Floating button */}
+            {!showBanner && <div className="pointer-events-auto">
+                <FloatingCookieButton onClick={openConsentBanner} />
+            </div>}
 
             {/* Cookie Banner */}
             {showBanner && (
-                <CookieBanner
-                    onAcceptAll={acceptAll}
-                    onAcceptNecessary={acceptNecessary}
-                    onRejectAll={rejectAll}
-                    onOpenSettings={openSettings}
-                />
+                <div className="pointer-events-auto">
+                    <CookieBanner
+                        onAcceptAll={acceptAll}
+                        onAcceptNecessary={acceptNecessary}
+                        onRejectAll={rejectAll}
+                        onOpenSettings={openSettings}
+                    />
+                </div>
             )}
 
-            {/* Cookie Settings Modal */}
+            {/* Settings modal */}
             {showBanner && (
-                <CookieSettingsModal
-                    isOpen={showSettings}
-                    onClose={closeSettings}
-                    preferences={preferences}
-                    onPreferencesChange={setPreferences}
-                    onSave={saveCustomPreferences}
-                />
+                <div className="pointer-events-auto">
+                    <CookieSettingsModal
+                        isOpen={showSettings}
+                        onClose={closeSettings}
+                        preferences={preferences}
+                        onPreferencesChange={setPreferences}
+                        onSave={saveCustomPreferences}
+                    />
+                </div>
             )}
         </div>
     );
-
     // Use portal to ensure overlay sits above all app layers
     return createPortal(content, document.body);
 }
