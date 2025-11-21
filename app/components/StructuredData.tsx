@@ -14,7 +14,7 @@ export default function StructuredData({ type, data }: StructuredDataProps) {
           '@type': 'WebSite',
           name: 'Kebabkartan',
           url: 'https://www.kebabkartan.se',
-          description: 'Hitta och betygsätt din favorit kebab i Sverige. Utforska kebabställen nära dig, läs recensioner och dela dina erfarenheter.',
+          description: 'Hitta och betygsätt kebab, pizza och falafel i Sverige. Utforska ställen nära dig, läs recensioner och dela dina erfarenheter.',
           inLanguage: 'sv-SE',
           potentialAction: {
             '@type': 'SearchAction',

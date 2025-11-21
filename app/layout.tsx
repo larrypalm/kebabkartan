@@ -16,11 +16,11 @@ const inter = Inter({
 
 export const metadata: Metadata = {
     title: {
-        default: 'Kebabkartan | Hitta och betygsätt din favorit kebab',
+        default: 'Kebabkartan | Hitta och betygsätt kebab, pizza & falafel',
         template: '%s | Kebabkartan'
     },
-    description: '🔥 Sveriges bästa kebabguide! Hitta toppkvalitet kebab i Stockholm, Göteborg, Malmö & fler städer. Läs äkta recensioner, se betyg & upptäck dina nya favoriter. Gratis & uppdaterat dagligen!',
-    keywords: ['kebab', 'kebabställen', 'restauranger', 'mat', 'betygsättning', 'Sverige', 'kebabkarta'],
+    description: '🔥 Sveriges bästa guide till kebab, pizza & falafel! Hitta toppställen i Stockholm, Göteborg, Malmö & fler städer. Läs äkta recensioner, se betyg & upptäck nya favoriter. Gratis & uppdaterat dagligen!',
+    keywords: ['kebab', 'pizza', 'falafel', 'kebabställen', 'pizzerior', 'falafelställen', 'restauranger', 'mat', 'betygsättning', 'Sverige', 'kebabkarta'],
     authors: [{ name: 'Kebabkartan' }],
     creator: 'Kebabkartan',
     publisher: 'Kebabkartan',
@@ -37,22 +37,22 @@ export const metadata: Metadata = {
         type: 'website',
         locale: 'sv_SE',
         url: 'https://www.kebabkartan.se',
-        title: 'Kebabkartan | Hitta och betygsätt din favorit kebab',
-        description: 'Hitta och betygsätt din favorit kebab i Sverige. Utforska kebabställen nära dig, läs recensioner och dela dina erfarenheter.',
+        title: 'Kebabkartan | Hitta och betygsätt kebab, pizza & falafel',
+        description: 'Hitta och betygsätt kebab, pizza och falafel i Sverige. Utforska ställen nära dig, läs recensioner och dela dina erfarenheter.',
         siteName: 'Kebabkartan',
         images: [
             {
                 url: '/static/logo.png',
                 width: 1200,
                 height: 630,
-                alt: 'Kebabkartan - Din guide till bästa kebaben i Sverige',
+                alt: 'Kebabkartan - Din guide till kebab, pizza och falafel i Sverige',
             },
         ],
     },
     twitter: {
         card: 'summary_large_image',
-        title: 'Kebabkartan | Hitta och betygsätt din favorit kebab',
-        description: 'Hitta och betygsätt din favorit kebab i Sverige. Utforska kebabställen nära dig, läs recensioner och dela dina erfarenheter.',
+        title: 'Kebabkartan | Hitta och betygsätt kebab, pizza & falafel',
+        description: 'Hitta och betygsätt kebab, pizza och falafel i Sverige. Utforska ställen nära dig, läs recensioner och dela dina erfarenheter.',
         images: ['/static/logo.png'],
         creator: '@kebabkartan',
     },

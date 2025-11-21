@@ -7,12 +7,17 @@ import PerformanceMonitor from './PerformanceMonitor';
 import LCPOptimizer from './LCPOptimizer';
 import CookieConsent from './CookieConsent';
 import AnalyticsDebug from './AnalyticsDebug';
+import { usePathname } from 'next/navigation';
 
 export default function ClientLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
+    const pathname = usePathname();
+    const isAdminRoute = pathname?.startsWith('/admin');
+
+    // Track page views; hook itself guards admin routes
     usePageTracking();
     
     return (
@@ -22,8 +27,8 @@ export default function ClientLayout({
             <PerformanceMonitor />
             <Breadcrumbs />
             {children}
-            <CookieConsent />
-            <AnalyticsDebug />
+            {!isAdminRoute && <CookieConsent />}
+            {!isAdminRoute && <AnalyticsDebug />}
         </>
     );
 } 

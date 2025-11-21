@@ -2,12 +2,12 @@ import { Metadata } from 'next';
 import StructuredData from '@/app/components/StructuredData';
 
 export const metadata: Metadata = {
-  title: 'Vanliga frågor om kebab | Kebabkartan',
-  description: 'Svar på vanliga frågor om kebab, kebabställen i Sverige, betyg och recensioner. Hitta svar på allt du behöver veta om kebab.',
-  keywords: ['kebab frågor', 'kebab FAQ', 'kebab Sverige', 'kebabställen', 'kebab betyg', 'kebab recensioner'],
+  title: 'Vanliga frågor om kebab, pizza & falafel | Kebabkartan',
+  description: 'Svar på vanliga frågor om kebab, pizza och falafel i Sverige – ställen, betyg och recensioner. Hitta svar på allt du behöver veta.',
+  keywords: ['kebab frågor', 'pizza frågor', 'falafel frågor', 'kebab FAQ', 'pizza FAQ', 'falafel FAQ', 'kebab Sverige', 'pizza Sverige', 'falafel Sverige', 'kebabställen', 'pizzerior', 'falafelställen', 'betyg', 'recensioner'],
   openGraph: {
-    title: 'Vanliga frågor om kebab | Kebabkartan',
-    description: 'Svar på vanliga frågor om kebab, kebabställen i Sverige, betyg och recensioner.',
+    title: 'Vanliga frågor om kebab, pizza & falafel | Kebabkartan',
+    description: 'Svar på vanliga frågor om kebab, pizza och falafel i Sverige – ställen, betyg och recensioner.',
     images: ['/static/logo.png'],
   },
 };
@@ -15,19 +15,19 @@ export const metadata: Metadata = {
 const faqData = [
   {
     question: "Vad är Kebabkartan?",
-    answer: "Kebabkartan är Sveriges ledande plattform för att hitta och betygsätta kebabställen. Vi hjälper dig upptäcka de bästa kebabrestaurangerna i Sverige genom användarrecensioner, betyg och en interaktiv karta."
+    answer: "Kebabkartan är Sveriges ledande plattform för att hitta och betygsätta kebabställen, pizzerior och falafelställen. Vi hjälper dig upptäcka de bästa ställena i Sverige genom användarrecensioner, betyg och en interaktiv karta."
   },
   {
     question: "Hur fungerar betygsättningen av kebabställen?",
-    answer: "Användare kan betygsätta kebabställen på en skala från 1-5 stjärnor och lämna detaljerade recensioner. Betygen sammanställs automatiskt för att visa genomsnittsbetyg för varje ställe."
+    answer: "Användare kan betygsätta kebabställen, pizzerior och falafelställen på en skala från 1-5 stjärnor och lämna detaljerade recensioner. Betygen sammanställs automatiskt för att visa genomsnittsbetyg för varje ställe."
   },
   {
     question: "Kan jag lägga till nya kebabställen?",
-    answer: "Ja! Du kan föreslå nya kebabställen genom att använda vår 'Föreslå restaurang'-funktion. Vi granskar alla förslag och lägger till verifierade ställen på kartan."
+    answer: "Ja! Du kan föreslå nya kebabställen, pizzerior och falafelställen via vår 'Föreslå restaurang'-funktion. Vi granskar alla förslag och lägger till verifierade ställen på kartan."
   },
   {
     question: "Vilka städer täcker Kebabkartan?",
-    answer: "Vi täcker hela Sverige med särskilt fokus på Stockholm, Göteborg, Malmö och andra större städer. Vår karta innehåller kebabställen från hela landet."
+    answer: "Vi täcker hela Sverige med särskilt fokus på Stockholm, Göteborg, Malmö och andra större städer. Vår karta innehåller kebabställen, pizzerior och falafelställen från hela landet."
   },
   {
     question: "Är Kebabkartan gratis att använda?",
@@ -39,7 +39,7 @@ const faqData = [
   },
   {
     question: "Kan jag söka efter kebab nära mig?",
-    answer: "Absolut! Använd vår interaktiva karta för att hitta kebabställen nära din plats. Du kan också använda våra stadsspecifika sidor för Stockholm, Göteborg och Malmö."
+    answer: "Absolut! Använd vår interaktiva karta för att hitta kebabställen, pizzerior och falafelställen nära din plats. Du kan också använda våra stadsspecifika sidor för Stockholm, Göteborg och Malmö."
   },
   {
     question: "Vad är skillnaden mellan kebab och gyros?",
@@ -47,7 +47,7 @@ const faqData = [
   },
   {
     question: "Finns det veganska kebabalternativ?",
-    answer: "Ja! Många kebabställen erbjuder veganska alternativ som falafel eller vegansk kebab. Du kan filtrera efter veganska alternativ på vår karta."
+    answer: "Ja! Många ställen erbjuder veganska alternativ som falafel eller vegansk kebab och pizza. Du kan filtrera efter veganska alternativ på vår karta."
   },
   {
     question: "Hur ofta uppdateras informationen?",
@@ -60,10 +60,10 @@ export default function FAQPage() {
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold text-gray-900 mb-4">
-          Vanliga frågor om kebab
+          Vanliga frågor om kebab, pizza & falafel
         </h1>
         <p className="text-xl text-gray-600 mb-8">
-          Här hittar du svar på de vanligaste frågorna om kebab, Kebabkartan och hur du hittar de bästa kebabställena i Sverige.
+          Här hittar du svar på de vanligaste frågorna om kebab, pizza, falafel och Kebabkartan – samt hur du hittar de bästa ställena i Sverige.
         </p>
 
         <div className="space-y-6">
@@ -84,14 +84,14 @@ export default function FAQPage() {
             Har du fler frågor?
           </h2>
           <p className="text-blue-800 mb-4">
-            Om du inte hittade svar på din fråga här, tveka inte att kontakta oss eller använd vår interaktiva karta för att utforska kebabställen i Sverige.
+            Om du inte hittade svar på din fråga här, tveka inte att kontakta oss eller använd vår interaktiva karta för att utforska kebabställen, pizzerior och falafelställen i Sverige.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <a 
               href="/" 
               className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors text-center"
             >
-              Utforska kebabkartan
+              Utforska Kebabkartan
             </a>
             <a 
               href="/suggestions" 
