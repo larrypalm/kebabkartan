@@ -40,7 +40,7 @@ export default function AnalyticsDebug() {
     }, []);
 
     // Only show in development or when explicitly enabled
-    if (process.env.NODE_ENV === 'production' && !process.env.NEXT_PUBLIC_SHOW_ANALYTICS_DEBUG) {
+    if (process.env.NEXT_PUBLIC_SHOW_ANALYTICS_DEBUG !== 'true') {
         return null;
     }
 
