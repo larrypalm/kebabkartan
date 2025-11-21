@@ -40,7 +40,7 @@ export default function CookieConsent({ onConsentChange }: CookieConsentProps) {
 
     const saveConsent = (newPreferences: ConsentPreferences) => {
         setPreferences(newPreferences);
-        saveConsentPreferences(newPreferences);
+        saveConsentPreferences(newPreferences, 30);
         setShowBanner(false);
         setShowSettings(false);
         onConsentChange?.(newPreferences);
