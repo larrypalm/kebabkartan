@@ -585,7 +585,7 @@ export default function MyAccountPage() {
                         </div>
                         <div style={{ display: 'flex', gap: '8px' }}>
                           <button
-                            onClick={() => router.push(`/place/${vote.placeId}`)}
+                            onClick={() => router.push(`/${vote.slug}`)}
                             style={{
                               backgroundColor: '#3b82f6',
                               color: 'white',
