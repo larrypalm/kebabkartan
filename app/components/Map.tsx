@@ -53,7 +53,7 @@ interface RatingStarsProps {
 }
 
 interface MapProps {
-    initialPlaceId?: string | null;
+    initialPlaceSlug?: string | null;
     initialCenter?: [number, number];
     initialZoom?: number;
 }
@@ -500,7 +500,7 @@ const generateStructuredData = (location: Location) => {
     return {
         '@context': 'https://schema.org',
         '@type': 'Restaurant',
-        '@id': `https://www.kebabkartan.se/place/${location.id}`,
+        '@id': `https://www.kebabkartan.se/${location.slug}`,
         name: location.name,
         image: '/og-image.jpg',
         address: {
@@ -516,7 +516,7 @@ const generateStructuredData = (location: Location) => {
             latitude: location.latitude,
             longitude: location.longitude,
         },
-        url: `https://kebabkartan.se/place/${location.id}`,
+        url: `https://kebabkartan.se/${location.slug}`,
         telephone: '',
         priceRange: location.priceRange || '$$',
         servesCuisine: ['Kebab', 'Mellanöstern', 'Turkisk'],
@@ -544,7 +544,7 @@ const generateStructuredData = (location: Location) => {
         hasMenu: {
             '@type': 'Menu',
             name: 'Kebab Menu',
-            url: `https://kebabkartan.se/place/${location.id}/menu`
+            url: `https://kebabkartan.se/${location.slug}/menu`
         }
     };
 };
@@ -552,8 +552,8 @@ const generateStructuredData = (location: Location) => {
 const MapControls: React.FC<{
     markers: Location[];
     onLocationSelect: (location: Location) => void;
-    initialPlaceId: string | null;
-}> = ({ markers, onLocationSelect, initialPlaceId }) => {
+    initialPlaceSlug: string | null;
+}> = ({ markers, onLocationSelect, initialPlaceSlug }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedResultIndex, setSelectedResultIndex] = useState(-1);
     const searchInputRef = useRef<HTMLInputElement>(null);
@@ -717,7 +717,6 @@ const CenterMapOnLocation: React.FC<{ location: Location | null }> = ({ location
     const map = useMap();
     useEffect(() => {
         if (location) {
-            console.log('CenterMapOnLocation: Centering map on:', location.name, location.latitude, location.longitude);
             map.setView([location.latitude, location.longitude], 15, {
                 animate: true,
                 duration: 0.5,
@@ -759,7 +758,7 @@ const useMapCentering = () => {
     return centerOnLocation;
 };
 
-const Map: React.FC<MapProps> = ({ initialPlaceId = null, initialCenter, initialZoom }) => {
+const Map: React.FC<MapProps> = ({ initialPlaceSlug = null, initialCenter, initialZoom }) => {
     const [markers, setMarkers] = useState<Location[]>([]);
     const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
     const [initialPlace, setInitialPlace] = useState<Location | null>(null);
@@ -780,12 +779,12 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null, initialCenter, initial
 
     const [isInitialLoad, setIsInitialLoad] = useState(true);
     const [mapLoaded, setMapLoaded] = useState(false);
-    const initialPlaceIdRef = useRef(initialPlaceId);
+    const initialPlaceSlugRef = useRef(initialPlaceSlug);
     
-    // Update the ref when initialPlaceId prop changes
+    // Update the ref when initialPlaceSlug prop changes
     useEffect(() => {
-        initialPlaceIdRef.current = initialPlaceId;
-    }, [initialPlaceId]);
+        initialPlaceSlugRef.current = initialPlaceSlug;
+    }, [initialPlaceSlug]);
     
     const [defaultView, setDefaultView] = useState<Coordinates>(
         initialCenter && initialZoom 
@@ -796,7 +795,6 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null, initialCenter, initial
     // Calculate initial center based on initial place ID
     const getInitialCenter = (): [number, number] => {
         if (initialPlace) {
-            console.log('Map: Using initial place center:', initialPlace.name, initialPlace.latitude, initialPlace.longitude);
             return [initialPlace.latitude, initialPlace.longitude];
         }
         if (selectedLocation) {
@@ -872,32 +870,20 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null, initialCenter, initial
     // Effect to find initial place before map renders
     useEffect(() => {
         const findInitialPlace = async () => {
-            if (!initialPlaceId) {
+            if (!initialPlaceSlug) {
                 setIsReady(true);
                 return;
             }
 
             try {
                 const response = await fetch('/api/kebab-places');
-                const data = await response.json();
-                
-                // Check if it's a UUID or a slug
-                const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(initialPlaceId);
-                
-                let targetPlace = null;
-                if (isUUID) {
-                    // If it's a UUID, find by ID
-                    targetPlace = data.find((place: Location) => place.id === initialPlaceId);
-                } else {
-                    // If it's a slug, find by admin-defined slug with restaurang/ prefix
-                    console.log('BAAA', data, initialPlaceId)
-                    targetPlace = data.find((place: Location) => 
-                        place.slug === `restaurang/${initialPlaceId}`
-                    );
-                }
-                
-                console.log('Map: Found initial place:', targetPlace);
-                
+                const places = await response.json();
+            
+                // If it's a slug, find by admin-defined slug with restaurang/ prefix
+                const targetPlace = places.find((place: Location) => 
+                    place.slug === `restaurang/${initialPlaceSlug}`
+                );
+
                 if (targetPlace) {
                     setInitialPlace(targetPlace);
                     setSelectedLocation(targetPlace);
@@ -911,7 +897,7 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null, initialCenter, initial
         };
 
         findInitialPlace();
-    }, [initialPlaceId]);
+    }, [initialPlaceSlug]);
 
     // Effect for handling direct navigation and initial load
     useEffect(() => {
@@ -920,41 +906,6 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null, initialCenter, initial
                 const response = await fetch('/api/kebab-places');
                 const data = await response.json();
                 setMarkers(data);
-                
-                // Handle initial place ID from URL or prop
-                const pathParts = window.location.pathname.split('/');
-                const urlPlaceId = pathParts[2]; // /restaurang/[id]
-                const targetPlaceId = urlPlaceId || initialPlaceIdRef.current;
-                
-                console.log('Map: Looking for place with ID:', targetPlaceId);
-                
-                if (targetPlaceId && !initialPlace) {
-                    // Check if it's a UUID or a slug
-                    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetPlaceId);
-                    
-                    let targetPlace = null;
-                    if (isUUID) {
-                        // If it's a UUID, find by ID
-                        targetPlace = data.find((place: Location) => place.id === targetPlaceId);
-                    } else {
-                        // If it's a slug, find by admin-defined slug with restaurang/ prefix
-                        targetPlace = data.find((place: Location) => 
-                            place.slug === `restaurang/${targetPlaceId}`
-                        );
-                    }
-                    
-                    console.log('Map: Found place:', targetPlace);
-                    
-                    if (targetPlace) {
-                        console.log('Map: Setting selected location:', targetPlace);
-                        setSelectedLocation(targetPlace);
-                        setInitialPlace(targetPlace);
-                        // Update document title for initial load
-                        document.title = `${targetPlace.name} | Betygsätt och recensera | Kebabkartan`;
-                    } else {
-                        console.warn('Map: Place not found for ID:', targetPlaceId);
-                    }
-                }
             } catch (error) {
                 console.error('Error fetching kebab places:', error);
             } finally {
@@ -1090,7 +1041,7 @@ const Map: React.FC<MapProps> = ({ initialPlaceId = null, initialCenter, initial
                     <MapControls 
                         markers={markers} 
                         onLocationSelect={handleLocationSelect}
-                        initialPlaceId={initialPlaceId}
+                        initialPlaceSlug={initialPlaceSlug}
                     />
                     <CenterMapOnLocation location={selectedLocation} />
                     <MapClickHandler onMapClick={() => handleLocationSelect(null)} />

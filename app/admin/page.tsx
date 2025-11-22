@@ -227,7 +227,7 @@ export default function AdminPage() {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                 <div className="flex gap-2">
                                                     <button
-                                                        onClick={() => router.push(`/admin/${place.id}`)}
+                                                        onClick={() => router.push(`/admin/${place.slug}`)}
                                                         className="text-blue-600 hover:text-blue-900"
                                                     >
                                                         Edit

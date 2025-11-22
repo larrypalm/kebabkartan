@@ -20,12 +20,12 @@ export const generatePlaceMetadata = (place: any): Metadata => {
     title,
     description,
     alternates: {
-      canonical: `https://www.kebabkartan.se/place/${place.id}`,
+      canonical: `https://www.kebabkartan.se/${place.slug}`,
     },
     openGraph: {
       title,
       description,
-      url: `https://www.kebabkartan.se/place/${place.id}`,
+      url: `https://www.kebabkartan.se/${place.slug}`,
       type: 'website',
       images: [
         {

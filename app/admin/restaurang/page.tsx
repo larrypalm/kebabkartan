@@ -16,6 +16,7 @@ interface KebabPlace {
     totalVotes: number;
     createdAt: string;
     updatedAt: string;
+    slug: string;
 }
 
 export default function AdminPlacesPage() {
@@ -146,7 +147,7 @@ export default function AdminPlacesPage() {
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
                                     {places.map((place) => (
-                                        <tr key={place.id} className="hover:bg-gray-50">
+                                        <tr key={place.slug} className="hover:bg-gray-50">
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="text-sm font-medium text-gray-900">
                                                     {place.name}
@@ -180,13 +181,13 @@ export default function AdminPlacesPage() {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                 <div className="flex gap-2">
                                                     <Link
-                                                        href={`/admin/restaurang/${place.id}`}
+                                                        href={`/admin/restaurang/${place.slug}`}
                                                         className="text-blue-600 hover:text-blue-900"
                                                     >
                                                         Redigera
                                                     </Link>
                                                     <Link
-                                                        href={`/place/${place.id}`}
+                                                        href={`/${place.slug}`}
                                                         target="_blank"
                                                         className="text-green-600 hover:text-green-900"
                                                     >

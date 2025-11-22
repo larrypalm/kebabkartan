@@ -26,21 +26,9 @@ export default function PlacePageClient({ id }: { id: string }) {
             try {
                 const response = await fetch('/api/kebab-places');
                 const places = await response.json();
-                
-                // Check if currentPlaceId is a UUID or a slug
-                const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(currentPlaceId || '');
-                
-                let place = null;
-                if (isUUID) {
-                    // If it's a UUID, find by ID
-                    place = places.find((p: any) => p.id === currentPlaceId);
-                } else {
-                    // If it's a slug, find by admin-defined slug with restaurang/ prefix
-                    place = places.find((p: any) => 
-                        p.slug === `restaurang/${currentPlaceId}`
-                    );
-                }
-                
+            
+                const place = places.find((p: any) => p.slug === `restaurang/${currentPlaceId}`);
+
                 if (!place) {
                     // Don't redirect immediately, let the Map component handle it
                     console.warn('Place not found:', currentPlaceId);
@@ -49,15 +37,6 @@ export default function PlacePageClient({ id }: { id: string }) {
                     trackKebabPlaceView(place.id, place.name);
                     // Update document title for client-side navigation
                     document.title = `${place.name} | Betygsätt och recensera | Kebabkartan`;
-                    
-                    // If we found by UUID but the URL should be slug-based, redirect to the proper slug URL
-                    if (isUUID && currentPlaceId === place.id) {
-                        const slug = place.slug;
-                        if (slug && slug !== currentPlaceId) {
-                            router.replace(`/restaurang/${slug}`);
-                            return;
-                        }
-                    }
                 }
             } catch (error) {
                 console.error('Error validating place:', error);

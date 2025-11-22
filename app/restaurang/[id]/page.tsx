@@ -31,7 +31,6 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
         }
 
         // Use admin-defined slug
-        const slug = place.slug;
         const title = createPlaceTitle(place);
         const description = createPlaceDescription(place);
 
@@ -39,12 +38,12 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
             title,
             description,
             alternates: {
-                canonical: `https://www.kebabkartan.se/restaurang/${slug}`,
+                canonical: `https://www.kebabkartan.se/${place.slug}`
             },
             openGraph: {
                 title,
                 description,
-                url: `https://www.kebabkartan.se/restaurang/${slug}`,
+                url: `https://www.kebabkartan.se/${place.slug}`,
                 type: 'website',
                 images: [
                     {
