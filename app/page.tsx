@@ -104,7 +104,7 @@ export default function App() {
     // Handle search result click
     const handleSearchResultClick = (location: Location) => {
         const slug = location.slug || createRestaurantSlug(location.name, location.city || location.address);
-        router.push(`/restaurang/${slug}`);
+        router.push(`/${slug}`);
         setSearchQuery('');
         setShowSearchDropdown(false);
     };

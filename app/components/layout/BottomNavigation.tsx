@@ -59,6 +59,7 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({
 
       {/* Bottom Navigation */}
       <nav
+        id="mobile-nav"
         className={`md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50 ${className}`}
       >
         <div className="flex items-center justify-around h-16 px-safe">

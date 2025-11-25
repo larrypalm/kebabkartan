@@ -38,7 +38,7 @@ main {
 
 /* Map-specific styles */
 .leaflet-container {
-  height: calc(100vh - 64px) !important;
+  height: calc(100vh - 64px);
   width: 100%;
   border-radius: 1rem;
 }
@@ -102,6 +102,10 @@ header {
 }
 
 #search-results {
+  z-index: 999;
+}
+
+#mobile-nav {
   z-index: 999;
 }
 
@@ -256,13 +260,6 @@ header {
   border: 0;
 }
 
-/* Prevent layout shift */
-.leaflet-container {
-  width: 100% !important;
-  height: 100vh !important;
-  position: relative;
-}
-
 /* Mobile responsiveness */
 @media (max-width: 768px) {
   /* Hide sidebar on mobile and make it a collapsible overlay */
@@ -283,7 +280,7 @@ header {
   .leaflet-container {
     width: 100% !important;
     margin-left: 0 !important;
-    height: 100vh !important;
+    height: 100%;
   }
   
   /* Mobile search positioning */
