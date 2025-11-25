@@ -98,11 +98,11 @@ main {
 
 /* Header styles */
 header {
-  z-index: 999999;
+  z-index: 999;
 }
 
 #search-results {
-  z-index: 999999;
+  z-index: 999;
 }
 
 .header-logo {
