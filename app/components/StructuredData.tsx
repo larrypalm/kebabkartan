@@ -6,7 +6,6 @@ interface StructuredDataProps {
 }
 
 export default function StructuredData({ type, data }: StructuredDataProps) {
-    console.log('adsasdasa')
     const getStructuredData = () => {
         switch (type) {
             case 'website':

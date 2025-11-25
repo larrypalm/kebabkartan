@@ -224,7 +224,7 @@ const AccountLayout: React.FC<AccountLayoutProps> = ({ children, showMap = true,
           }}
           onClick={handleMapClick}
         >
-          <Map initialPlaceId={null} />
+          <Map initialPlaceSlug={null} />
         </div>
       )}
 

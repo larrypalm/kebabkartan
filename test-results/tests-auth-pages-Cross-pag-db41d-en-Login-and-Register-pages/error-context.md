@@ -1,0 +1,57 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - link "restaurant kebabkartan.se" [ref=e5] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e7]: restaurant
+      - generic [ref=e8]: kebabkartan.se
+    - generic [ref=e10]:
+      - generic [ref=e11]:
+        - generic [ref=e12]:
+          - heading "Välkommen tillbaka" [level=1] [ref=e13]
+          - paragraph [ref=e14]: Logga in för att betygsätta och recensera kebab
+        - generic [ref=e15]:
+          - generic [ref=e16]:
+            - generic [ref=e17]: E-postadress
+            - generic [ref=e18]:
+              - generic [ref=e20]: mail
+              - textbox "din@email.com" [ref=e21]
+          - generic [ref=e22]:
+            - generic [ref=e23]: Lösenord
+            - generic [ref=e24]:
+              - generic [ref=e26]: lock
+              - textbox "••••••••" [ref=e27]
+          - generic [ref=e28]:
+            - generic [ref=e29] [cursor=pointer]:
+              - checkbox "Kom ihåg mig" [ref=e30]
+              - generic [ref=e31]: Kom ihåg mig
+            - link "Glömt lösenord?" [ref=e32] [cursor=pointer]:
+              - /url: /forgot-password
+          - button "login Logga in" [ref=e33] [cursor=pointer]:
+            - generic [ref=e34]: login
+            - text: Logga in
+        - generic [ref=e39]: eller
+        - generic [ref=e40]:
+          - paragraph [ref=e41]: Har du inget konto än?
+          - link "person_add Skapa konto" [ref=e42] [cursor=pointer]:
+            - /url: /register
+            - button "person_add Skapa konto" [ref=e43]:
+              - generic [ref=e44]: person_add
+              - text: Skapa konto
+      - link "arrow_back Tillbaka till kartan" [ref=e46] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e47]: arrow_back
+        - generic [ref=e48]: Tillbaka till kartan
+  - alert [ref=e49]
+  - generic [ref=e74]:
+    - heading "Vi använder cookies" [level=3] [ref=e75]
+    - paragraph [ref=e76]: Vi använder cookies för att förbättra din upplevelse och analysera trafik. Du kan välja vilka cookies du vill acceptera.
+    - generic [ref=e77]:
+      - generic [ref=e78]:
+        - button "Acceptera alla" [ref=e79] [cursor=pointer]
+        - button "Avvisa alla" [ref=e80] [cursor=pointer]
+      - button "Inställningar" [ref=e81] [cursor=pointer]
+    - button "Läs mer" [ref=e83] [cursor=pointer]
+```
