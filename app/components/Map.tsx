@@ -9,7 +9,6 @@ import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { trackKebabPlaceView, trackRatingSubmitted, trackSearch, trackSearchResultSelect, trackMarkerClick, trackMarkerShare, trackMarkerExpand, trackMapLoaded, trackIpLocationSuccess, trackIpLocationError, trackGeolocationPermission, trackRatingSubmitAttempt, trackRatingSubmitError, trackSearchOpen, trackSearchClear } from '@/app/utils/analytics';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import Header from './Header';
 import { MobileMenuProvider, useMobileMenu } from '@/app/contexts/MobileMenuContext';
 
 // Helper function to extract city from address
@@ -56,6 +55,7 @@ interface MapProps {
     initialPlaceSlug?: string | null;
     initialCenter?: [number, number];
     initialZoom?: number;
+    searchQuery?: string;
 }
 
 interface ZoomableMarkerProps {
@@ -369,127 +369,101 @@ const ZoomableMarker: React.FC<ZoomableMarkerProps> = React.memo(({ location, on
             icon={pizzaIcon} 
             eventHandlers={{ click: handleClick }}
         >
-            <Popup maxWidth={isExpanded ? 350 : 250} minWidth={isExpanded ? 350 : 200}>
-                <div style={{ 
-                    padding: '12px'
+            <Popup maxWidth={280} minWidth={240} className="custom-popup">
+                <div style={{
+                    padding: '16px',
+                    fontFamily: 'var(--font-plus-jakarta, sans-serif)'
                 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                        <div style={{ flex: 1 }}>
-                            <h3 style={{ 
-                                fontSize: '16px', 
-                                fontWeight: 'bold', 
-                                margin: '0 0 4px 0',
-                                color: '#333'
-                            }}>
-                                {location.name}
-                            </h3>
-                            <p style={{ 
-                                fontSize: '12px', 
-                                color: '#666', 
-                                margin: '0',
-                                lineHeight: '1.3'
-                            }}>
-                                {location.address}
-                            </p>
-                        </div>
-                        <button
-                            onClick={handleExpandToggle}
-                            style={{
-                                background: '#f8f9fa',
-                                border: '1px solid #dee2e6',
-                                cursor: 'pointer',
-                                fontSize: '12px',
-                                padding: '6px 12px',
-                                borderRadius: '4px',
-                                transition: 'all 0.2s',
-                                marginLeft: '12px',
-                                fontWeight: '500',
-                                color: '#495057',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '4px'
-                            }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = '#e9ecef';
-                                e.currentTarget.style.borderColor = '#adb5bd';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = '#f8f9fa';
-                                e.currentTarget.style.borderColor = '#dee2e6';
-                            }}
-                            title={isExpanded ? 'Dölj detaljer' : 'Visa detaljer'}
-                        >
-                            {isExpanded ? 'Minde' : 'Mer'}
-                        </button>
-                    </div>
-                    
-                    <RatingStars 
-                        placeId={location.id}
-                        currentRating={location.rating}
-                        totalVotes={location.totalVotes}
-                    />
-                    
-                    {isExpanded && (
-                        <div style={{ 
-                            marginTop: '12px',
-                            padding: '12px',
-                            backgroundColor: '#f8f9fa',
-                            borderRadius: '6px',
-                            border: '1px solid #e9ecef'
+                    {/* Restaurant Name */}
+                    <h3 style={{
+                        fontSize: '18px',
+                        fontWeight: '700',
+                        margin: '0 0 6px 0',
+                        color: '#1F2937',
+                        lineHeight: '1.3'
+                    }}>
+                        {location.name}
+                    </h3>
+
+                    {/* Address */}
+                    <p style={{
+                        fontSize: '13px',
+                        color: '#6B7280',
+                        margin: '0 0 12px 0',
+                        lineHeight: '1.4'
+                    }}>
+                        {location.address}
+                    </p>
+
+                    {/* Ratings */}
+                    <div style={{
+                        display: 'flex',
+                        gap: '12px',
+                        marginBottom: '16px'
+                    }}>
+                        {/* General Rating */}
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
                         }}>
-                            <h4 style={{ 
-                                fontSize: '13px', 
-                                fontWeight: '600',
-                                color: '#495057',
-                                margin: '0 0 8px 0'
+                            <span style={{ fontSize: '16px' }}>⭐</span>
+                            <span style={{
+                                fontSize: '15px',
+                                fontWeight: '700',
+                                color: '#1F2937'
                             }}>
-                                Restaurangdetaljer
-                            </h4>
-                            
-                            <div style={{ fontSize: '12px', lineHeight: '1.4', color: '#6c757d' }}>
-                                <div style={{ marginBottom: '6px', display: 'flex', alignItems: 'center' }}>
-                                    <span style={{ marginRight: '6px' }}>📍</span>
-                                    <span>{location.address}</span>
-                                </div>
-                                <div style={{ marginBottom: '6px', display: 'flex', alignItems: 'center' }}>
-                                    <span style={{ marginRight: '6px' }}>⭐</span>
-                                    <span>{location.rating.toFixed(1)}/5.0 ({location.totalVotes} röster)</span>
-                                </div>
-                                <div style={{ marginBottom: '6px', display: 'flex', alignItems: 'center' }}>
-                                    <span style={{ marginRight: '6px' }}>💰</span>
-                                    <span>{location.priceRange ? `${location.priceRange} SEK` : 'Pris ej angivet'}</span>
-                                </div>
-                                <div style={{ marginBottom: '0', display: 'flex', alignItems: 'center' }}>
-                                    <span style={{ marginRight: '6px' }}>🕒</span>
-                                    <span>{location.openingHours || 'Öppettider ej angivna'}</span>
-                                </div>
-                            </div>
+                                {location.rating.toFixed(1)}
+                            </span>
                         </div>
-                    )}
-                    
-                    <div style={{ marginTop: '12px' }}>
-                        <button
-                            onClick={handleShare}
-                            style={{
-                                width: '100%',
-                                backgroundColor: '#28a745',
-                                color: 'white',
-                                padding: '10px 16px',
-                                border: 'none',
-                                borderRadius: '6px',
-                                cursor: 'pointer',
-                                fontSize: '13px',
+
+                        {/* Sauce Rating */}
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                        }}>
+                            <span style={{
+                                fontSize: '12px',
                                 fontWeight: '600',
-                                transition: 'background-color 0.2s',
-                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                            }}
-                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#218838'}
-                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#28a745'}
-                        >
-                            📤 Dela plats
-                        </button>
+                                color: '#6B7280',
+                                textTransform: 'capitalize'
+                            }}>
+                                Sås
+                            </span>
+                            <span style={{
+                                fontSize: '15px',
+                                fontWeight: '700',
+                                color: '#D97706'
+                            }}>
+                                {location.rating.toFixed(1)}
+                            </span>
+                        </div>
                     </div>
+
+                    {/* View Restaurant Button */}
+                    <button
+                        onClick={() => {
+                            window.location.href = `/${location.slug || `restaurang/${location.id}`}`;
+                        }}
+                        style={{
+                            width: '100%',
+                            backgroundColor: '#D97706',
+                            color: 'white',
+                            padding: '12px 20px',
+                            border: 'none',
+                            borderRadius: '12px',
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            transition: 'background-color 0.2s',
+                            boxShadow: '0 2px 8px rgba(217, 119, 6, 0.2)'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#B45309'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#D97706'}
+                    >
+                        Visa restaurang
+                    </button>
                 </div>
             </Popup>
         </Marker>
@@ -620,97 +594,7 @@ const MapControls: React.FC<{
         trackSearchResultSelect(location.id, location.name);
     };
 
-    return (
-        <>
-            {!isMenuOpen ? (
-                <div className="mobile-search" style={{
-                    position: 'absolute',
-                    top: '20px',
-                    left: 'calc(50% + 140px)',
-                    transform: 'translateX(-50%)',
-                    zIndex: 1000,
-                    width: '300px',
-                    backgroundColor: 'white',
-                    padding: '10px',
-                    borderRadius: '8px',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                }}>
-                    <div style={{ position: 'relative', display: 'flex' }}>
-                        <input
-                            ref={searchInputRef}
-                            type="text"
-                            placeholder="Sök kebabställen... (Ctrl/Cmd + K)"
-                            value={searchQuery}
-                            onChange={(e) => {
-                                setSearchQuery(e.target.value);
-                                if (e.target.value.length > 0) {
-                                    trackSearch(e.target.value);
-                                }
-                            }}
-                            onFocus={() => trackSearchOpen()}
-                            style={{
-                                width: '100%',
-                                padding: '8px',
-                                paddingRight: '30px',
-                                border: '1px solid #ccc',
-                                borderRadius: '4px',
-                                fontSize: '14px'
-                            }}
-                        />
-                        {searchQuery && (
-                            <button
-                                onClick={handleClearSearch}
-                                style={{
-                                    position: 'absolute',
-                                    right: '8px',
-                                    top: '50%',
-                                    transform: 'translateY(-50%)',
-                                    background: 'none',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    fontSize: '16px',
-                                    color: '#666'
-                                }}
-                            >
-                                ×
-                            </button>
-                        )}
-                    </div>
-                    
-                    {searchQuery && filteredMarkers.length > 0 && (
-                        <div style={{
-                            position: 'absolute',
-                            top: '100%',
-                            left: 0,
-                            right: 0,
-                            backgroundColor: 'white',
-                            borderRadius: '4px',
-                            marginTop: '4px',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                            maxHeight: '300px',
-                            overflowY: 'auto'
-                        }}>
-                            {filteredMarkers.map((location, index) => (
-                                <div
-                                    key={location.id}
-                                    onClick={() => handleResultClick(location)}
-                                    style={{
-                                        padding: '10px',
-                                        cursor: 'pointer',
-                                        backgroundColor: index === selectedResultIndex ? '#f0f0f0' : 'transparent',
-                                        borderBottom: '1px solid #eee'
-                                    }}
-                                >
-                                    <div style={{ fontWeight: 'bold' }}>{location.name}</div>
-                                    <div style={{ fontSize: '12px', color: '#666' }}>{location.address}</div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            ) : null}
-        </>
-    );
+    return null;
 };
 
 const CenterMapOnLocation: React.FC<{ location: Location | null }> = ({ location }) => {
@@ -758,7 +642,7 @@ const useMapCentering = () => {
     return centerOnLocation;
 };
 
-const Map: React.FC<MapProps> = ({ initialPlaceSlug = null, initialCenter, initialZoom }) => {
+const Map: React.FC<MapProps> = ({ initialPlaceSlug = null, initialCenter, initialZoom, searchQuery = '' }) => {
     const [markers, setMarkers] = useState<Location[]>([]);
     const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
     const [initialPlace, setInitialPlace] = useState<Location | null>(null);
@@ -809,7 +693,6 @@ const Map: React.FC<MapProps> = ({ initialPlaceSlug = null, initialCenter, initi
         }
         return defaultView.zoom;
     };
-    const [permissionState, setPermissionState] = useState<PermissionState | null>(null);
 
     const createClusterCustomIcon = (cluster: any) => {
         const count = cluster.getChildCount();
@@ -825,19 +708,6 @@ const Map: React.FC<MapProps> = ({ initialPlaceSlug = null, initialCenter, initi
             popupAnchor: [0, -44]
         });
     };
-
-    useEffect(() => {
-        // Check if geolocation permission is available
-        if (navigator.permissions && navigator.permissions.query) {
-            navigator.permissions
-                .query({ name: 'geolocation' })
-                .then((result) => {
-                    setPermissionState(result.state);
-                    trackGeolocationPermission(result.state);
-                    result.onchange = () => setPermissionState(result.state);
-                });
-        }
-    }, []);
 
     // Effect to get initial location from IP
     useEffect(() => {
@@ -986,18 +856,18 @@ const Map: React.FC<MapProps> = ({ initialPlaceSlug = null, initialCenter, initi
     if (!isReady) {
         return (
             <MobileMenuProvider>
-                <div style={{ position: 'relative', width: '100vw', height: '100vh', display: 'flex' }}>
+                <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex' }}>
                     <img
                         src={MAP_PLACEHOLDER}
                         alt="Map loading"
                         style={{
                             position: 'absolute',
-                            width: 'calc(100% - 280px)',
+                            width: '100%',
                             height: '100%',
                             objectFit: 'cover',
                             zIndex: 1,
                             top: 0,
-                            left: '280px'
+                            left: 0
                         }}
                     />
                 </div>
@@ -1007,19 +877,19 @@ const Map: React.FC<MapProps> = ({ initialPlaceSlug = null, initialCenter, initi
 
     return (
         <MobileMenuProvider>
-            <div style={{ position: 'relative', width: '100vw', height: '100vh', display: 'flex' }}>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 rounded-2xl" style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', zIndex: 998 }}>
                 {!mapLoaded && (
                     <img
                         src={MAP_PLACEHOLDER}
                         alt="Map loading"
                         style={{
                             position: 'absolute',
-                            width: 'calc(100% - 280px)',
+                            width: '100%',
                             height: '100%',
                             objectFit: 'cover',
                             zIndex: 1,
                             top: 0,
-                            left: '280px'
+                            left: 0
                         }}
                     />
                 )}
@@ -1037,7 +907,6 @@ const Map: React.FC<MapProps> = ({ initialPlaceSlug = null, initialCenter, initi
                             load: () => { setMapLoaded(true); trackMapLoaded(); },
                         }}
                     />
-                    <Header permissionState={permissionState} />
                     <MapControls 
                         markers={markers} 
                         onLocationSelect={handleLocationSelect}

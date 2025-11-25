@@ -61,14 +61,34 @@ export async function POST(request: Request) {
             }
         }
 
-        if (!body.placeId || typeof body.rating !== 'number') {
+        // Support both single rating (legacy) and dual rating (new)
+        const hasGeneralRating = typeof body.generalRating === 'number';
+        const hasSauceRating = typeof body.sauceRating === 'number';
+        const hasLegacyRating = typeof body.rating === 'number';
+
+        if (!body.placeId || (!hasGeneralRating && !hasSauceRating && !hasLegacyRating)) {
             return NextResponse.json(
-                { message: 'Missing or invalid request body' },
+                { message: 'Missing or invalid request body. Provide generalRating and sauceRating, or rating (legacy)' },
                 { status: 400 }
             );
         }
 
-        if (body.rating < 1 || body.rating > 5) {
+        // Validate ratings are within 1-5 range
+        if (hasGeneralRating && (body.generalRating < 1 || body.generalRating > 5)) {
+            return NextResponse.json(
+                { message: 'General rating must be between 1 and 5' },
+                { status: 400 }
+            );
+        }
+
+        if (hasSauceRating && (body.sauceRating < 1 || body.sauceRating > 5)) {
+            return NextResponse.json(
+                { message: 'Sauce rating must be between 1 and 5' },
+                { status: 400 }
+            );
+        }
+
+        if (hasLegacyRating && (body.rating < 1 || body.rating > 5)) {
             return NextResponse.json(
                 { message: 'Rating must be between 1 and 5' },
                 { status: 400 }
@@ -96,7 +116,8 @@ export async function POST(request: Request) {
         );
 
         const isUpdate = !!existingVote.Item;
-        const previousRating = existingVote.Item?.rating;
+        const previousGeneralRating = existingVote.Item?.generalRating || existingVote.Item?.rating || 0;
+        const previousSauceRating = existingVote.Item?.sauceRating || existingVote.Item?.rating || 0;
 
         // Get the kebab place
         const getResult = await docClient.send(
@@ -114,48 +135,67 @@ export async function POST(request: Request) {
         }
 
         const currentPlace = getResult.Item;
+
+        // Determine which ratings to use (dual or legacy)
+        const newGeneralRating = hasGeneralRating ? body.generalRating : (hasLegacyRating ? body.rating : previousGeneralRating);
+        const newSauceRating = hasSauceRating ? body.sauceRating : (hasLegacyRating ? body.rating : previousSauceRating);
+
         let newTotalVotes: number;
-        let newRating: number;
+        let updatedGeneralRating: number;
+        let updatedSauceRating: number;
+
+        // Initialize ratings if they don't exist (for migration)
+        const currentGeneralRating = currentPlace.rating || 0;
+        const currentSauceRating = currentPlace.sauceRating || currentPlace.rating || 0;
+        const currentTotalVotes = currentPlace.totalVotes || 0;
 
         if (isUpdate) {
             // Update existing vote
-            newTotalVotes = currentPlace.totalVotes; // Total votes stays the same
-            newRating = (currentPlace.rating * currentPlace.totalVotes - previousRating + body.rating) / currentPlace.totalVotes;
+            newTotalVotes = currentTotalVotes; // Total votes stays the same
+            updatedGeneralRating = currentTotalVotes > 0
+                ? (currentGeneralRating * currentTotalVotes - previousGeneralRating + newGeneralRating) / currentTotalVotes
+                : newGeneralRating;
+            updatedSauceRating = currentTotalVotes > 0
+                ? (currentSauceRating * currentTotalVotes - previousSauceRating + newSauceRating) / currentTotalVotes
+                : newSauceRating;
         } else {
             // New vote
-            newTotalVotes = currentPlace.totalVotes + 1;
-            newRating = (currentPlace.rating * currentPlace.totalVotes + body.rating) / newTotalVotes;
+            newTotalVotes = currentTotalVotes + 1;
+            updatedGeneralRating = (currentGeneralRating * currentTotalVotes + newGeneralRating) / newTotalVotes;
+            updatedSauceRating = (currentSauceRating * currentTotalVotes + newSauceRating) / newTotalVotes;
         }
 
-        // Update the kebab place rating
+        // Update the kebab place with dual ratings
         await docClient.send(
             new UpdateCommand({
                 TableName: TABLE_NAME,
                 Key: { id: body.placeId },
                 UpdateExpression:
-                    'SET rating = :rating, totalVotes = :totalVotes, updatedAt = :updatedAt',
+                    'SET rating = :rating, sauceRating = :sauceRating, totalVotes = :totalVotes, updatedAt = :updatedAt',
                 ExpressionAttributeValues: {
-                    ':rating': newRating,
+                    ':rating': updatedGeneralRating,
+                    ':sauceRating': updatedSauceRating,
                     ':totalVotes': newTotalVotes,
                     ':updatedAt': new Date().toISOString(),
                 },
             })
         );
 
-        // Save/update the user's vote
+        // Save/update the user's vote with dual ratings
         const now = new Date().toISOString();
         if (isUpdate) {
             // Update existing vote
             await docClient.send(
                 new UpdateCommand({
                     TableName: USER_VOTES_TABLE_NAME,
-                    Key: { 
+                    Key: {
                         userId,
-                        placeId: body.placeId 
+                        placeId: body.placeId
                     },
-                    UpdateExpression: 'SET rating = :rating, updatedAt = :updatedAt',
+                    UpdateExpression: 'SET generalRating = :generalRating, sauceRating = :sauceRating, updatedAt = :updatedAt',
                     ExpressionAttributeValues: {
-                        ':rating': body.rating,
+                        ':generalRating': newGeneralRating,
+                        ':sauceRating': newSauceRating,
                         ':updatedAt': now,
                     },
                 })
@@ -168,7 +208,8 @@ export async function POST(request: Request) {
                     Item: {
                         userId,
                         placeId: body.placeId,
-                        rating: body.rating,
+                        generalRating: newGeneralRating,
+                        sauceRating: newSauceRating,
                         createdAt: now,
                         updatedAt: now,
                     },
@@ -178,10 +219,12 @@ export async function POST(request: Request) {
 
         return NextResponse.json({
             placeId: body.placeId,
-            newRating,
+            generalRating: updatedGeneralRating,
+            sauceRating: updatedSauceRating,
             totalVotes: newTotalVotes,
             isUpdate,
-            previousRating,
+            previousGeneralRating,
+            previousSauceRating,
         });
     } catch (error) {
         console.error('Error updating rating:', error);
