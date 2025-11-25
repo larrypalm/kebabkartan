@@ -43,4 +43,4 @@ test-results
 test-screenshots
 .playwright-mcp
 screenshots
-context/*.png
+context
