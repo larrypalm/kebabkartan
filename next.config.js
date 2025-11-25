@@ -7,10 +7,10 @@ const nextConfig = {
         tsconfigPath: 'tsconfig.json'
     },
     webpack: (config, { isServer }) => {
-        // Exclude infrastructure, lambda, and Amplify files from webpack build
+        // Exclude infrastructure, lambda, Amplify, and context files from webpack build
         config.watchOptions = {
             ...config.watchOptions,
-            ignored: ['**/infrastructure/**', '**/lambda/**', '**/cdk.out/**', '**/amplify/**']
+            ignored: ['**/infrastructure/**', '**/lambda/**', '**/cdk.out/**', '**/amplify/**', '**/context/**']
         };
         return config;
     },

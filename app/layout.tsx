@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./app.css";
 import GoogleAnalytics from "./components/GoogleAnalytics";
 import ClientLayout from "./components/ClientLayout";
 import AmplifyProvider from "./components/AmplifyProvider";
 import StructuredData from "./components/StructuredData";
 
-const inter = Inter({ 
+const plusJakartaSans = Plus_Jakarta_Sans({
     subsets: ["latin"],
+    weight: ['400', '500', '600', '700', '800'],
     display: 'swap',
     preload: true,
-    fallback: ['system-ui', 'arial'],
-    variable: '--font-inter'
+    fallback: ['Inter', 'system-ui', 'arial'],
+    variable: '--font-plus-jakarta'
 });
 
 export const metadata: Metadata = {
@@ -86,6 +87,11 @@ export default function RootLayout({
                 <link rel="dns-prefetch" href="https://tile.openstreetmap.org" />
                 <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
                 <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+                {/* Material Symbols Icons */}
+                <link
+                    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+                    rel="stylesheet"
+                />
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
                 <script type="module" src="/_next/static/chunks/main.js" async defer />
                 <script noModule src="/_next/static/chunks/main-legacy.js" async defer />
@@ -119,7 +125,7 @@ export default function RootLayout({
                 <link rel="preload" as="image" href="/static/logo.png" />
                 <link rel="preload" as="image" href="/static/map-placeholder.png" />
             </head>
-            <body className={inter.className}>
+            <body className={plusJakartaSans.variable}>
                 {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
                     <GoogleAnalytics GA_MEASUREMENT_ID={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
                 )}
