@@ -16,7 +16,6 @@ export default function LCPOptimizer() {
         const criticalCSS = `
           .leaflet-container { 
             width: 100% !important; 
-            height: 100vh !important; 
             position: relative; 
           }
           main { 

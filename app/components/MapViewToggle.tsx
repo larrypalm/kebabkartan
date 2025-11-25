@@ -96,13 +96,16 @@ export default function MapViewToggle({
 
             {/* List View */}
             {viewMode === 'list' && (
-                <div style={{
-                    width: '100%',
-                    height: '100%',
-                    overflowY: 'auto',
-                    background: '#F7F5F2',
-                    padding: '80px 20px 20px'
-                }}>
+                <div 
+                    style={{
+                        width: '100%',
+                        height: '100%',
+                        overflowY: 'auto',
+                        background: '#F7F5F2',
+                        padding: '1rem'
+                    }}
+                    className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 rounded-2xl"
+                >
                     {loading ? (
                         <div style={{
                             textAlign: 'center',
