@@ -11,26 +11,6 @@ import { useAuth } from '@/app/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { MobileMenuProvider, useMobileMenu } from '@/app/contexts/MobileMenuContext';
 
-// Helper function to extract city from address
-const extractCityFromAddress = (address: string): string => {
-    // Common Swedish cities to look for
-    const cities = ['Stockholm', 'Göteborg', 'Malmö', 'Uppsala', 'Linköping', 'Jönköping', 'Lund', 'Umeå', 'Västerås', 'Örebro'];
-    
-    for (const city of cities) {
-        if (address.toLowerCase().includes(city.toLowerCase())) {
-            return city;
-        }
-    }
-    
-    // If no known city found, try to extract the last part of the address
-    const parts = address.split(',').map(part => part.trim());
-    if (parts.length > 1) {
-        return parts[parts.length - 1];
-    }
-    
-    return 'Sverige';
-};
-
 interface Location {
     id: string;
     name: string;
@@ -56,6 +36,7 @@ interface MapProps {
     initialCenter?: [number, number];
     initialZoom?: number;
     searchQuery?: string;
+    className?: string;
 }
 
 interface ZoomableMarkerProps {

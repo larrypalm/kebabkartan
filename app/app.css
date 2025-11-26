@@ -43,6 +43,10 @@ main {
   border-radius: 1rem;
 }
 
+.place-page-map-container .leaflet-container {
+  height: 100% !important;
+}
+
 .leaflet-popup-content {
   margin: 8px;
 }
