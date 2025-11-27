@@ -35,6 +35,7 @@ export default function PlacePageClient({ id }: { id: string }) {
     const [loading, setLoading] = useState(true);
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [loadingReviews, setLoadingReviews] = useState(false);
+    const [editingReview, setEditingReview] = useState<Review | undefined>(undefined);
 
     // Fetch restaurant data
     useEffect(() => {
@@ -87,14 +88,43 @@ export default function PlacePageClient({ id }: { id: string }) {
         fetchReviews();
     }, [restaurant]);
 
-    const handleReviewSubmitted = () => {
-        setShowReviewModal(false);
-        // Refresh reviews
-        if (restaurant) {
-            fetch(`/api/reviews?restaurantId=${restaurant.id}`)
-                .then(res => res.json())
-                .then(data => setReviews(data.reviews || []))
-                .catch(err => console.error('Error refreshing reviews:', err));
+    const handleReviewSubmit = async (formData: import('@/app/types').ReviewFormData) => {
+        if (!user || !restaurant) return;
+
+        try {
+            const reviewData = {
+                restaurantId: restaurant.id,
+                userId: user.username,
+                username: user.username,
+                ...formData,
+            };
+
+            const method = editingReview ? 'PUT' : 'POST';
+            const url = editingReview
+                ? `/api/reviews?id=${editingReview.id}`
+                : '/api/reviews';
+
+            const response = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(reviewData),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to submit review');
+            }
+
+            // Refresh reviews
+            const reviewsResponse = await fetch(`/api/reviews?restaurantId=${restaurant.id}`);
+            const reviewsData = await reviewsResponse.json();
+            setReviews(reviewsData.reviews || []);
+
+            // Close modal and reset editing state
+            setShowReviewModal(false);
+            setEditingReview(undefined);
+        } catch (error) {
+            console.error('Error submitting review:', error);
+            throw error;
         }
     };
 
@@ -102,12 +132,7 @@ export default function PlacePageClient({ id }: { id: string }) {
         return (
             <GoogleReCaptchaProvider reCaptchaKey={RECAPTCHA_SITE_KEY}>
                 <Header
-                    isLoggedIn={!!user}
-                    userName={user?.username}
                     onSearch={(query) => console.log('Search:', query)}
-                    onLoginClick={() => window.location.href = '/login'}
-                    onProfileClick={() => window.location.href = '/profil'}
-                    onLogoutClick={() => window.location.href = '/logout'}
                 />
                 <div className="flex items-center justify-center min-h-screen bg-background-light">
                     <div className="text-center">
@@ -127,12 +152,7 @@ export default function PlacePageClient({ id }: { id: string }) {
         <GoogleReCaptchaProvider reCaptchaKey={RECAPTCHA_SITE_KEY}>
             {/* Header Navigation */}
             <Header
-                isLoggedIn={!!user}
-                userName={user?.username}
                 onSearch={(query) => console.log('Search:', query)}
-                onLoginClick={() => window.location.href = '/login'}
-                onProfileClick={() => window.location.href = '/profil'}
-                onLogoutClick={() => window.location.href = '/logout'}
             />
 
             <main role="main" className="min-h-screen bg-background-light pb-20 md:pb-8">
@@ -249,15 +269,24 @@ export default function PlacePageClient({ id }: { id: string }) {
                             </div>
                         ) : reviews.length > 0 ? (
                             <ReviewList
-                                reviews={reviews}
+                                initialReviews={reviews}
                                 restaurantId={restaurant.id}
-                                currentUserId={user?.userId}
-                                onReviewUpdated={() => {
-                                    // Refresh reviews
-                                    fetch(`/api/reviews?restaurantId=${restaurant.id}`)
-                                        .then(res => res.json())
-                                        .then(data => setReviews(data.reviews || []))
-                                        .catch(err => console.error('Error refreshing reviews:', err));
+                                currentUserId={user?.username}
+                                onReviewEdit={(review) => {
+                                    setEditingReview(review);
+                                    setShowReviewModal(true);
+                                }}
+                                onReviewDelete={async (reviewId) => {
+                                    // Refresh reviews after deletion
+                                    const res = await fetch(`/api/reviews?restaurantId=${restaurant.id}`);
+                                    const data = await res.json();
+                                    setReviews(data.reviews || []);
+                                }}
+                                onReviewLike={async (reviewId) => {
+                                    // Refresh reviews after like
+                                    const res = await fetch(`/api/reviews?restaurantId=${restaurant.id}`);
+                                    const data = await res.json();
+                                    setReviews(data.reviews || []);
                                 }}
                             />
                         ) : null}
@@ -286,16 +315,21 @@ export default function PlacePageClient({ id }: { id: string }) {
                 {showReviewModal && (
                     <Modal
                         isOpen={showReviewModal}
-                        onClose={() => setShowReviewModal(false)}
-                        title="Skriv en recension"
+                        onClose={() => {
+                            setShowReviewModal(false);
+                            setEditingReview(undefined);
+                        }}
+                        title={editingReview ? 'Redigera recension' : 'Skriv en recension'}
                     >
                         <ReviewForm
                             restaurantId={restaurant.id}
                             restaurantName={restaurant.name}
-                            userId={user?.userId || ''}
-                            username={user?.username || ''}
-                            onSuccess={handleReviewSubmitted}
-                            onCancel={() => setShowReviewModal(false)}
+                            existingReview={editingReview}
+                            onSubmit={handleReviewSubmit}
+                            onCancel={() => {
+                                setShowReviewModal(false);
+                                setEditingReview(undefined);
+                            }}
                         />
                     </Modal>
                 )}

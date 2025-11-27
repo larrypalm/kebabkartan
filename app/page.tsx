@@ -113,19 +113,8 @@ export default function App() {
         <GoogleReCaptchaProvider reCaptchaKey={RECAPTCHA_SITE_KEY}>
             {/* Header Navigation */}
             <Header
-                isLoggedIn={!!user}
-                userName={user?.username}
                 onSearch={(query) => {
                     setSearchQuery(query);
-                }}
-                onLoginClick={() => {
-                    window.location.href = '/login';
-                }}
-                onProfileClick={() => {
-                    window.location.href = '/profil';
-                }}
-                onLogoutClick={() => {
-                    window.location.href = '/logout';
                 }}
             />
 

@@ -107,19 +107,8 @@ const CityPageClient: React.FC<CityPageClientProps> = ({
     <GoogleReCaptchaProvider reCaptchaKey={RECAPTCHA_SITE_KEY}>
       {/* Header Navigation */}
       <Header
-        isLoggedIn={!!user}
-        userName={user?.username}
         onSearch={(query) => {
           console.log('Search:', query);
-        }}
-        onLoginClick={() => {
-          window.location.href = '/login';
-        }}
-        onProfileClick={() => {
-          window.location.href = '/profil';
-        }}
-        onLogoutClick={() => {
-          window.location.href = '/logout';
         }}
       />
 

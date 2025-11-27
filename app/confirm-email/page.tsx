@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { confirmSignUp, resendSignUpCode } from 'aws-amplify/auth';
@@ -9,7 +9,7 @@ import Input from '@/app/components/ui/Input';
 import Card from '@/app/components/ui/Card';
 import { MaterialIcon } from '@/app/components/Icons';
 
-export default function ConfirmEmailPage() {
+function ConfirmEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get('email') || '';
@@ -223,5 +223,17 @@ export default function ConfirmEmailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ConfirmEmailPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background-light flex items-center justify-center">
+        <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
+      </div>
+    }>
+      <ConfirmEmailContent />
+    </Suspense>
   );
 }
