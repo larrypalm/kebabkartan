@@ -1,22 +1,15 @@
 import { Metadata } from 'next';
-import { getKebabPlaces } from '@/lib/getKebabPlaces';
-import { CityPageLayout } from '@/app/components/ui';
+import CityPageClient from '@/app/components/CityPageClient';
 import { generateCityMetadata } from '@/app/utils/metadata';
 import { getCityByPath } from '@/app/data/cities';
 
 export const metadata: Metadata = generateCityMetadata(getCityByPath('/kebab-stockholm')!);
 
-export default async function StockholmKebabPage() {
-  const places = await getKebabPlaces();
-  const stockholmPlaces = places.filter((place: any) => 
-    place.city?.toLowerCase().includes('stockholm') || 
-    place.address?.toLowerCase().includes('stockholm')
-  );
-
+export default function StockholmKebabPage() {
   const city = getCityByPath('/kebab-stockholm')!;
 
   return (
-    <CityPageLayout
+    <CityPageClient
       cityName={city.name}
       description={city.description}
       initialCenter={city.coordinates}

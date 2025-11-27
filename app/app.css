@@ -38,9 +38,13 @@ main {
 
 /* Map-specific styles */
 .leaflet-container {
-  height: calc(100vh - 64px);
+  height: 100%;
   width: 100%;
   border-radius: 1rem;
+}
+
+.place-page-map-container .leaflet-container {
+  height: 100% !important;
 }
 
 .leaflet-popup-content {

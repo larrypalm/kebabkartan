@@ -106,52 +106,35 @@ export default function CookieConsent({ onConsentChange }: CookieConsentProps) {
     if (!isMounted) return null;
 
     const content = (
-        <div
-            style={{
-                position: 'fixed',
-                bottom: '10px',
-                right: showBanner ? '10px' : 'auto',
-                left: '10px',
-                background: 'rgba(0,0,0,0.8)',
-                color: 'white',
-                padding: '10px',
-                borderRadius: '5px',
-                fontSize: '12px',
-                zIndex: 9999,
-                fontFamily: 'monospace'
-            }}
-        >
+        <>
             {/* Floating button */}
-            {!showBanner && <div className="pointer-events-auto">
+            {!showBanner && (
                 <FloatingCookieButton onClick={openConsentBanner} />
-            </div>}
+            )}
 
-            {/* Cookie Banner */}
-            {showBanner && (
-                <div className="pointer-events-auto">
-                    <CookieBanner
-                        onAcceptAll={acceptAll}
-                        onAcceptNecessary={acceptNecessary}
-                        onRejectAll={rejectAll}
-                        onOpenSettings={openSettings}
-                    />
-                </div>
+            {/* Cookie Banner - hide when settings are open */}
+            {showBanner && !showSettings && (
+                <CookieBanner
+                    onAcceptAll={acceptAll}
+                    onAcceptNecessary={acceptNecessary}
+                    onRejectAll={rejectAll}
+                    onOpenSettings={openSettings}
+                />
             )}
 
             {/* Settings modal */}
             {showBanner && (
-                <div className="pointer-events-auto">
-                    <CookieSettingsModal
-                        isOpen={showSettings}
-                        onClose={closeSettings}
-                        preferences={preferences}
-                        onPreferencesChange={setPreferences}
-                        onSave={saveCustomPreferences}
-                    />
-                </div>
+                <CookieSettingsModal
+                    isOpen={showSettings}
+                    onClose={closeSettings}
+                    preferences={preferences}
+                    onPreferencesChange={setPreferences}
+                    onSave={saveCustomPreferences}
+                />
             )}
-        </div>
+        </>
     );
+
     // Use portal to ensure overlay sits above all app layers
     return createPortal(content, document.body);
 }

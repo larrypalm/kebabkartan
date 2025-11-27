@@ -41,8 +41,6 @@ export default function TestComponentsPage() {
       {/* Header Examples */}
       <div className="mb-4">
         <Header
-          isLoggedIn={false}
-          onLoginClick={() => alert('Login clicked')}
           onSearch={(query) => alert(`Searching for: ${query}`)}
         />
       </div>
@@ -70,29 +68,11 @@ export default function TestComponentsPage() {
               {/* Header Variants */}
               <div>
                 <h3 className="text-sm font-bold text-slate-600 uppercase tracking-wider mb-4">
-                  Header - Logged Out
+                  Header - Default
                 </h3>
                 <div className="border border-slate-200 rounded-lg overflow-hidden">
                   <Header
-                    isLoggedIn={false}
-                    onLoginClick={() => alert('Login clicked')}
                     onSearch={(query) => alert(`Searching for: ${query}`)}
-                    variant="solid"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-sm font-bold text-slate-600 uppercase tracking-wider mb-4">
-                  Header - Logged In
-                </h3>
-                <div className="border border-slate-200 rounded-lg overflow-hidden">
-                  <Header
-                    isLoggedIn={true}
-                    userName="Erik Johansson"
-                    onSearch={(query) => alert(`Searching for: ${query}`)}
-                    onProfileClick={() => alert('Profile clicked')}
-                    onLogoutClick={() => alert('Logout clicked')}
                     variant="solid"
                   />
                 </div>
@@ -104,11 +84,7 @@ export default function TestComponentsPage() {
                 </h3>
                 <div className="border border-slate-200 rounded-lg overflow-hidden">
                   <Header
-                    isLoggedIn={true}
-                    userName="Anna Svensson"
                     showSearch={false}
-                    onProfileClick={() => alert('Profile clicked')}
-                    onLogoutClick={() => alert('Logout clicked')}
                     variant="solid"
                   />
                 </div>

@@ -113,19 +113,8 @@ export default function App() {
         <GoogleReCaptchaProvider reCaptchaKey={RECAPTCHA_SITE_KEY}>
             {/* Header Navigation */}
             <Header
-                isLoggedIn={!!user}
-                userName={user?.username}
                 onSearch={(query) => {
                     setSearchQuery(query);
-                }}
-                onLoginClick={() => {
-                    window.location.href = '/login';
-                }}
-                onProfileClick={() => {
-                    window.location.href = '/profil';
-                }}
-                onLogoutClick={() => {
-                    window.location.href = '/logout';
                 }}
             />
 
@@ -225,7 +214,9 @@ export default function App() {
                         {/* Results Count */}
                         <div className="flex items-center gap-2 text-slate-700">
                             <MaterialIcon name="location_on" className="text-primary" size="sm" />
-                            <span className="font-medium">9 ställen hittades</span>
+                            <span className="font-medium">
+                                {loadingLocations ? 'Laddar...' : `${locations.length} ${locations.length === 1 ? 'ställe' : 'ställen'} hittades`}
+                            </span>
                         </div>
 
                         {/* View Toggle */}

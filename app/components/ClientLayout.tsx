@@ -7,6 +7,7 @@ import PerformanceMonitor from './PerformanceMonitor';
 import LCPOptimizer from './LCPOptimizer';
 import CookieConsent from './CookieConsent';
 import AnalyticsDebug from './AnalyticsDebug';
+import { Footer } from './layout/Footer';
 import { usePathname } from 'next/navigation';
 
 export default function ClientLayout({
@@ -27,7 +28,12 @@ export default function ClientLayout({
             <PerformanceMonitor />
             <Breadcrumbs />
             {children}
-            {!isAdminRoute && <CookieConsent />}
+            {!isAdminRoute && <Footer />}
+            {!isAdminRoute && (
+                <div suppressHydrationWarning>
+                    {typeof window !== 'undefined' && <CookieConsent />}
+                </div>
+            )}
             {!isAdminRoute && <AnalyticsDebug />}
         </>
     );

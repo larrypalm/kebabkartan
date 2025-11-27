@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { signIn } from 'aws-amplify/auth';
+import { useAuth } from '@/app/contexts/AuthContext';
 import Button from '@/app/components/ui/Button';
 import Input from '@/app/components/ui/Input';
 import Card from '@/app/components/ui/Card';
@@ -11,10 +12,20 @@ import { MaterialIcon } from '@/app/components/Icons';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { user, loading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Redirect to profile if already logged in
+  useEffect(() => {
+    console.log('Login page: loading=', loading, 'user=', user);
+    if (!loading && user) {
+      console.log('Login page: User already authenticated, redirecting to profile...');
+      router.push('/profil');
+    }
+  }, [user, loading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,10 +38,17 @@ export default function LoginPage() {
         password: password,
       });
 
-      // Redirect to homepage after successful login
-      router.push('/');
+      // Redirect to profile page after successful login
+      router.push('/profil');
     } catch (err: any) {
       console.error('Login error:', err);
+
+      // Handle case where user is already authenticated
+      if (err.name === 'UserAlreadyAuthenticatedException') {
+        console.log('User already authenticated, redirecting to profile...');
+        router.push('/profil');
+        return;
+      }
 
       if (err.name === 'UserNotConfirmedException') {
         setError('E-postadressen är inte bekräftad. Kontrollera din e-post.');
@@ -45,6 +63,23 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   };
+
+  // Show loading while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background-light flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-600">Kontrollerar inloggning...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render login form if user is already authenticated (will redirect)
+  if (user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-background-light flex flex-col">

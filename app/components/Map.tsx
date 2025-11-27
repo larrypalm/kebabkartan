@@ -11,26 +11,6 @@ import { useAuth } from '@/app/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { MobileMenuProvider, useMobileMenu } from '@/app/contexts/MobileMenuContext';
 
-// Helper function to extract city from address
-const extractCityFromAddress = (address: string): string => {
-    // Common Swedish cities to look for
-    const cities = ['Stockholm', 'Göteborg', 'Malmö', 'Uppsala', 'Linköping', 'Jönköping', 'Lund', 'Umeå', 'Västerås', 'Örebro'];
-    
-    for (const city of cities) {
-        if (address.toLowerCase().includes(city.toLowerCase())) {
-            return city;
-        }
-    }
-    
-    // If no known city found, try to extract the last part of the address
-    const parts = address.split(',').map(part => part.trim());
-    if (parts.length > 1) {
-        return parts[parts.length - 1];
-    }
-    
-    return 'Sverige';
-};
-
 interface Location {
     id: string;
     name: string;
@@ -56,6 +36,7 @@ interface MapProps {
     initialCenter?: [number, number];
     initialZoom?: number;
     searchQuery?: string;
+    className?: string;
 }
 
 interface ZoomableMarkerProps {
@@ -81,6 +62,12 @@ const SWEDEN_VIEW: Coordinates = {
     longitude: 16.5,
     zoom: 5
 };
+
+// Sweden's geographical bounds (southwest and northeast corners)
+const SWEDEN_BOUNDS: [[number, number], [number, number]] = [
+    [55.0, 10.5],  // Southwest corner (southernmost, westernmost)
+    [69.5, 24.5]   // Northeast corner (northernmost, easternmost)
+];
 
 const MAP_PLACEHOLDER = '/static/map-placeholder.png'; // Place a suitable image in public/static/
 
@@ -899,6 +886,10 @@ const Map: React.FC<MapProps> = ({ initialPlaceSlug = null, initialCenter, initi
                     scrollWheelZoom={true}
                     touchZoom={true}
                     zoomControl={false}
+                    maxBounds={SWEDEN_BOUNDS}
+                    maxBoundsViscosity={0.8}
+                    minZoom={5}
+                    maxZoom={18}
                 >
                     <TileLayer
                         url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"

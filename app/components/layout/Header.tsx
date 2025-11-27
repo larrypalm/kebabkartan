@@ -2,33 +2,28 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { MaterialIcon } from '@/app/components/Icons';
 import Button from '@/app/components/ui/Button';
 import Input from '@/app/components/ui/Input';
+import { useAuth } from '@/app/contexts/AuthContext';
+import { signOut as amplifySignOut } from 'aws-amplify/auth';
 
 export interface HeaderProps {
-  isLoggedIn?: boolean;
-  userName?: string;
   onSearch?: (query: string) => void;
-  onLoginClick?: () => void;
-  onProfileClick?: () => void;
-  onLogoutClick?: () => void;
   showSearch?: boolean;
   variant?: 'default' | 'transparent' | 'solid';
   className?: string;
 }
 
 const Header: React.FC<HeaderProps> = ({
-  isLoggedIn = false,
-  userName,
   onSearch,
-  onLoginClick,
-  onProfileClick,
-  onLogoutClick,
   showSearch = true,
   variant = 'default',
   className = '',
 }) => {
+  const router = useRouter();
+  const { user, loading } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
@@ -38,6 +33,18 @@ const Header: React.FC<HeaderProps> = ({
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const handleLogout = async () => {
+    try {
+      await amplifySignOut();
+      router.push('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  const isLoggedIn = !!user;
+  const userName = user?.username;
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -153,7 +160,7 @@ const Header: React.FC<HeaderProps> = ({
             )}
 
             {/* User Menu or Auth Buttons */}
-            {!mounted ? (
+            {!mounted || loading ? (
               // Skeleton to prevent layout shift
               <div className="h-9 w-24 bg-slate-200 rounded-full animate-pulse"></div>
             ) : isLoggedIn ? (
@@ -190,16 +197,14 @@ const Header: React.FC<HeaderProps> = ({
                         </div>
                       )}
 
-                      <button
-                        onClick={() => {
-                          setShowUserMenu(false);
-                          onProfileClick?.();
-                        }}
+                      <Link
+                        href="/profil"
                         className="w-full flex items-center gap-3 px-4 py-2 hover:bg-slate-50 transition-colors"
+                        onClick={() => setShowUserMenu(false)}
                       >
                         <MaterialIcon name="person" size="sm" className="text-slate-600" />
                         <span className="text-sm text-slate-700">Profil</span>
-                      </button>
+                      </Link>
 
                       <Link
                         href="/mina-recensioner"
@@ -233,7 +238,7 @@ const Header: React.FC<HeaderProps> = ({
                       <button
                         onClick={() => {
                           setShowUserMenu(false);
-                          onLogoutClick?.();
+                          handleLogout();
                         }}
                         className="w-full flex items-center gap-3 px-4 py-2 hover:bg-red-50 transition-colors text-error"
                       >
@@ -246,21 +251,23 @@ const Header: React.FC<HeaderProps> = ({
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onLoginClick}
-                  className="text-slate-700 hover:text-slate-900"
-                >
-                  Logga in
-                </Button>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={() => window.location.href = '/register'}
-                >
-                  Skapa konto
-                </Button>
+                <Link href="/login">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-slate-700 hover:text-slate-900"
+                  >
+                    Logga in
+                  </Button>
+                </Link>
+                <Link href="/register">
+                  <Button
+                    variant="primary"
+                    size="sm"
+                  >
+                    Skapa konto
+                  </Button>
+                </Link>
               </div>
             )}
           </div>
