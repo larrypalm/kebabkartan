@@ -21,16 +21,23 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  // Check localStorage first for instant loading
+  const [user, setUser] = useState<User | null>(() => {
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('kebabkartan_user');
+      return cached ? JSON.parse(cached) : null;
+    }
+    return null;
+  });
   const [loading, setLoading] = useState(true);
 
   const fetchUser = async () => {
     try {
-      // Add a small delay to ensure Amplify is fully configured
-      await new Promise(resolve => setTimeout(resolve, 100));
       const currentUser = await getCurrentUser();
       console.log('AuthContext: User fetched:', currentUser);
       setUser(currentUser);
+      // Cache user in localStorage
+      localStorage.setItem('kebabkartan_user', JSON.stringify(currentUser));
     } catch (err) {
       // Only log if it's not an expected unauthenticated error
       if (err instanceof Error && err.name !== 'UserUnAuthenticatedException') {
@@ -39,6 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log('AuthContext: No authenticated user found');
       }
       setUser(null);
+      localStorage.removeItem('kebabkartan_user');
     } finally {
       setLoading(false);
     }
@@ -48,6 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await signOut();
       setUser(null);
+      localStorage.removeItem('kebabkartan_user');
     } catch (err) {
       console.error('Error signing out:', err);
     }
@@ -59,13 +68,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    // Initial fetch with delay to ensure Amplify is fully configured
-    const timeoutId = setTimeout(() => {
-      fetchUser();
-    }, 1000);
-
-    // Removed periodic check to prevent excessive re-renders
-    // The Hub listener should handle most authentication state changes
+    // Immediate fetch, no delay
+    fetchUser();
 
     // Listen for auth events
     const unsubscribe = Hub.listen('auth', ({ payload }) => {
@@ -78,6 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         case 'signedOut':
           console.log('AuthContext: User signed out');
           setUser(null);
+          localStorage.removeItem('kebabkartan_user');
           setLoading(false);
           break;
         case 'tokenRefresh':
@@ -87,24 +92,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         case 'tokenRefresh_failure':
           console.log('AuthContext: Token refresh failed');
           setUser(null);
+          localStorage.removeItem('kebabkartan_user');
           setLoading(false);
           break;
       }
     });
 
-    // Also check for user on window focus (in case of tab switching)
-    const handleFocus = () => {
-      console.log('AuthContext: Window focused, checking user...');
-      fetchUser();
-    };
-
-    window.addEventListener('focus', handleFocus);
-
     return () => {
-      clearTimeout(timeoutId);
       unsubscribe();
-      window.removeEventListener('focus', handleFocus);
-      // Removed interval cleanup since we removed the periodic check
     };
   }, []);
 

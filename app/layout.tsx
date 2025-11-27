@@ -93,8 +93,6 @@ export default function RootLayout({
                     rel="stylesheet"
                 />
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
-                <script type="module" src="/_next/static/chunks/main.js" async defer />
-                <script noModule src="/_next/static/chunks/main-legacy.js" async defer />
                 {/* Preload OpenStreetMap tiles for LCP optimization */}
                 <link rel="preload" as="image" href="https://tile.openstreetmap.org/5/17/8.png" />
                 <link rel="preload" as="image" href="https://tile.openstreetmap.org/5/17/7.png" />

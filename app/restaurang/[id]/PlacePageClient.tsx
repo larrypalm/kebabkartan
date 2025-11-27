@@ -54,7 +54,7 @@ export default function PlacePageClient({ id }: { id: string }) {
                 }
 
                 setRestaurant(place);
-                trackKebabPlaceView(place.id, place.name, place.city);
+                trackKebabPlaceView(place.id, place.name);
                 document.title = `${place.name} | Betygsätt och recensera | Kebabkartan`;
             } catch (error) {
                 console.error('Error fetching restaurant:', error);

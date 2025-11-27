@@ -27,7 +27,11 @@ export default function ClientLayout({
             <PerformanceMonitor />
             <Breadcrumbs />
             {children}
-            {!isAdminRoute && <CookieConsent />}
+            {!isAdminRoute && (
+                <div suppressHydrationWarning>
+                    {typeof window !== 'undefined' && <CookieConsent />}
+                </div>
+            )}
             {!isAdminRoute && <AnalyticsDebug />}
         </>
     );

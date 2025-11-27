@@ -63,6 +63,12 @@ const SWEDEN_VIEW: Coordinates = {
     zoom: 5
 };
 
+// Sweden's geographical bounds (southwest and northeast corners)
+const SWEDEN_BOUNDS: [[number, number], [number, number]] = [
+    [55.0, 10.5],  // Southwest corner (southernmost, westernmost)
+    [69.5, 24.5]   // Northeast corner (northernmost, easternmost)
+];
+
 const MAP_PLACEHOLDER = '/static/map-placeholder.png'; // Place a suitable image in public/static/
 
 const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, totalVotes }) => {
@@ -880,6 +886,10 @@ const Map: React.FC<MapProps> = ({ initialPlaceSlug = null, initialCenter, initi
                     scrollWheelZoom={true}
                     touchZoom={true}
                     zoomControl={false}
+                    maxBounds={SWEDEN_BOUNDS}
+                    maxBoundsViscosity={0.8}
+                    minZoom={5}
+                    maxZoom={18}
                 >
                     <TileLayer
                         url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
