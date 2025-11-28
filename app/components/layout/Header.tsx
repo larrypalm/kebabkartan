@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { MaterialIcon } from '@/app/components/Icons';
 import Button from '@/app/components/ui/Button';
 import Input from '@/app/components/ui/Input';
@@ -23,12 +23,16 @@ const Header: React.FC<HeaderProps> = ({
   className = '',
 }) => {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, loading } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showCitiesDropdown, setShowCitiesDropdown] = useState(false);
+
+  // On frontpage, hide mobile search icon since search bar is in page content
+  const isFrontpage = pathname === '/';
 
   useEffect(() => {
     setMounted(true);
@@ -148,8 +152,8 @@ const Header: React.FC<HeaderProps> = ({
 
           {/* Right Side - Actions */}
           <div className="flex items-center gap-3">
-            {/* Mobile Search Toggle */}
-            {showSearch && (
+            {/* Mobile Search Toggle - Hidden on frontpage since search is in page content */}
+            {showSearch && !isFrontpage && (
               <button
                 onClick={() => setIsSearchExpanded(!isSearchExpanded)}
                 className="lg:hidden p-2 hover:bg-slate-100 rounded-lg transition-colors"
