@@ -5,10 +5,11 @@ import GoogleAnalytics from "./components/GoogleAnalytics";
 import ClientLayout from "./components/ClientLayout";
 import AmplifyProvider from "./components/AmplifyProvider";
 import StructuredData from "./components/StructuredData";
+import MaterialIconsLoader from "./components/MaterialIconsLoader";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
     subsets: ["latin"],
-    weight: ['400', '500', '600', '700', '800'],
+    weight: ['400', '500', '700'], // Reduced from 5 to 3 weights for performance
     display: 'swap',
     preload: true,
     fallback: ['Inter', 'system-ui', 'arial'],
@@ -81,22 +82,21 @@ export default function RootLayout({
     return (
         <html lang="sv">
             <head>
+                {/* Preconnect to critical domains for faster DNS resolution */}
+                <link rel="preconnect" href="https://fonts.googleapis.com" />
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
                 <link rel="preconnect" href="https://www.google.com" />
                 <link rel="preconnect" href="https://www.gstatic.com" crossOrigin="anonymous" />
-                <link rel="preconnect" href="https://tile.openstreetmap.org" />
+
+                {/* DNS prefetch for less critical domains */}
                 <link rel="dns-prefetch" href="https://tile.openstreetmap.org" />
-                <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-                <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
-                {/* Material Symbols Icons */}
-                <link
-                    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
-                    rel="stylesheet"
-                />
+
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
-                {/* Preload only critical site-wide resources - removed OpenStreetMap tiles as they're only needed on map pages */}
-                <link rel="preload" as="image" href="/static/logo.png" />
+                {/* Preload only critical site-wide resources */}
+                <link rel="preload" as="image" href="/static/logo.png" fetchPriority="high" />
             </head>
             <body className={plusJakartaSans.variable}>
+                <MaterialIconsLoader />
                 {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
                     <GoogleAnalytics GA_MEASUREMENT_ID={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
                 )}

@@ -45,22 +45,41 @@ export async function GET(request: Request) {
         }
 
         // Query reviews by restaurantId (assuming GSI or proper key structure)
-        const result = await docClient.send(
-            new QueryCommand({
-                TableName: REVIEWS_TABLE_NAME,
-                IndexName: 'restaurantId-index', // You'll need to create this GSI in DynamoDB
-                KeyConditionExpression: 'restaurantId = :restaurantId',
-                ExpressionAttributeValues: {
-                    ':restaurantId': restaurantId,
-                },
-                ScanIndexForward: false, // Most recent first
-            })
-        );
+        try {
+            const result = await docClient.send(
+                new QueryCommand({
+                    TableName: REVIEWS_TABLE_NAME,
+                    IndexName: 'restaurantId-index', // You'll need to create this GSI in DynamoDB
+                    KeyConditionExpression: 'restaurantId = :restaurantId',
+                    ExpressionAttributeValues: {
+                        ':restaurantId': restaurantId,
+                    },
+                    ScanIndexForward: false, // Most recent first
+                })
+            );
 
-        return NextResponse.json({
-            reviews: result.Items || [],
-            count: result.Count || 0,
-        });
+            return NextResponse.json({
+                reviews: result.Items || [],
+                count: result.Count || 0,
+            });
+        } catch (queryError: any) {
+            // If table doesn't exist or GSI is missing, return empty results instead of error
+            if (
+                queryError.name === 'ResourceNotFoundException' ||
+                queryError.message?.includes('ResourceNotFoundException') ||
+                queryError.message?.includes('does not exist') ||
+                queryError.message?.includes('Index')
+            ) {
+                console.warn('Reviews table or GSI not found, returning empty results:', queryError.message);
+                return NextResponse.json({
+                    reviews: [],
+                    count: 0,
+                });
+            }
+
+            // Re-throw other errors to be caught by outer catch
+            throw queryError;
+        }
     } catch (error) {
         console.error('Error fetching reviews:', error);
         return NextResponse.json(

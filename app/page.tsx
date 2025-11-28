@@ -2,7 +2,6 @@
 
 import { useState, useMemo, useEffect, useRef } from "react";
 import "./app.css";
-import "@aws-amplify/ui-react/styles.css";
 import dynamic from "next/dynamic";
 import { GoogleReCaptchaProvider } from "react-google-recaptcha-v3";
 import Header from "./components/layout/Header";
