@@ -6,21 +6,19 @@ export default function PerformanceOptimizer() {
   useEffect(() => {
     // Optimize resource loading
     const optimizeResources = () => {
-      // Preload critical resources (only if not already preloaded)
-      const criticalResources = [
-        '/static/logo.png',
-        '/static/map-placeholder.png'
-      ];
+      // Only preload map placeholder if there's actually a map on the page
+      const hasMap = document.querySelector('.leaflet-container') !== null;
 
-      criticalResources.forEach(resource => {
-        if (!document.querySelector(`link[href="${resource}"]`)) {
+      if (hasMap) {
+        const mapPlaceholder = '/static/map-placeholder.png';
+        if (!document.querySelector(`link[href="${mapPlaceholder}"]`)) {
           const link = document.createElement('link');
           link.rel = 'preload';
           link.as = 'image';
-          link.href = resource;
+          link.href = mapPlaceholder;
           document.head.appendChild(link);
         }
-      });
+      }
 
       // Optimize map tiles loading
       const mapTiles = document.querySelectorAll('img[src*="tile.openstreetmap.org"]');

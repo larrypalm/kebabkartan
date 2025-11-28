@@ -93,35 +93,8 @@ export default function RootLayout({
                     rel="stylesheet"
                 />
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
-                {/* Preload OpenStreetMap tiles for LCP optimization */}
-                <link rel="preload" as="image" href="https://tile.openstreetmap.org/5/17/8.png" />
-                <link rel="preload" as="image" href="https://tile.openstreetmap.org/5/17/7.png" />
-                <link rel="preload" as="image" href="https://tile.openstreetmap.org/5/16/8.png" />
-                <link rel="preload" as="image" href="https://tile.openstreetmap.org/5/18/8.png" />
-                <link rel="preload" as="image" href="https://tile.openstreetmap.org/5/17/9.png" />
-                <link rel="preload" as="image" href="https://tile.openstreetmap.org/5/16/7.png" />
-                <link rel="preload" as="image" href="https://tile.openstreetmap.org/5/18/7.png" />
-                <link rel="preload" as="image" href="https://tile.openstreetmap.org/5/16/9.png" />
-                <link rel="preload" as="image" href="https://tile.openstreetmap.org/5/18/9.png" />
-                <link rel="preload" as="image" href="https://tile.openstreetmap.org/5/17/6.png" />
-                <link rel="preload" as="image" href="https://tile.openstreetmap.org/5/15/8.png" />
-                <link rel="preload" as="image" href="https://tile.openstreetmap.org/5/19/8.png" />
-                <link rel="preload" as="image" href="https://tile.openstreetmap.org/5/17/10.png" />
-                <link rel="preload" as="image" href="https://tile.openstreetmap.org/5/16/6.png" />
-                <link rel="preload" as="image" href="https://tile.openstreetmap.org/5/18/6.png" />
-                <link rel="preload" as="image" href="https://tile.openstreetmap.org/5/15/7.png" />
-                <link rel="preload" as="image" href="https://tile.openstreetmap.org/5/19/7.png" />
-                <link rel="preload" as="image" href="https://tile.openstreetmap.org/5/15/9.png" />
-                <link rel="preload" as="image" href="https://tile.openstreetmap.org/5/19/9.png" />
-                <link rel="preload" as="image" href="https://tile.openstreetmap.org/5/16/10.png" />
-                <link rel="preload" as="image" href="https://tile.openstreetmap.org/5/18/10.png" />
-                <link rel="preload" as="image" href="https://tile.openstreetmap.org/5/15/6.png" />
-                <link rel="preload" as="image" href="https://tile.openstreetmap.org/5/19/6.png" />
-                <link rel="preload" as="image" href="https://tile.openstreetmap.org/5/15/10.png" />
-                <link rel="preload" as="image" href="https://tile.openstreetmap.org/5/19/10.png" />
-                {/* Preload critical resources for LCP optimization */}
+                {/* Preload only critical site-wide resources - removed OpenStreetMap tiles as they're only needed on map pages */}
                 <link rel="preload" as="image" href="/static/logo.png" />
-                <link rel="preload" as="image" href="/static/map-placeholder.png" />
             </head>
             <body className={plusJakartaSans.variable}>
                 {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
