@@ -798,7 +798,18 @@ NEXT_PUBLIC_RECAPTCHA_SITE_KEY=
 
 # Google Site Verification
 NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION=
+
+# Debug Flags (Optional - controls console logging)
+NEXT_PUBLIC_DEBUG_PERFORMANCE=false  # Performance & SEO metrics (LCP, CLS, FID, resource loading)
+NEXT_PUBLIC_DEBUG_ANALYTICS=false    # Analytics tracking, consent, Google Analytics events
+NEXT_PUBLIC_DEBUG_AUTH=false         # Authentication, Amplify, user sessions, token refresh
 ```
+
+**Debug Flag Usage:**
+- Set to `true` to enable detailed console logging for debugging
+- Set to `false` (or omit) for production to minimize console noise
+- **Recommended:** Keep all debug flags `false` in production
+- **Development:** Enable specific categories as needed for debugging
 
 ### Files to Never Modify
 

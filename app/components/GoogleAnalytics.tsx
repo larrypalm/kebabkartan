@@ -5,6 +5,11 @@ import { useEffect, useState } from 'react';
 import { isTrackingEnabled } from '@/app/utils/analytics';
 import { usePathname } from 'next/navigation';
 
+// Helper to check if analytics debugging is enabled
+const isDebugAnalyticsEnabled = () => {
+  return process.env.NEXT_PUBLIC_DEBUG_ANALYTICS === 'true';
+};
+
 export default function GoogleAnalytics({ GA_MEASUREMENT_ID }: { GA_MEASUREMENT_ID: string }) {
     const [shouldLoad, setShouldLoad] = useState(false);
     const [scriptLoaded, setScriptLoaded] = useState(false);
@@ -32,9 +37,11 @@ export default function GoogleAnalytics({ GA_MEASUREMENT_ID }: { GA_MEASUREMENT_
 
         // Check if analytics should be enabled (consent etc.)
         const trackingEnabled = isTrackingEnabled();
-        console.log('GoogleAnalytics: isTrackingEnabled:', trackingEnabled);
-        console.log('GoogleAnalytics: GA_MEASUREMENT_ID:', GA_MEASUREMENT_ID);
-        console.log('GoogleAnalytics: NODE_ENV:', process.env.NODE_ENV);
+        if (isDebugAnalyticsEnabled()) {
+            console.log('GoogleAnalytics: isTrackingEnabled:', trackingEnabled);
+            console.log('GoogleAnalytics: GA_MEASUREMENT_ID:', GA_MEASUREMENT_ID);
+            console.log('GoogleAnalytics: NODE_ENV:', process.env.NODE_ENV);
+        }
         setShouldLoad(trackingEnabled);
 
         // Listen for consent changes
@@ -42,7 +49,9 @@ export default function GoogleAnalytics({ GA_MEASUREMENT_ID }: { GA_MEASUREMENT_
             // Add a small delay to ensure cookie is set
             setTimeout(() => {
                 const newTrackingEnabled = isTrackingEnabled();
-                console.log('GoogleAnalytics: Consent changed, isTrackingEnabled:', newTrackingEnabled);
+                if (isDebugAnalyticsEnabled()) {
+                    console.log('GoogleAnalytics: Consent changed, isTrackingEnabled:', newTrackingEnabled);
+                }
                 setShouldLoad(newTrackingEnabled);
             }, 100);
         };
@@ -64,7 +73,9 @@ export default function GoogleAnalytics({ GA_MEASUREMENT_ID }: { GA_MEASUREMENT_
             
             const currentTrackingEnabled = isTrackingEnabled();
             if (currentTrackingEnabled !== shouldLoad) {
-                console.log('GoogleAnalytics: Fallback check detected consent change');
+                if (isDebugAnalyticsEnabled()) {
+                    console.log('GoogleAnalytics: Fallback check detected consent change');
+                }
                 setShouldLoad(currentTrackingEnabled);
                 clearInterval(checkInterval);
             }
@@ -83,21 +94,27 @@ export default function GoogleAnalytics({ GA_MEASUREMENT_ID }: { GA_MEASUREMENT_
         if (shouldLoad && scriptLoaded) {
             const checkGtag = () => {
                 if (typeof window !== 'undefined' && window.gtag) {
-                    console.log('GoogleAnalytics: gtag function is available');
+                    if (isDebugAnalyticsEnabled()) {
+                        console.log('GoogleAnalytics: gtag function is available');
+                    }
                     setGtagInitialized(true);
-                    
+
                     // Test gtag function
-                    try {
-                        window.gtag('event', 'test_event', {
-                            event_category: 'debug',
-                            event_label: 'gtag_availability_test'
-                        });
-                        console.log('GoogleAnalytics: gtag test event sent successfully');
-                    } catch (error) {
-                        console.error('GoogleAnalytics: Error testing gtag function:', error);
+                    if (isDebugAnalyticsEnabled()) {
+                        try {
+                            window.gtag('event', 'test_event', {
+                                event_category: 'debug',
+                                event_label: 'gtag_availability_test'
+                            });
+                            console.log('GoogleAnalytics: gtag test event sent successfully');
+                        } catch (error) {
+                            console.error('GoogleAnalytics: Error testing gtag function:', error);
+                        }
                     }
                 } else {
-                    console.warn('GoogleAnalytics: gtag function not available, retrying...');
+                    if (isDebugAnalyticsEnabled()) {
+                        console.warn('GoogleAnalytics: gtag function not available, retrying...');
+                    }
                     setTimeout(checkGtag, 1000);
                 }
             };
@@ -108,12 +125,16 @@ export default function GoogleAnalytics({ GA_MEASUREMENT_ID }: { GA_MEASUREMENT_
     }, [shouldLoad, scriptLoaded]);
 
     const handleScriptLoad = () => {
-        console.log('GoogleAnalytics: gtag script loaded successfully');
+        if (isDebugAnalyticsEnabled()) {
+            console.log('GoogleAnalytics: gtag script loaded successfully');
+        }
         setScriptLoaded(true);
     };
 
     const handleScriptError = (error: any) => {
-        console.error('GoogleAnalytics: Error loading gtag script:', error);
+        if (isDebugAnalyticsEnabled()) {
+            console.error('GoogleAnalytics: Error loading gtag script:', error);
+        }
     };
 
     // Always render the component but conditionally load GA scripts
@@ -132,7 +153,10 @@ export default function GoogleAnalytics({ GA_MEASUREMENT_ID }: { GA_MEASUREMENT_
                         strategy="afterInteractive"
                         dangerouslySetInnerHTML={{
                             __html: `
-                                console.log('GoogleAnalytics: Initializing gtag with ID: ${GA_MEASUREMENT_ID}');
+                                const debugAnalytics = '${process.env.NEXT_PUBLIC_DEBUG_ANALYTICS}' === 'true';
+                                if (debugAnalytics) {
+                                    console.log('GoogleAnalytics: Initializing gtag with ID: ${GA_MEASUREMENT_ID}');
+                                }
                                 window.dataLayer = window.dataLayer || [];
                                 function gtag(){dataLayer.push(arguments);}
                                 window.gtag = gtag;
@@ -142,8 +166,10 @@ export default function GoogleAnalytics({ GA_MEASUREMENT_ID }: { GA_MEASUREMENT_
                                     allow_google_signals: false,
                                     send_page_view: false
                                 });
-                                console.log('GoogleAnalytics: gtag initialized and available on window.gtag');
-                                console.log('GoogleAnalytics: dataLayer:', window.dataLayer);
+                                if (debugAnalytics) {
+                                    console.log('GoogleAnalytics: gtag initialized and available on window.gtag');
+                                    console.log('GoogleAnalytics: dataLayer:', window.dataLayer);
+                                }
                             `,
                         }}
                     />

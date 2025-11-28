@@ -2,8 +2,16 @@
 
 import { useEffect } from 'react';
 
+// Helper to check if performance debugging is enabled
+const isDebugPerformanceEnabled = () => {
+  return process.env.NEXT_PUBLIC_DEBUG_PERFORMANCE === 'true';
+};
+
 export default function PerformanceMonitor() {
   useEffect(() => {
+    // Only monitor performance if debug flag is enabled
+    if (!isDebugPerformanceEnabled()) return;
+
     // Monitor Core Web Vitals
     const monitorPerformance = () => {
       // Monitor Largest Contentful Paint (LCP)

@@ -4,6 +4,11 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { getCurrentUser, signOut } from 'aws-amplify/auth';
 import { Hub } from 'aws-amplify/utils';
 
+// Helper to check if auth debugging is enabled
+const isDebugAuthEnabled = () => {
+  return process.env.NEXT_PUBLIC_DEBUG_AUTH === 'true';
+};
+
 interface User {
   username: string;
   signInDetails?: {
@@ -34,16 +39,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchUser = async () => {
     try {
       const currentUser = await getCurrentUser();
-      console.log('AuthContext: User fetched:', currentUser);
+      if (isDebugAuthEnabled()) {
+        console.log('AuthContext: User fetched:', currentUser);
+      }
       setUser(currentUser);
       // Cache user in localStorage
       localStorage.setItem('kebabkartan_user', JSON.stringify(currentUser));
     } catch (err) {
-      // Only log if it's not an expected unauthenticated error
-      if (err instanceof Error && err.name !== 'UserUnAuthenticatedException') {
-        console.log('AuthContext: Authentication error:', err);
-      } else {
-        console.log('AuthContext: No authenticated user found');
+      // Only log if it's not an expected unauthenticated error and debug is enabled
+      if (isDebugAuthEnabled()) {
+        if (err instanceof Error && err.name !== 'UserUnAuthenticatedException') {
+          console.log('AuthContext: Authentication error:', err);
+        } else {
+          console.log('AuthContext: No authenticated user found');
+        }
       }
       setUser(null);
       localStorage.removeItem('kebabkartan_user');
@@ -73,24 +82,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Listen for auth events
     const unsubscribe = Hub.listen('auth', ({ payload }) => {
-      console.log('AuthContext: Hub event received:', payload.event);
+      if (isDebugAuthEnabled()) {
+        console.log('AuthContext: Hub event received:', payload.event);
+      }
       switch (payload.event) {
         case 'signedIn':
-          console.log('AuthContext: User signed in, fetching user...');
+          if (isDebugAuthEnabled()) {
+            console.log('AuthContext: User signed in, fetching user...');
+          }
           fetchUser();
           break;
         case 'signedOut':
-          console.log('AuthContext: User signed out');
+          if (isDebugAuthEnabled()) {
+            console.log('AuthContext: User signed out');
+          }
           setUser(null);
           localStorage.removeItem('kebabkartan_user');
           setLoading(false);
           break;
         case 'tokenRefresh':
-          console.log('AuthContext: Token refreshed, fetching user...');
+          if (isDebugAuthEnabled()) {
+            console.log('AuthContext: Token refreshed, fetching user...');
+          }
           fetchUser();
           break;
         case 'tokenRefresh_failure':
-          console.log('AuthContext: Token refresh failed');
+          if (isDebugAuthEnabled()) {
+            console.log('AuthContext: Token refresh failed');
+          }
           setUser(null);
           localStorage.removeItem('kebabkartan_user');
           setLoading(false);
