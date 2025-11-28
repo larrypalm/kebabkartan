@@ -21,6 +21,39 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Amplify configuration in `/amplify/`
 - **Important**: Infrastructure files are excluded from Next.js build (see `next.config.js`)
 
+## ⚠️ CRITICAL: Build Check Before Completing Tasks
+
+**ALWAYS run the production build check before marking any task as complete:**
+
+```bash
+nvm use && npm run build
+```
+
+This is **MANDATORY** for any code changes, especially:
+- Creating or modifying pages (`.tsx` files in `app/`)
+- Adding new components
+- Changing imports or dependencies
+- Modifying TypeScript types
+- Any front-end code changes
+
+**Why this matters:**
+- Next.js has strict rules about Server vs Client Components
+- Build-time errors won't appear in dev mode (`npm run dev`)
+- A failing build means the code cannot be deployed
+- Catching errors early saves time and prevents broken deployments
+
+**Common build errors to watch for:**
+- Event handlers in Server Components (need `'use client'` directive)
+- Missing imports or type errors
+- Metadata exports in Client Components (not allowed)
+- Invalid component patterns
+
+**If build fails:**
+1. Read the error message carefully
+2. Fix the issue (usually needs `'use client'` or type fixes)
+3. Run `npm run build` again to verify
+4. Only mark task complete when build succeeds
+
 ## Architecture Overview
 
 ### Core Technology Stack

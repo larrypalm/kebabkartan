@@ -1,18 +1,9 @@
-import { Metadata } from 'next';
+'use client';
+
 import Link from 'next/link';
 import Header from '@/app/components/layout/Header';
 import { Footer } from '@/app/components/layout/Footer';
 import BottomNavigation from '@/app/components/layout/BottomNavigation';
-
-export const metadata: Metadata = {
-  title: 'Cookiepolicy | Kebabkartan',
-  description: 'Läs om hur Kebabkartan använder cookies och liknande tekniker. Information om vilka cookies vi använder och hur du kan hantera dem.',
-  openGraph: {
-    title: 'Cookiepolicy | Kebabkartan',
-    description: 'Läs om hur Kebabkartan använder cookies och liknande tekniker.',
-    images: ['/static/logo.png'],
-  },
-};
 
 export default function CookiesPage() {
   return (
