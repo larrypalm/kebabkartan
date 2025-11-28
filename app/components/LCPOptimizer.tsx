@@ -2,6 +2,11 @@
 
 import { useEffect } from 'react';
 
+// Helper to check if performance debugging is enabled
+const isDebugPerformanceEnabled = () => {
+  return process.env.NEXT_PUBLIC_DEBUG_PERFORMANCE === 'true';
+};
+
 export default function LCPOptimizer() {
   useEffect(() => {
     // Optimize LCP (Largest Contentful Paint)
@@ -57,8 +62,8 @@ export default function LCPOptimizer() {
     // Run LCP optimization immediately
     optimizeLCP();
 
-    // Monitor LCP in real-time
-    if ('PerformanceObserver' in window) {
+    // Monitor LCP in real-time (only if debug is enabled)
+    if ('PerformanceObserver' in window && isDebugPerformanceEnabled()) {
       const lcpObserver = new PerformanceObserver((list) => {
         const entries = list.getEntries();
         const lastEntry = entries[entries.length - 1];

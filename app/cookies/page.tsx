@@ -5,6 +5,9 @@ import Header from '@/app/components/layout/Header';
 import { Footer } from '@/app/components/layout/Footer';
 import BottomNavigation from '@/app/components/layout/BottomNavigation';
 
+// Force dynamic rendering to avoid build-time issues
+export const dynamic = 'force-dynamic';
+
 export default function CookiesPage() {
   return (
     <>

@@ -34,6 +34,14 @@ module.exports = {
         sans: ['var(--font-plus-jakarta)', 'Inter', 'system-ui', 'sans-serif'],
         display: ['var(--font-plus-jakarta)', 'Inter', 'system-ui', 'sans-serif'],
       },
+      fontWeight: {
+        // Map semibold and extrabold to bold since we only load 400, 500, 700
+        normal: '400',
+        medium: '500',
+        semibold: '700', // Maps to bold (was 600)
+        bold: '700',
+        extrabold: '700', // Maps to bold (was 800)
+      },
       boxShadow: {
         'card': '0 2px 8px rgba(0, 0, 0, 0.05)',
         'card-hover': '0 4px 12px rgba(0, 0, 0, 0.08)',

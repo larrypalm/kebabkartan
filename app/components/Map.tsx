@@ -71,6 +71,39 @@ const SWEDEN_BOUNDS: [[number, number], [number, number]] = [
 
 const MAP_PLACEHOLDER = '/static/map-placeholder.png'; // Place a suitable image in public/static/
 
+// Component to set fetchpriority on initial map tiles for LCP optimization
+const TilePriorityOptimizer: React.FC = () => {
+    const map = useMap();
+
+    useEffect(() => {
+        // Add fetchpriority=high to initial visible tiles
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                mutation.addedNodes.forEach((node) => {
+                    if (node instanceof HTMLImageElement && node.classList.contains('leaflet-tile')) {
+                        node.fetchPriority = 'high';
+                    }
+                });
+            });
+        });
+
+        const tilePane = map.getPane('tilePane');
+        if (tilePane) {
+            observer.observe(tilePane, { childList: true, subtree: true });
+
+            // Set priority on existing tiles
+            const existingTiles = tilePane.querySelectorAll<HTMLImageElement>('.leaflet-tile');
+            existingTiles.forEach((tile) => {
+                tile.fetchPriority = 'high';
+            });
+        }
+
+        return () => observer.disconnect();
+    }, [map]);
+
+    return null;
+};
+
 const RatingStars: React.FC<RatingStarsProps> = ({ placeId, currentRating, totalVotes }) => {
     const { executeRecaptcha } = useGoogleReCaptcha();
     const { user, loading } = useAuth();
@@ -898,6 +931,7 @@ const Map: React.FC<MapProps> = ({ initialPlaceSlug = null, initialCenter, initi
                             load: () => { setMapLoaded(true); trackMapLoaded(); },
                         }}
                     />
+                    <TilePriorityOptimizer />
                     <MapControls 
                         markers={markers} 
                         onLocationSelect={handleLocationSelect}
