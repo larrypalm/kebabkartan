@@ -1,9 +1,8 @@
-'use client';
-
 import Link from 'next/link';
 import Header from '@/app/components/layout/Header';
 import { Footer } from '@/app/components/layout/Footer';
 import BottomNavigation from '@/app/components/layout/BottomNavigation';
+import CookieSettingsButton from './CookieSettingsButton';
 
 // Force dynamic rendering to avoid build-time issues
 export const dynamic = 'force-dynamic';
@@ -321,16 +320,7 @@ export default function CookiesPage() {
                 <p className="text-slate-700 mb-4 font-medium">
                   Vill du ändra dina cookie-inställningar?
                 </p>
-                <button
-                  onClick={() => {
-                    // This would trigger cookie settings modal
-                    // For now, just a placeholder
-                    alert('Cookie-inställningar kommer snart! För närvarande kan du hantera cookies via din webbläsare.');
-                  }}
-                  className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-secondary transition-colors font-medium"
-                >
-                  Öppna cookie-inställningar
-                </button>
+                <CookieSettingsButton />
               </div>
 
               <h3 className="text-xl font-semibold text-slate-900 mb-3">5.2 Webbläsarinställningar</h3>

@@ -82,9 +82,17 @@ const Header: React.FC<HeaderProps> = ({
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
             <div className="w-8 h-8">
-              <img 
-                src="/static/logo.png"
-              />
+              <picture>
+                <source srcSet="/static/logo-small.webp" type="image/webp" />
+                <img
+                  src="/static/logo-small.png"
+                  alt="Kebabkartan logo"
+                  width="32"
+                  height="32"
+                  loading="eager"
+                  fetchPriority="high"
+                />
+              </picture>
             </div>
           </Link>
 

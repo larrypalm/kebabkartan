@@ -87,13 +87,18 @@ export default function RootLayout({
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
                 <link rel="preconnect" href="https://www.google.com" />
                 <link rel="preconnect" href="https://www.gstatic.com" crossOrigin="anonymous" />
-
-                {/* DNS prefetch for less critical domains */}
-                <link rel="dns-prefetch" href="https://tile.openstreetmap.org" />
+                <link rel="preconnect" href="https://tile.openstreetmap.org" />
 
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
                 {/* Preload only critical site-wide resources */}
-                <link rel="preload" as="image" href="/static/logo.png" fetchPriority="high" />
+                <link rel="preload" as="image" href="/static/logo-small.webp" type="image/webp" fetchPriority="high" />
+                <link rel="preload" as="image" href="/static/logo-small.png" fetchPriority="high" />
+
+                {/* Note: Map tiles are not preloaded here because:
+                    1. We can't predict exact visible tiles (depends on viewport size)
+                    2. TilePriorityOptimizer component sets fetchpriority="high" dynamically
+                    3. We have preconnect to tile.openstreetmap.org for early connection
+                */}
             </head>
             <body className={plusJakartaSans.variable}>
                 <MaterialIconsLoader />
