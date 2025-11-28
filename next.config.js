@@ -32,8 +32,49 @@ const nextConfig = {
     // Add security and performance headers
     async headers() {
         return [
+            // Static assets - long cache (1 year)
             {
-                source: '/(.*)',
+                source: '/static/:path*',
+                headers: [
+                    {
+                        key: 'Cache-Control',
+                        value: 'public, max-age=31536000, immutable',
+                    },
+                ],
+            },
+            // Next.js static assets - long cache (1 year)
+            {
+                source: '/_next/static/:path*',
+                headers: [
+                    {
+                        key: 'Cache-Control',
+                        value: 'public, max-age=31536000, immutable',
+                    },
+                ],
+            },
+            // Images and fonts - long cache (1 year)
+            {
+                source: '/:path*.(png|jpg|jpeg|gif|webp|svg|ico|woff|woff2|ttf|eot)',
+                headers: [
+                    {
+                        key: 'Cache-Control',
+                        value: 'public, max-age=31536000, immutable',
+                    },
+                ],
+            },
+            // API routes - no cache
+            {
+                source: '/api/:path*',
+                headers: [
+                    {
+                        key: 'Cache-Control',
+                        value: 'no-store, must-revalidate',
+                    },
+                ],
+            },
+            // HTML pages - revalidate frequently
+            {
+                source: '/:path*',
                 headers: [
                     {
                         key: 'X-Frame-Options',
@@ -49,29 +90,7 @@ const nextConfig = {
                     },
                     {
                         key: 'Cache-Control',
-                        value: 'public, max-age=31536000, immutable',
-                    },
-                ],
-            },
-            {
-                source: '/static/(.*)',
-                headers: [
-                    {
-                        key: 'Cache-Control',
-                        value: 'public, max-age=31536000, immutable',
-                    },
-                    {
-                        key: 'Expires',
-                        value: new Date(Date.now() + 31536000000).toUTCString(),
-                    },
-                ],
-            },
-            {
-                source: '/_next/static/(.*)',
-                headers: [
-                    {
-                        key: 'Cache-Control',
-                        value: 'public, max-age=31536000, immutable',
+                        value: 'public, max-age=0, must-revalidate',
                     },
                 ],
             },
