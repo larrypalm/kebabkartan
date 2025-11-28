@@ -38,22 +38,20 @@ export default function LCPOptimizer() {
         document.head.appendChild(fontLink);
       }
 
-      // Preload critical images (only if not already preloaded)
-      const criticalImages = [
-        '/static/logo.png',
-        '/static/map-placeholder.png'
-      ];
+      // Only preload map placeholder if there's actually a map on the page
+      const hasMap = document.querySelector('.leaflet-container') !== null;
 
-      criticalImages.forEach(src => {
-        if (!document.querySelector(`link[href="${src}"]`)) {
+      if (hasMap) {
+        const mapPlaceholder = '/static/map-placeholder.png';
+        if (!document.querySelector(`link[href="${mapPlaceholder}"]`)) {
           const link = document.createElement('link');
           link.rel = 'preload';
           link.as = 'image';
-          link.href = src;
+          link.href = mapPlaceholder;
           link.fetchPriority = 'high';
           document.head.appendChild(link);
         }
-      });
+      }
     };
 
     // Run LCP optimization immediately
