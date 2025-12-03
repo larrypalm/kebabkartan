@@ -26,13 +26,17 @@ interface Location {
     slug?: string;
 }
 
-export default function App() {
+interface HomeClientProps {
+    initialLocations?: any[];
+}
+
+export default function App({ initialLocations = [] }: HomeClientProps) {
     const { user } = useAuth();
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState("");
     const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
     const [showSearchDropdown, setShowSearchDropdown] = useState(false);
-    const [locations, setLocations] = useState<Location[]>([]);
+    const [locations, setLocations] = useState<Location[]>(initialLocations);
     const [loadingLocations, setLoadingLocations] = useState(false);
     const searchRef = useRef<HTMLDivElement>(null);
 
@@ -51,8 +55,13 @@ export default function App() {
         }
     ), []);
 
-    // Fetch locations for search
+    // Fetch locations for search (only if not provided server-side)
     useEffect(() => {
+        // If we already have initial locations, no need to fetch
+        if (initialLocations.length > 0) {
+            return;
+        }
+
         const fetchLocations = async () => {
             setLoadingLocations(true);
             try {
@@ -67,7 +76,7 @@ export default function App() {
         };
 
         fetchLocations();
-    }, []);
+    }, [initialLocations]);
 
     // Filter locations based on search query
     const filteredLocations = useMemo(() => {
