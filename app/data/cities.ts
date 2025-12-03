@@ -22,7 +22,7 @@ export const cities: City[] = [
     coordinates: [57.7089, 11.9746],
     zoom: 12,
     description: 'Upptäck Göteborgs bästa kebabställen, pizzerior och falafelställen med hjälp av våra användares recensioner och betyg.',
-    keywords: ['kebab Göteborg', 'pizza Göteborg', 'falafel Göteborg', 'bästa kebab Göteborg', 'bästa pizza Göteborg', 'bästa falafel Göteborg', 'kebab restaurang Göteborg', 'pizzeria Göteborg', 'falafelställe Göteborg', 'kebab nära mig Göteborg', 'pizza nära mig Göteborg', 'falafel nära mig Göteborg', 'kebab recensioner Göteborg', 'pizza recensioner Göteborg', 'falafel recensioner Göteborg']
+    keywords: ['kebab Göteborg', 'pizza Göteborg', 'falafel Göteborg', 'bästa kebab Göteborg', 'bästa pizza Göteborg', 'bästa falafel Göteborg', 'kebabsås Göteborg', 'kebabtallrik Göteborg', 'bästa kebabsåsen Göteborg', 'kebab restaurang Göteborg', 'pizzeria Göteborg', 'falafelställe Göteborg', 'kebab nära mig Göteborg', 'pizza nära mig Göteborg', 'falafel nära mig Göteborg', 'kebab recensioner Göteborg', 'pizza recensioner Göteborg', 'falafel recensioner Göteborg']
   },
   {
     name: 'Malmö',
