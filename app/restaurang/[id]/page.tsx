@@ -3,6 +3,25 @@ import PlacePageClient from '@/app/restaurang/[id]/PlacePageClient';
 import { getKebabPlaces } from '@/lib/getKebabPlaces';
 import { createPlaceTitle, createPlaceDescription } from '@/app/lib/slugUtils';
 
+// Generate static params for all restaurants at build time
+export async function generateStaticParams() {
+    try {
+        const places = await getKebabPlaces();
+
+        // Generate params for each restaurant using their slugs
+        return places.map((place: any) => {
+            // Extract just the slug part after "restaurang/"
+            const slug = place.slug?.replace('restaurang/', '') || place.id;
+            return {
+                id: slug,
+            };
+        });
+    } catch (error) {
+        console.error('Error generating static params:', error);
+        return [];
+    }
+}
+
 // Generate metadata for the place page
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
     try {
@@ -70,6 +89,24 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     }
 }
 
-export default function PlacePage({ params }: { params: { id: string } }) {
-    return <PlacePageClient id={params.id} />;
+export default async function PlacePage({ params }: { params: { id: string } }) {
+    // Fetch restaurant data server-side for SEO
+    let initialRestaurant: any = null;
+
+    try {
+        const places = await getKebabPlaces();
+
+        // Find restaurant by slug
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(params.id);
+
+        if (isUUID) {
+            initialRestaurant = places.find((p: any) => p.id === params.id);
+        } else {
+            initialRestaurant = places.find((p: any) => p.slug === `restaurang/${params.id}`);
+        }
+    } catch (error) {
+        console.error('Error fetching restaurant server-side:', error);
+    }
+
+    return <PlacePageClient id={params.id} initialRestaurant={initialRestaurant} />;
 } 

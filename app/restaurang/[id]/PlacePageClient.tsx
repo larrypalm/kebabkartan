@@ -27,18 +27,31 @@ const RestaurantMap = dynamic(
     }
 );
 
-export default function PlacePageClient({ id }: { id: string }) {
+interface PlacePageClientProps {
+    id: string;
+    initialRestaurant?: Restaurant | null;
+}
+
+export default function PlacePageClient({ id, initialRestaurant }: PlacePageClientProps) {
     const router = useRouter();
     const { user } = useAuth();
-    const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
+    const [restaurant, setRestaurant] = useState<Restaurant | null>(initialRestaurant || null);
     const [reviews, setReviews] = useState<Review[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(!initialRestaurant);
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [loadingReviews, setLoadingReviews] = useState(false);
     const [editingReview, setEditingReview] = useState<Review | undefined>(undefined);
 
-    // Fetch restaurant data
+    // Fetch restaurant data only if not provided server-side
     useEffect(() => {
+        // If we already have initial data, just track the view
+        if (initialRestaurant) {
+            trackKebabPlaceView(initialRestaurant.id, initialRestaurant.name);
+            document.title = `${initialRestaurant.name} | Betygsätt och recensera | Kebabkartan`;
+            return;
+        }
+
+        // Otherwise, fetch client-side (fallback for dynamic routes)
         const fetchRestaurant = async () => {
             try {
                 const response = await fetch('/api/kebab-places');
@@ -66,7 +79,7 @@ export default function PlacePageClient({ id }: { id: string }) {
         };
 
         fetchRestaurant();
-    }, [id, router]);
+    }, [id, router, initialRestaurant]);
 
     // Fetch reviews for this restaurant
     useEffect(() => {
