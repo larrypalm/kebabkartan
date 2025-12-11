@@ -67,6 +67,7 @@ export async function POST(request: Request) {
             priceRange: body.priceRange || '',
             slug: body.slug || '',
             city: body.city || '',
+            tags: body.tags || [],
             rating: 0,
             totalVotes: 0,
             createdAt: now,

@@ -14,6 +14,7 @@ interface KebabPlace {
     priceRange?: string;
     slug?: string;
     city?: string;
+    tags?: string[];
     rating: number;
     totalVotes: number;
     createdAt: string;
@@ -40,6 +41,7 @@ export default function EditPlacePage({ params }: EditPlacePageProps) {
         priceRange: '',
         slug: '',
         city: '',
+        tags: [] as string[],
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -85,6 +87,7 @@ export default function EditPlacePage({ params }: EditPlacePageProps) {
                     priceRange: data.priceRange || '',
                     slug: data.slug || '',
                     city: data.city || '',
+                    tags: data.tags || [],
                 });
             } else {
                 setError('Kunde inte hämta ställets detaljer');
@@ -131,10 +134,19 @@ export default function EditPlacePage({ params }: EditPlacePageProps) {
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        
+
         setFormData(prev => ({
             ...prev,
             [name]: value,
+        }));
+    };
+
+    const handleTagToggle = (tag: string) => {
+        setFormData(prev => ({
+            ...prev,
+            tags: prev.tags.includes(tag)
+                ? prev.tags.filter(t => t !== tag)
+                : [...prev.tags, tag],
         }));
     };
 
@@ -366,6 +378,40 @@ export default function EditPlacePage({ params }: EditPlacePageProps) {
                                 Stad (t.ex. "Göteborg", "Stockholm")
                             </p>
                         </div>
+                    </div>
+                    <div className="mb-4">
+                        <label className="block text-gray-700 mb-2">Mattypter (Taggar)</label>
+                        <div className="flex flex-wrap gap-3">
+                            {['Kebab', 'Pizza', 'Falafel', 'Sallad', 'Hamburgare'].map((tag) => (
+                                <label
+                                    key={tag}
+                                    className="flex items-center gap-2 px-4 py-2 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                                    style={{
+                                        backgroundColor: formData.tags.includes(tag) ? '#D97706' : 'white',
+                                        color: formData.tags.includes(tag) ? 'white' : '#374151',
+                                        borderColor: formData.tags.includes(tag) ? '#D97706' : '#D1D5DB',
+                                    }}
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={formData.tags.includes(tag)}
+                                        onChange={() => handleTagToggle(tag)}
+                                        className="w-4 h-4"
+                                    />
+                                    <span className="font-medium">{tag}</span>
+                                </label>
+                            ))}
+                        </div>
+                        <p className="text-sm text-gray-500 mt-2">
+                            Välj alla mattypter som denna restaurang serverar. Detta hjälper till med filtrering på stadssidorna.
+                        </p>
+                        {formData.tags.length > 0 && (
+                            <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded">
+                                <p className="text-sm text-green-800">
+                                    <strong>Vald:</strong> {formData.tags.join(', ')}
+                                </p>
+                            </div>
+                        )}
                     </div>
                     {error && <p className="text-red-500 mb-4">{error}</p>}
                     {success && <p className="text-green-500 mb-4">{success}</p>}

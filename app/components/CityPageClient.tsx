@@ -2,12 +2,14 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
 import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3';
 import Header from '@/app/components/layout/Header';
 import BottomNavigation from '@/app/components/layout/BottomNavigation';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { MaterialIcon } from '@/app/components/Icons';
 import RestaurantCard from '@/app/components/ui/RestaurantCard';
+import FilterTabs, { FilterTab } from '@/app/components/ui/FilterTabs';
 
 const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!;
 
@@ -41,6 +43,7 @@ interface Location {
   priceRange?: string;
   city?: string;
   slug?: string;
+  tags?: string[];
 }
 
 interface CityPageClientProps {
@@ -74,9 +77,22 @@ const CityPageClient: React.FC<CityPageClientProps> = ({
   initialZoom,
 }) => {
   const { user } = useAuth();
+  const router = useRouter();
   const [viewMode, setViewMode] = useState<'map' | 'list'>('list');
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+
+  // Initialize filter from URL on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const typeParam = params.get('type');
+      if (typeParam) {
+        setActiveFilter(typeParam);
+      }
+    }
+  }, []);
 
   // Fetch all locations
   useEffect(() => {
@@ -102,6 +118,58 @@ const CityPageClient: React.FC<CityPageClientProps> = ({
       location.address?.toLowerCase().includes(cityName.toLowerCase())
     );
   }, [locations, cityName]);
+
+  // Apply food type filter
+  const filteredLocations = useMemo(() => {
+    if (!activeFilter) {
+      return cityLocations;
+    }
+
+    return cityLocations.filter((location: Location) => {
+      const tags = location.tags || [];
+      return tags.some(tag => tag.toLowerCase().includes(activeFilter.toLowerCase()));
+    });
+  }, [cityLocations, activeFilter]);
+
+  // Calculate filter tabs with counts
+  const filterTabs: FilterTab[] = useMemo(() => {
+    const kebabCount = cityLocations.filter(loc =>
+      loc.tags?.some(tag => tag.toLowerCase().includes('kebab'))
+    ).length;
+
+    const pizzaCount = cityLocations.filter(loc =>
+      loc.tags?.some(tag => tag.toLowerCase().includes('pizza'))
+    ).length;
+
+    const falafelCount = cityLocations.filter(loc =>
+      loc.tags?.some(tag => tag.toLowerCase().includes('falafel'))
+    ).length;
+
+    return [
+      { label: 'Alla', value: null, count: cityLocations.length },
+      { label: 'Kebab', value: 'kebab', count: kebabCount },
+      { label: 'Pizza', value: 'pizza', count: pizzaCount },
+      { label: 'Falafel', value: 'falafel', count: falafelCount },
+    ];
+  }, [cityLocations]);
+
+  // Handle filter change with URL params
+  const handleFilterChange = (filter: string | null) => {
+    setActiveFilter(filter);
+
+    // Update URL params for SEO
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (filter) {
+        params.set('type', filter);
+      } else {
+        params.delete('type');
+      }
+
+      const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname;
+      router.push(newUrl, { scroll: false });
+    }
+  };
 
   return (
     <GoogleReCaptchaProvider reCaptchaKey={RECAPTCHA_SITE_KEY}>
@@ -132,23 +200,47 @@ const CityPageClient: React.FC<CityPageClientProps> = ({
         <div className="bg-white border-b border-slate-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 mb-3">
-              Bästa Kebab & Pizza i <span className="text-primary">{cityName}</span>
+              {activeFilter ? (
+                <>
+                  Bästa {activeFilter} i {cityName}
+                </>
+              ) : (
+                <>
+                  Bästa Kebab, Pizza & Falafel i <span className="text-primary">{cityName}</span>
+                </>
+              )}
             </h1>
             <p className="text-base md:text-lg text-text-muted mb-6 max-w-3xl">
-              {description}
+              {activeFilter ? (
+                `Upptäck de bästa ${activeFilter}ställena i ${cityName}. Läs recensioner, se betyg och hitta din favorit.`
+              ) : (
+                description
+              )}
             </p>
           </div>
         </div>
 
-        {/* Controls Section */}
+        {/* Filter Tabs Section */}
         <div className="bg-white border-b border-slate-200 sticky top-[64px] z-10 md:relative md:top-0">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <FilterTabs
+              tabs={filterTabs}
+              activeFilter={activeFilter}
+              onChange={handleFilterChange}
+              className="mb-4"
+            />
+          </div>
+        </div>
+
+        {/* Controls Section */}
+        <div className="bg-white border-b border-slate-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
               {/* Results Count */}
               <div className="flex items-center gap-2 text-slate-700">
                 <MaterialIcon name="location_on" className="text-primary" size="sm" />
                 <span className="font-medium">
-                  {loading ? 'Laddar...' : `${cityLocations.length} ${cityLocations.length === 1 ? 'ställe' : 'ställen'} hittades`}
+                  {loading ? 'Laddar...' : `${filteredLocations.length} ${filteredLocations.length === 1 ? 'ställe' : 'ställen'} hittades`}
                 </span>
               </div>
 
@@ -196,15 +288,19 @@ const CityPageClient: React.FC<CityPageClientProps> = ({
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                    {cityLocations.length === 0 ? (
+                    {filteredLocations.length === 0 ? (
                       <div className="col-span-full text-center py-12">
                         <MaterialIcon name="restaurant" className="text-slate-300 text-6xl mb-4" />
                         <p className="text-lg text-text-muted">
-                          Inga restauranger hittades i {cityName}
+                          {activeFilter ? (
+                            `Inga ${activeFilter}ställen hittades i ${cityName}`
+                          ) : (
+                            `Inga restauranger hittades i ${cityName}`
+                          )}
                         </p>
                       </div>
                     ) : (
-                      cityLocations.map((location) => (
+                      filteredLocations.map((location) => (
                         <RestaurantCard
                           key={location.id}
                           id={location.id}
